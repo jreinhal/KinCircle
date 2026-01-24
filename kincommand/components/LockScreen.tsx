@@ -65,7 +65,7 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
           <Lock size={32} className="text-white" />
         </div>
 
-        <h2 className="text-2xl font-bold text-white mb-2">KinCommand Protected</h2>
+        <h2 className="text-2xl font-bold text-white mb-2">KinCircle Protected</h2>
         <p className="text-slate-400 mb-8 text-center">
           Session timed out for HIPAA security.<br />
           Enter PIN for <span className="text-white font-semibold">{user}</span>
@@ -75,10 +75,10 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
         <div className="flex space-x-4 mb-8">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className={`w-4 h-4 rounded-full transition-all duration-300 ${pin.length > i
-                ? 'bg-blue-500 scale-110'
-                : error
-                  ? 'bg-red-500/50'
-                  : 'bg-slate-700'
+              ? 'bg-blue-500 scale-110'
+              : error
+                ? 'bg-red-500/50'
+                : 'bg-slate-700'
               }`} />
           ))}
         </div>

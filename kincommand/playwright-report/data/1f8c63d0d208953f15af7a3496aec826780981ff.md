@@ -1,0 +1,145 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e8]: K
+      - generic [ref=e9]: KinCommand
+    - navigation [ref=e10]:
+      - button "Sibling Ledger" [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+        - generic [ref=e17]: Sibling Ledger
+      - button "Care Schedule" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e22]: Care Schedule
+      - button "Add Entry" [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+        - generic [ref=e26]: Add Entry
+      - button "Ask Kin" [ref=e27] [cursor=pointer]:
+        - img [ref=e28]
+        - generic [ref=e30]: Ask Kin
+      - button "All Transactions" [ref=e31] [cursor=pointer]:
+        - img [ref=e32]
+        - generic [ref=e35]: All Transactions
+      - button "Medicaid Audit" [ref=e36] [cursor=pointer]:
+        - img [ref=e37]
+        - generic [ref=e39]: Medicaid Audit
+      - button "Digital Vault" [ref=e40] [cursor=pointer]:
+        - img [ref=e41]
+        - generic [ref=e44]: Digital Vault
+      - button "Agent Lab" [ref=e45] [cursor=pointer]:
+        - img [ref=e46]
+        - generic [ref=e48]: Agent Lab
+    - generic [ref=e49]:
+      - button "Settings" [active] [ref=e50] [cursor=pointer]:
+        - img [ref=e51]
+        - generic [ref=e54]: Settings
+      - button "S Sarah Family Admin" [ref=e55] [cursor=pointer]:
+        - generic [ref=e56]:
+          - generic [ref=e57]: S
+          - generic [ref=e58]:
+            - paragraph [ref=e59]: Sarah
+            - paragraph [ref=e60]: Family Admin
+        - img [ref=e61]
+  - main [ref=e67]:
+    - generic [ref=e69]:
+      - generic [ref=e70]:
+        - heading "Family Configuration" [level=1] [ref=e71]
+        - paragraph [ref=e72]: Manage rates, privacy, and care details.
+      - generic [ref=e73]:
+        - img [ref=e74]
+        - generic [ref=e76]:
+          - heading "Prototype Compliance Notice" [level=3] [ref=e77]
+          - paragraph [ref=e78]:
+            - text: This application uses
+            - strong [ref=e79]: Local Storage
+            - text: and is NOT currently HIPAA compliant for real-world medical data storage. Do not store sensitive SSNs or detailed medical histories without an Enterprise upgrade.
+      - generic [ref=e80]:
+        - generic [ref=e81]:
+          - generic [ref=e82]:
+            - img [ref=e83]
+            - heading "Financial Agreement" [level=2] [ref=e85]
+          - generic [ref=e87]:
+            - generic [ref=e88]: Sweat Equity Hourly Rate ($)
+            - paragraph [ref=e89]: The agreed value for one hour of caregiving work.
+            - spinbutton [ref=e90]: "25"
+        - generic [ref=e91]:
+          - generic [ref=e92]:
+            - img [ref=e93]
+            - heading "Care Recipient" [level=2] [ref=e96]
+          - generic [ref=e98]:
+            - generic [ref=e99]: Patient Name
+            - textbox [ref=e100]: son
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - img [ref=e103]
+            - heading "Privacy & Security" [level=2] [ref=e106]
+          - generic [ref=e107]:
+            - generic [ref=e108]:
+              - checkbox "Enhanced Privacy Masking" [ref=e109]
+              - generic [ref=e110]:
+                - generic [ref=e111]: Enhanced Privacy Masking
+                - paragraph [ref=e112]: When enabled, the app uses regex to scrub Patient Names, Emails, Phone Numbers, and SSN patterns before sending data to the AI.
+            - generic [ref=e113]:
+              - checkbox "Auto-Lock Inactivity Timer" [ref=e114]
+              - generic [ref=e115]:
+                - generic [ref=e116]: Auto-Lock Inactivity Timer
+                - paragraph [ref=e117]: Automatically lock the application after 60 seconds of inactivity.Disabling this reduces HIPAA compliance.
+            - generic [ref=e118]:
+              - heading "Custom PIN Code" [level=4] [ref=e119]
+              - paragraph [ref=e120]: Set a 4-digit PIN for lock screen authentication. Default is "1234".
+              - generic [ref=e121]:
+                - textbox "New PIN" [ref=e123]
+                - textbox "Confirm PIN" [ref=e125]
+              - button "Update PIN" [ref=e126] [cursor=pointer]
+        - button "Save Configuration" [ref=e127] [cursor=pointer]:
+          - img [ref=e128]
+          - generic [ref=e132]: Save Configuration
+      - generic [ref=e133]:
+        - generic [ref=e134]:
+          - generic [ref=e135]:
+            - img [ref=e136]
+            - heading "Cloud Sync (Beta)" [level=3] [ref=e138]
+          - generic [ref=e139]:
+            - paragraph [ref=e140]: Migrate your local data to the secure cloud. This enables sharing with family members.
+            - button "Sync Local Data to Cloud" [ref=e141] [cursor=pointer]:
+              - img [ref=e142]
+              - generic [ref=e144]: Sync Local Data to Cloud
+        - heading "Manual Data Sync" [level=3] [ref=e145]
+        - generic [ref=e146]:
+          - generic [ref=e147]:
+            - img [ref=e148]
+            - heading "Share Ledger with Family" [level=4] [ref=e154]
+          - paragraph [ref=e155]: To sync data between devices without a cloud server, export your data and send the file to your family members to import.
+          - generic [ref=e156]:
+            - button "Export Backup" [ref=e157] [cursor=pointer]:
+              - img [ref=e158]
+              - generic [ref=e161]: Export Backup
+            - button "Import Backup" [ref=e162] [cursor=pointer]:
+              - img [ref=e163]
+              - generic [ref=e166]: Import Backup
+      - generic [ref=e167]:
+        - generic [ref=e168]:
+          - generic [ref=e169]:
+            - img [ref=e170]
+            - heading "Security Audit Trail" [level=3] [ref=e172]
+          - generic [ref=e173]: Immutable
+        - generic [ref=e174]: No events logged yet.
+      - generic [ref=e175]:
+        - heading "Danger Zone" [level=3] [ref=e176]
+        - generic [ref=e177]:
+          - generic [ref=e178]:
+            - generic [ref=e179]:
+              - img [ref=e180]
+              - heading "Reset Application Data" [level=4] [ref=e182]
+            - paragraph [ref=e183]: This will permanently delete all local entries and settings. The app will revert to the default demo state.
+          - button "Reset Everything" [ref=e184] [cursor=pointer]:
+            - img [ref=e185]
+            - generic [ref=e188]: Reset Everything
+      - generic [ref=e189]:
+        - generic [ref=e190]:
+          - img [ref=e191]
+          - generic [ref=e195]: KinCommand v0.1.0-alpha
+        - paragraph [ref=e196]: "Build: 2026-01-24"
+```

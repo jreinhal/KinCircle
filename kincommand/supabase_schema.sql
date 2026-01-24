@@ -1,5 +1,5 @@
 -- ============================================================================
--- KinCommand Database Schema
+-- KinCircle Database Schema
 -- Run this in your Supabase SQL Editor to set up the backend.
 -- ============================================================================
 

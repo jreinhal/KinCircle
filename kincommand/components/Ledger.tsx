@@ -17,8 +17,8 @@ const Ledger: React.FC<LedgerProps> = ({ entries, users, onDelete }) => {
   const sortedEntries = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const filteredEntries = sortedEntries.filter(entry => {
-    const matchesSearch = entry.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          entry.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = entry.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      entry.category.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = filterType === 'ALL' || entry.type === filterType;
     return matchesSearch && matchesType;
   });
@@ -26,25 +26,25 @@ const Ledger: React.FC<LedgerProps> = ({ entries, users, onDelete }) => {
   const handleExportCSV = () => {
     const headers = ['Date', 'User', 'Type', 'Category', 'Description', 'Amount', 'Duration (Min)'];
     const rows = filteredEntries.map(e => [
-        e.date,
-        getUserName(e.userId),
-        e.type,
-        e.category,
-        `"${e.description.replace(/"/g, '""')}"`, // Escape quotes
-        e.amount.toFixed(2),
-        e.timeDurationMinutes || 0
+      e.date,
+      getUserName(e.userId),
+      e.type,
+      e.category,
+      `"${e.description.replace(/"/g, '""')}"`, // Escape quotes
+      e.amount.toFixed(2),
+      e.timeDurationMinutes || 0
     ]);
 
     const csvContent = [
-        headers.join(','),
-        ...rows.map(r => r.join(','))
+      headers.join(','),
+      ...rows.map(r => r.join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'kincommand_ledger.csv');
+    link.setAttribute('download', 'kincircle_ledger.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -54,49 +54,49 @@ const Ledger: React.FC<LedgerProps> = ({ entries, users, onDelete }) => {
     <div className="space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-           <h1 className="text-2xl font-bold text-slate-900">All Transactions</h1>
-           <p className="text-slate-500">A complete history of care and costs.</p>
+          <h1 className="text-2xl font-bold text-slate-900">All Transactions</h1>
+          <p className="text-slate-500">A complete history of care and costs.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-             <div className="relative">
-                <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />
-                <input 
-                    type="text" 
-                    placeholder="Search ledger..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-white text-slate-900 placeholder:text-slate-400 pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 w-full md:w-64"
-                />
-            </div>
-            
-            <div className="flex bg-white border border-slate-200 rounded-lg p-1">
-                <button 
-                    onClick={() => setFilterType('ALL')}
-                    className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'ALL' ? 'bg-slate-100 text-slate-900' : 'text-slate-500'}`}
-                >
-                    All
-                </button>
-                <button 
-                    onClick={() => setFilterType('EXPENSE')}
-                    className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'EXPENSE' ? 'bg-blue-50 text-blue-700' : 'text-slate-500'}`}
-                >
-                    $$
-                </button>
-                <button 
-                    onClick={() => setFilterType('TIME')}
-                    className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'TIME' ? 'bg-green-50 text-green-700' : 'text-slate-500'}`}
-                >
-                    Time
-                </button>
-            </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search ledger..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-white text-slate-900 placeholder:text-slate-400 pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 w-full md:w-64"
+            />
+          </div>
 
-            <button 
-                onClick={handleExportCSV}
-                className="flex items-center space-x-2 px-3 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 text-sm transition-colors"
+          <div className="flex bg-white border border-slate-200 rounded-lg p-1">
+            <button
+              onClick={() => setFilterType('ALL')}
+              className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'ALL' ? 'bg-slate-100 text-slate-900' : 'text-slate-500'}`}
             >
-                <Download size={16} />
-                <span className="hidden md:inline">Export CSV</span>
+              All
             </button>
+            <button
+              onClick={() => setFilterType('EXPENSE')}
+              className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'EXPENSE' ? 'bg-blue-50 text-blue-700' : 'text-slate-500'}`}
+            >
+              $$
+            </button>
+            <button
+              onClick={() => setFilterType('TIME')}
+              className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'TIME' ? 'bg-green-50 text-green-700' : 'text-slate-500'}`}
+            >
+              Time
+            </button>
+          </div>
+
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center space-x-2 px-3 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 text-sm transition-colors"
+          >
+            <Download size={16} />
+            <span className="hidden md:inline">Export CSV</span>
+          </button>
         </div>
       </header>
 
@@ -115,28 +115,28 @@ const Ledger: React.FC<LedgerProps> = ({ entries, users, onDelete }) => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredEntries.length === 0 ? (
-                  <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
-                          No transactions found matching your filters.
-                      </td>
-                  </tr>
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400">
+                    No transactions found matching your filters.
+                  </td>
+                </tr>
               ) : filteredEntries.map((entry) => (
                 <tr key={entry.id} className="hover:bg-slate-50 transition-colors group">
                   <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap">{entry.date}</td>
                   <td className="px-6 py-4 text-sm font-medium text-slate-900 flex items-center space-x-2">
                     <span className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs text-slate-600">
-                        {getUserName(entry.userId).charAt(0)}
+                      {getUserName(entry.userId).charAt(0)}
                     </span>
                     <span className="hidden md:inline">{getUserName(entry.userId)}</span>
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600">
                     <div className="flex flex-col">
-                        <span className="font-medium text-slate-800">{entry.description}</span>
-                        {entry.type === EntryType.TIME && (
-                            <span className="text-xs text-slate-400 flex items-center mt-0.5">
-                                <Clock size={10} className="mr-1"/> {entry.timeDurationMinutes ? (entry.timeDurationMinutes / 60).toFixed(1) : 0} hrs
-                            </span>
-                        )}
+                      <span className="font-medium text-slate-800">{entry.description}</span>
+                      {entry.type === EntryType.TIME && (
+                        <span className="text-xs text-slate-400 flex items-center mt-0.5">
+                          <Clock size={10} className="mr-1" /> {entry.timeDurationMinutes ? (entry.timeDurationMinutes / 60).toFixed(1) : 0} hrs
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -146,20 +146,20 @@ const Ledger: React.FC<LedgerProps> = ({ entries, users, onDelete }) => {
                   </td>
                   <td className="px-6 py-4 text-sm text-right font-medium">
                     <span className={entry.type === EntryType.EXPENSE ? 'text-blue-600' : 'text-green-600'}>
-                       {entry.type === EntryType.EXPENSE ? '$' : '~$'}
-                       {entry.amount.toFixed(2)}
+                      {entry.type === EntryType.EXPENSE ? '$' : '~$'}
+                      {entry.amount.toFixed(2)}
                     </span>
                   </td>
                   {onDelete && (
-                      <td className="px-6 py-4 text-right">
-                          <button 
-                            onClick={() => onDelete(entry.id)}
-                            className="text-slate-300 hover:text-red-500 transition-colors p-1"
-                            title="Delete Entry"
-                          >
-                              <Trash2 size={16} />
-                          </button>
-                      </td>
+                    <td className="px-6 py-4 text-right">
+                      <button
+                        onClick={() => onDelete(entry.id)}
+                        className="text-slate-300 hover:text-red-500 transition-colors p-1"
+                        title="Delete Entry"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
                   )}
                 </tr>
               ))}

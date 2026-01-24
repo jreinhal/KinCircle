@@ -10,7 +10,7 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
-  
+
   // Empty State Handling
   if (entries.length === 0) {
     return (
@@ -19,29 +19,29 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
           <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <PlusCircle size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome to KinCommand</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome to KinCircle</h2>
           <p className="text-slate-500 mb-8">
             The operating system for your family's caregiving. Start by logging your first expense or care hours to build the sibling ledger.
           </p>
           <div className="space-y-4">
-             <div className="flex items-center p-4 bg-slate-50 rounded-lg text-left">
-                <div className="p-2 bg-white rounded-md shadow-sm mr-4 text-blue-500"><DollarSign size={20}/></div>
-                <div>
-                   <h3 className="font-semibold text-slate-900">Track Expenses</h3>
-                   <p className="text-xs text-slate-500">Log receipts and purchases for {settings.patientName}.</p>
-                </div>
-             </div>
-             <div className="flex items-center p-4 bg-slate-50 rounded-lg text-left">
-                <div className="p-2 bg-white rounded-md shadow-sm mr-4 text-green-500"><Clock size={20}/></div>
-                <div>
-                   <h3 className="font-semibold text-slate-900">Log Sweat Equity</h3>
-                   <p className="text-xs text-slate-500">Record time spent to ensure fair recognition.</p>
-                </div>
-             </div>
+            <div className="flex items-center p-4 bg-slate-50 rounded-lg text-left">
+              <div className="p-2 bg-white rounded-md shadow-sm mr-4 text-blue-500"><DollarSign size={20} /></div>
+              <div>
+                <h3 className="font-semibold text-slate-900">Track Expenses</h3>
+                <p className="text-xs text-slate-500">Log receipts and purchases for {settings.patientName}.</p>
+              </div>
+            </div>
+            <div className="flex items-center p-4 bg-slate-50 rounded-lg text-left">
+              <div className="p-2 bg-white rounded-md shadow-sm mr-4 text-green-500"><Clock size={20} /></div>
+              <div>
+                <h3 className="font-semibold text-slate-900">Log Care Hours</h3>
+                <p className="text-xs text-slate-500">Record time spent to ensure fair recognition.</p>
+              </div>
+            </div>
           </div>
           <div className="mt-8 text-sm text-slate-400 flex items-center justify-center">
-             <span>Click "Add Entry" in the sidebar to begin</span>
-             <ArrowRight size={14} className="ml-1" />
+            <span>Click "Add Entry" in the sidebar to begin</span>
+            <ArrowRight size={14} className="ml-1" />
           </div>
         </div>
       </div>
@@ -54,7 +54,7 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
     const cashTotal = userEntries
       .filter(e => e.type === EntryType.EXPENSE)
       .reduce((acc, curr) => acc + curr.amount, 0);
-    
+
     const timeTotal = userEntries
       .filter(e => e.type === EntryType.TIME)
       .reduce((acc, curr) => acc + curr.amount, 0); // Amount is already calculated value
@@ -62,7 +62,7 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
     return {
       name: user.name,
       Cash: cashTotal,
-      SweatEquity: timeTotal,
+      CareHours: timeTotal,
       Total: cashTotal + timeTotal
     };
   });
@@ -71,7 +71,7 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
 
   const colors = {
     Cash: '#3b82f6', // blue-500
-    SweatEquity: '#10b981', // green-500
+    CareHours: '#10b981', // green-500
   };
 
   return (
@@ -103,9 +103,9 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
               <Clock size={24} />
             </div>
             <div>
-              <p className="text-sm text-slate-500 font-medium">Sweat Equity Value</p>
+              <p className="text-sm text-slate-500 font-medium">Care Hours Value</p>
               <h3 className="text-2xl font-bold text-slate-900">
-                 ${userTotals.reduce((acc, curr) => acc + curr.SweatEquity, 0).toLocaleString()}
+                ${userTotals.reduce((acc, curr) => acc + curr.CareHours, 0).toLocaleString()}
               </h3>
               <p className="text-xs text-slate-400">@{settings.hourlyRate}/hr rate</p>
             </div>
@@ -138,11 +138,11 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
             </div>
             <div className="flex items-center space-x-2">
               <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-              <span className="text-slate-600">Sweat Equity</span>
+              <span className="text-slate-600">Care Hours</span>
             </div>
           </div>
         </div>
-        
+
         <div className="h-80 w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
             <BarChart
@@ -153,18 +153,18 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
               <XAxis type="number" tickFormatter={(val) => `$${val}`} stroke="#94a3b8" />
               <YAxis dataKey="name" type="category" stroke="#64748b" width={80} />
-              <Tooltip 
-                cursor={{fill: '#f1f5f9'}}
+              <Tooltip
+                cursor={{ fill: '#f1f5f9' }}
                 formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               />
               <Bar dataKey="Cash" stackId="a" fill={colors.Cash} radius={[0, 4, 4, 0]} barSize={32} />
-              <Bar dataKey="SweatEquity" stackId="a" fill={colors.SweatEquity} radius={[0, 4, 4, 0]} barSize={32} />
+              <Bar dataKey="CareHours" stackId="a" fill={colors.CareHours} radius={[0, 4, 4, 0]} barSize={32} />
             </BarChart>
           </ResponsiveContainer>
         </div>
         <p className="mt-4 text-sm text-slate-500 italic text-center">
-          "Sweat Equity" is calculated at an agreed family rate of ${settings.hourlyRate}/hour to value time spent caregiving.
+          Care hours are valued at ${settings.hourlyRate}/hour to fairly recognize time spent caregiving.
         </p>
       </div>
 

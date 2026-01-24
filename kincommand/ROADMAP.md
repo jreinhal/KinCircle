@@ -1,6 +1,6 @@
-# KinCommand Development Roadmap
+# KinCircle Development Roadmap
 
-This document outlines the strategy for moving KinCommand from a local prototype to a scalable, production-ready application.
+This document outlines the strategy for moving KinCircle from a local prototype to a scalable, production-ready application.
 
 ## Phase 1: Initial Test Development (✅ COMPLETED)
 **Goal:** Prototype validation, investor/family demos, local testing.

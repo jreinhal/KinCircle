@@ -274,7 +274,7 @@ export default function App() {
         {/* Mobile Header */}
         <header className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-900">KinCommand</span>
+            <span className="font-bold text-slate-900">KinCircle</span>
           </div>
           <button onClick={() => setIsMobileOpen(true)} className="text-slate-600">
             <Menu size={24} />

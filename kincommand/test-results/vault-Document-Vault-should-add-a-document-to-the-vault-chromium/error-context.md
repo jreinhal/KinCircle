@@ -1,0 +1,62 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e8]: K
+      - generic [ref=e9]: KinCommand
+    - navigation [ref=e10]:
+      - button "Sibling Ledger" [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+        - generic [ref=e17]: Sibling Ledger
+      - button "Care Schedule" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e22]: Care Schedule
+      - button "Add Entry" [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+        - generic [ref=e26]: Add Entry
+      - button "Ask Kin" [ref=e27] [cursor=pointer]:
+        - img [ref=e28]
+        - generic [ref=e30]: Ask Kin
+      - button "All Transactions" [ref=e31] [cursor=pointer]:
+        - img [ref=e32]
+        - generic [ref=e35]: All Transactions
+      - button "Medicaid Audit" [ref=e36] [cursor=pointer]:
+        - img [ref=e37]
+        - generic [ref=e39]: Medicaid Audit
+      - button "Digital Vault" [active] [ref=e40] [cursor=pointer]:
+        - img [ref=e41]
+        - generic [ref=e44]: Digital Vault
+      - button "Agent Lab" [ref=e45] [cursor=pointer]:
+        - img [ref=e46]
+        - generic [ref=e48]: Agent Lab
+    - generic [ref=e49]:
+      - button "Settings" [ref=e50] [cursor=pointer]:
+        - img [ref=e51]
+        - generic [ref=e54]: Settings
+      - button "S Sarah Family Admin" [ref=e55] [cursor=pointer]:
+        - generic [ref=e56]:
+          - generic [ref=e57]: S
+          - generic [ref=e58]:
+            - paragraph [ref=e59]: Sarah
+            - paragraph [ref=e60]: Family Admin
+        - img [ref=e61]
+  - main [ref=e67]:
+    - generic [ref=e69]:
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - heading "Digital Vault" [level=1] [ref=e72]
+          - paragraph [ref=e73]: Secure storage for critical legal and medical documents.
+        - button "Emergency Access" [ref=e74] [cursor=pointer]:
+          - img [ref=e75]
+          - generic [ref=e80]: Emergency Access
+      - generic [ref=e81]:
+        - img [ref=e82]
+        - generic [ref=e84]:
+          - heading "Security Note" [level=3] [ref=e85]
+          - paragraph [ref=e86]: Documents stored here are encrypted. "Emergency Access" creates a read-only view for First Responders.
+      - generic [ref=e88] [cursor=pointer]:
+        - img [ref=e90]
+        - generic [ref=e93]: Upload Document
+```

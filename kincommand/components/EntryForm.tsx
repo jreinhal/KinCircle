@@ -234,8 +234,8 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, onAddEntry
             type="button"
             onClick={() => setType(EntryType.EXPENSE)}
             className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-md text-sm font-medium transition-all ${type === EntryType.EXPENSE
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
+              ? 'bg-white text-blue-600 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
               }`}
           >
             <DollarSign size={18} />
@@ -245,12 +245,12 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, onAddEntry
             type="button"
             onClick={() => setType(EntryType.TIME)}
             className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-md text-sm font-medium transition-all ${type === EntryType.TIME
-                ? 'bg-white text-green-600 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
+              ? 'bg-white text-green-600 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
               }`}
           >
             <Clock size={18} />
-            <span>Sweat Equity</span>
+            <span>Care Hours</span>
           </button>
         </div>
 

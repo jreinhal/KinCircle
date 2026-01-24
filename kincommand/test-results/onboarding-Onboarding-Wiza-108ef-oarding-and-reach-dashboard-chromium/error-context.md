@@ -1,0 +1,64 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e8]: K
+      - generic [ref=e9]: KinCommand
+    - navigation [ref=e10]:
+      - button "Sibling Ledger" [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+        - generic [ref=e17]: Sibling Ledger
+      - button "Care Schedule" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e22]: Care Schedule
+      - button "Add Entry" [ref=e23] [cursor=pointer]:
+        - img [ref=e24]
+        - generic [ref=e26]: Add Entry
+      - button "Ask Kin" [ref=e27] [cursor=pointer]:
+        - img [ref=e28]
+        - generic [ref=e30]: Ask Kin
+      - button "All Transactions" [ref=e31] [cursor=pointer]:
+        - img [ref=e32]
+        - generic [ref=e35]: All Transactions
+      - button "Medicaid Audit" [ref=e36] [cursor=pointer]:
+        - img [ref=e37]
+        - generic [ref=e39]: Medicaid Audit
+      - button "Digital Vault" [ref=e40] [cursor=pointer]:
+        - img [ref=e41]
+        - generic [ref=e44]: Digital Vault
+      - button "Agent Lab" [ref=e45] [cursor=pointer]:
+        - img [ref=e46]
+        - generic [ref=e48]: Agent Lab
+    - generic [ref=e49]:
+      - button "Settings" [ref=e50] [cursor=pointer]:
+        - img [ref=e51]
+        - generic [ref=e54]: Settings
+      - button "S Sarah Family Admin" [ref=e55] [cursor=pointer]:
+        - generic [ref=e56]:
+          - generic [ref=e57]: S
+          - generic [ref=e58]:
+            - paragraph [ref=e59]: Sarah
+            - paragraph [ref=e60]: Family Admin
+        - img [ref=e61]
+  - main [ref=e67]:
+    - generic [ref=e70]:
+      - img [ref=e72]
+      - heading "Welcome to KinCommand" [level=2] [ref=e74]
+      - paragraph [ref=e75]: The operating system for your family's caregiving. Start by logging your first expense or care hours to build the sibling ledger.
+      - generic [ref=e76]:
+        - generic [ref=e77]:
+          - img [ref=e79]
+          - generic [ref=e81]:
+            - heading "Track Expenses" [level=3] [ref=e82]
+            - paragraph [ref=e83]: Log receipts and purchases for son.
+        - generic [ref=e84]:
+          - img [ref=e86]
+          - generic [ref=e89]:
+            - heading "Log Sweat Equity" [level=3] [ref=e90]
+            - paragraph [ref=e91]: Record time spent to ensure fair recognition.
+      - generic [ref=e92]:
+        - generic [ref=e93]: Click "Add Entry" in the sidebar to begin
+        - img [ref=e94]
+```

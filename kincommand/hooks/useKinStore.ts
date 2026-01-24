@@ -3,7 +3,7 @@ import { LedgerEntry, Task, VaultDocument, FamilySettings, SecurityEvent, User }
 import { storageService } from '../services/storageService';
 
 /**
- * Custom hook for managing KinCommand's centralized state
+ * Custom hook for managing KinCircle's centralized state
  * Abstracts business logic away from UI components
  * 
  * @param defaultEntries - Initial ledger entries if storage is empty

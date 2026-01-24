@@ -115,7 +115,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, d
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Sweat Equity Hourly Rate ($)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Care Hours Hourly Rate ($)</label>
               <p className="text-xs text-slate-500 mb-2">The agreed value for one hour of caregiving work.</p>
               <input
                 type="number"

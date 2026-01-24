@@ -1,8 +1,8 @@
-# KinCommand
+# KinCircle
 
-**The Operating System for Family Caregiving.**
+**Your Family's Circle of Care.**
 
-KinCommand is a modern web application designed to bring transparency, fairness, and organization to families managing the care of an aging loved one. It tracks both financial contributions and "sweat equity" (time spent) to ensure sibling fairness, prepares data for Medicaid look-back periods, and provides instant access to critical documents in emergencies.
+KinCircle is a modern web application designed to bring transparency, fairness, and organization to families managing the care of an aging loved one. It tracks both financial contributions and "care hours" (time spent) to ensure sibling fairness, prepares data for Medicaid look-back periods, and provides instant access to critical documents in emergencies.
 
 ## 🚀 Key Features
 
