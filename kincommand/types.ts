@@ -1,0 +1,80 @@
+
+export enum EntryType {
+  EXPENSE = 'EXPENSE',
+  TIME = 'TIME'
+}
+
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  CONTRIBUTOR = 'CONTRIBUTOR',
+  VIEWER = 'VIEWER'
+}
+
+export interface User {
+  id: string;
+  name: string;
+  role: UserRole;
+  avatarUrl?: string;
+}
+
+export interface LedgerEntry {
+  id: string;
+  userId: string;
+  type: EntryType;
+  date: string; // ISO String
+  description: string;
+  amount: number; // For Expense: currency value. For Time: calculated value.
+  timeDurationMinutes?: number; // Only for TIME type
+  category: string;
+  receiptUrl?: string;
+  isMedicaidFlagged?: boolean; // Flagged by AI as potential "Gift" or non-compliant
+  aiAnalysis?: string;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  assignedUserId: string;
+  dueDate: string; // YYYY-MM-DD
+  isCompleted: boolean;
+  relatedEntryId?: string; // If logged to ledger
+}
+
+export interface VaultDocument {
+  id: string;
+  name: string;
+  date: string;
+  type: string;
+  size: string;
+}
+
+export interface FamilySettings {
+  hourlyRate: number; // Sweat equity rate, e.g., $25/hr
+  patientName: string;
+  privacyMode: boolean; // If true, anonymize names before sending to AI
+  autoLockEnabled: boolean; // Controls whether idle timer is active
+  hasCompletedOnboarding: boolean; // Tracks if the user has finished the setup wizard
+}
+
+export interface MedicaidReportItem {
+  entryId: string;
+  status: 'COMPLIANT' | 'WARNING' | 'REVIEW_NEEDED';
+  reason: string;
+  categorySuggestion: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+}
+
+export interface SecurityEvent {
+  id: string;
+  timestamp: string;
+  type: 'AUTH_SUCCESS' | 'AUTH_FAILURE' | 'SESSION_TIMEOUT' | 'EMERGENCY_ACCESS' | 'DATA_RESET' | 'SYSTEM_INIT' | 'SETTINGS_CHANGE';
+  details: string;
+  severity: 'INFO' | 'WARNING' | 'CRITICAL';
+  user?: string;
+}

@@ -1,0 +1,8 @@
+{
+  "name": "KinCommand",
+  "description": "The operating system for family caregiving. Tracks financial expenses and sweat equity to ensure fairness among siblings and simplify estate management.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
