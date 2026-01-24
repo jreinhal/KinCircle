@@ -71,16 +71,17 @@ export default function App() {
     deleteDocument,
     updateSettings,
     importData,
-    logSecurityEvent
+    logSecurityEvent,
+    isLoading
   } = useKinStore(MOCK_ENTRIES, MOCK_TASKS, MOCK_DOCS, DEFAULT_SETTINGS, currentUser);
 
   // Initial App Load Log
   useEffect(() => {
-    if (securityLogs.length === 0) {
+    if (securityLogs.length === 0 && !isLoading) {
       logSecurityEvent('Application Initialized', 'INFO', 'SYSTEM_INIT');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isLoading]);
 
   // --- IDLE TIMER LOGIC ---
   const handleActivity = useCallback(() => {
@@ -229,6 +230,18 @@ export default function App() {
         return <Dashboard entries={entries} users={MOCK_USERS} settings={settings} />;
     }
   };
+
+  // Show Loading Screen
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-slate-700">Loading KinCommand...</h2>
+        </div>
+      </div>
+    );
+  }
 
   // Show Onboarding Wizard if not completed
   if (!settings.hasCompletedOnboarding) {

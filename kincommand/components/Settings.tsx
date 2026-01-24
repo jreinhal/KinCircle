@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { FamilySettings, LedgerEntry, User, SecurityEvent, Task, VaultDocument } from '../types';
-import { Save, Shield, DollarSign, User as UserIcon, Trash2, AlertTriangle, Lock, FileText, Activity, Download, Upload, Share2, GitBranch } from 'lucide-react';
+import { Save, Shield, DollarSign, User as UserIcon, Trash2, AlertTriangle, Lock, FileText, Activity, Download, Upload, Share2, GitBranch, Cloud } from 'lucide-react';
+import { storageService } from '../services/storageService';
 
 interface SettingsProps {
   settings: FamilySettings;
@@ -270,6 +271,49 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, d
 
       {/* Sync & Backup Section */}
       <div className="mt-8 pt-8 border-t border-slate-200">
+
+        {/* Cloud Sync Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <Cloud className="text-indigo-500" size={24} />
+            <h3 className="text-lg font-semibold text-slate-800">Cloud Sync (Beta)</h3>
+          </div>
+
+          <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+            <p className="text-sm text-indigo-900 mb-3">
+              Migrate your local data to the secure cloud. This enables sharing with family members.
+            </p>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!window.confirm("Upload local data to cloud? This will overwrite cloud data with local copies.")) return;
+                try {
+                  // Manual migration: Read Local -> Write Cloud
+                  const localEntries = localStorage.getItem('kin_entries');
+                  const localTasks = localStorage.getItem('kin_tasks');
+                  const localDocs = localStorage.getItem('kin_documents');
+                  const localSettings = localStorage.getItem('kin_settings');
+
+                  if (localEntries) await storageService.save('kin_entries', JSON.parse(localEntries));
+                  if (localTasks) await storageService.save('kin_tasks', JSON.parse(localTasks));
+                  if (localDocs) await storageService.save('kin_documents', JSON.parse(localDocs));
+                  if (localSettings) await storageService.save('kin_settings', JSON.parse(localSettings));
+
+                  alert("Migration Success! Your data is now in the cloud.");
+                  window.location.reload(); // Refresh to load from cloud
+                } catch (e) {
+                  console.error(e);
+                  alert("Migration Failed. Check console.");
+                }
+              }}
+              className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+            >
+              <Cloud className="w-4 h-4" />
+              <span>Sync Local Data to Cloud</span>
+            </button>
+          </div>
+        </div>
+
         <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Manual Data Sync</h3>
 
         <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
@@ -325,7 +369,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, d
               <span className="text-slate-500 whitespace-nowrap">{new Date(log.timestamp).toLocaleTimeString()}</span>
               <div className="flex-1">
                 <span className={`font-bold mr-2 ${log.severity === 'CRITICAL' ? 'text-red-500' :
-                    log.severity === 'WARNING' ? 'text-yellow-500' : 'text-blue-400'
+                  log.severity === 'WARNING' ? 'text-yellow-500' : 'text-blue-400'
                   }`}>
                   [{log.type}]
                 </span>

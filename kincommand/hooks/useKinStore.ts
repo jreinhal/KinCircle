@@ -20,47 +20,75 @@ export const useKinStore = (
     defaultSettings: FamilySettings,
     currentUser: User
 ) => {
-    // Initialize state from storage
-    const [entries, setEntries] = useState<LedgerEntry[]>(() =>
-        storageService.load('kin_entries', defaultEntries)
-    );
+    // Loading State
+    const [isLoading, setIsLoading] = useState(true);
 
-    const [tasks, setTasks] = useState<Task[]>(() =>
-        storageService.load('kin_tasks', defaultTasks)
-    );
+    // Initialize state (empty/default initially, populated via async effect)
+    const [entries, setEntries] = useState<LedgerEntry[]>(defaultEntries);
+    const [tasks, setTasks] = useState<Task[]>(defaultTasks);
+    const [documents, setDocuments] = useState<VaultDocument[]>(defaultDocuments);
+    const [settings, setSettings] = useState<FamilySettings>(defaultSettings);
+    const [securityLogs, setSecurityLogs] = useState<SecurityEvent[]>([]);
 
-    const [documents, setDocuments] = useState<VaultDocument[]>(() =>
-        storageService.load('kin_documents', defaultDocuments)
-    );
-
-    const [settings, setSettings] = useState<FamilySettings>(() =>
-        storageService.load('kin_settings', defaultSettings)
-    );
-
-    const [securityLogs, setSecurityLogs] = useState<SecurityEvent[]>(() =>
-        storageService.load('kin_security_logs', [])
-    );
-
-    // Persist changes to storage
+    // Async Data Loading
     useEffect(() => {
-        storageService.save('kin_entries', entries);
-    }, [entries]);
+        const loadAllData = async () => {
+            try {
+                // Determine if we should load defaultTasks or use empty if loading fails
+                // In a real app, defaults might only be used if storage is truly empty
+                const [
+                    loadedEntries,
+                    loadedTasks,
+                    loadedDocs,
+                    loadedSettings,
+                    loadedLogs
+                ] = await Promise.all([
+                    storageService.load('kin_entries', defaultEntries),
+                    storageService.load('kin_tasks', defaultTasks),
+                    storageService.load('kin_documents', defaultDocuments),
+                    storageService.load('kin_settings', defaultSettings),
+                    storageService.load('kin_security_logs', [])
+                ]);
+
+                // Batch updates to reduce renders (React 18 does this automatically)
+                setEntries(loadedEntries);
+                setTasks(loadedTasks);
+                setDocuments(loadedDocs);
+                setSettings(loadedSettings);
+                setSecurityLogs(loadedLogs);
+            } catch (error) {
+                console.error("Failed to load application data:", error);
+                // Fallback to defaults is redundant here as they are initial state, 
+                // but good practice to handle critical failures.
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadAllData();
+    }, []); // Run once on mount
+
+    // Persist changes to storage (Fire and Forget)
+    // In Phase 2, we might want to debounce these or handle 'saving' states
+    useEffect(() => {
+        if (!isLoading) storageService.save('kin_entries', entries);
+    }, [entries, isLoading]);
 
     useEffect(() => {
-        storageService.save('kin_tasks', tasks);
-    }, [tasks]);
+        if (!isLoading) storageService.save('kin_tasks', tasks);
+    }, [tasks, isLoading]);
 
     useEffect(() => {
-        storageService.save('kin_documents', documents);
-    }, [documents]);
+        if (!isLoading) storageService.save('kin_documents', documents);
+    }, [documents, isLoading]);
 
     useEffect(() => {
-        storageService.save('kin_settings', settings);
-    }, [settings]);
+        if (!isLoading) storageService.save('kin_settings', settings);
+    }, [settings, isLoading]);
 
     useEffect(() => {
-        storageService.save('kin_security_logs', securityLogs);
-    }, [securityLogs]);
+        if (!isLoading) storageService.save('kin_security_logs', securityLogs);
+    }, [securityLogs, isLoading]);
 
     // Logging helper
     const logSecurityEvent = useCallback((
@@ -214,6 +242,7 @@ export const useKinStore = (
         documents,
         settings,
         securityLogs,
+        isLoading, // Exposed for UI
 
         // Operations
         addEntry,
