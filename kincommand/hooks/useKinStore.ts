@@ -5,6 +5,13 @@ import { storageService } from '../services/storageService';
 /**
  * Custom hook for managing KinCommand's centralized state
  * Abstracts business logic away from UI components
+ * 
+ * @param defaultEntries - Initial ledger entries if storage is empty
+ * @param defaultTasks - Initial tasks if storage is empty
+ * @param defaultDocuments - Initial vault documents if storage is empty
+ * @param defaultSettings - Initial family settings if storage is empty
+ * @param currentUser - Current authenticated user for security logging
+ * @returns Object containing all state and mutation functions
  */
 export const useKinStore = (
     defaultEntries: LedgerEntry[],
@@ -74,6 +81,11 @@ export const useKinStore = (
     }, [currentUser.name]);
 
     // Entry operations
+
+    /**
+     * Adds a new ledger entry (expense or time tracking)
+     * @param entry - The ledger entry to add
+     */
     const addEntry = (entry: LedgerEntry) => {
         setEntries(prev => [entry, ...prev]);
     };
@@ -89,6 +101,11 @@ export const useKinStore = (
     };
 
     // Task operations
+
+    /**
+     * Adds a new task to the schedule
+     * @param task - The task to add
+     */
     const addTask = (task: Task) => {
         setTasks(prev => [...prev, task]);
     };
@@ -104,6 +121,11 @@ export const useKinStore = (
     };
 
     // Document operations
+
+    /**
+     * Adds a new document to the vault
+     * @param doc - The vault document to add
+     */
     const addDocument = (doc: VaultDocument) => {
         setDocuments(prev => [doc, ...prev]);
     };
@@ -127,7 +149,11 @@ export const useKinStore = (
         setSettings(newSettings);
     };
 
-    // Import data (merge logic)
+    /**
+     * Imports data from backup file with smart merge logic
+     * Merges by ID - updates existing items, adds new ones
+     * @param data - Backup data object containing entries, tasks, documents, and settings
+     */
     const importData = (data: any) => {
         try {
             if (!data.entries || !data.settings) throw new Error("Invalid backup format");

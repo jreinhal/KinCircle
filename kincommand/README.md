@@ -25,8 +25,11 @@ KinCommand is a modern web application designed to bring transparency, fairness,
 ## ⚙️ Setup & Configuration
 
 1.  **Environment Variables**:
-    The application requires a Google Gemini API Key.
-    Ensure `process.env.API_KEY` is available in your environment.
+    Create a `.env.local` file in the `kincommand` directory:
+    ```bash
+    VITE_GEMINI_API_KEY=your_api_key_here
+    ```
+    Get a free API key from [Google AI Studio](https://ai.google.dev/)
 
 2.  **Installation**:
     ```bash
@@ -37,6 +40,15 @@ KinCommand is a modern web application designed to bring transparency, fairness,
     ```bash
     npm run dev
     ```
+
+## 🔐 Security Features
+
+*   **Custom PIN Lock**: Set your own 4-digit PIN in Settings (default: `1234`). PIN is hashed before storage.
+*   **Auto-Lock**: Configurable 60-second idle timeout. Can be disabled in Settings for development.
+*   **Security Audit Logs**: Immutable trail of auth attempts, settings changes, and data imports.
+*   **Privacy Mode**: Regex-based PII scrubbing removes patient names, emails, phone numbers, and SSNs before sending data to AI.
+*   **Input Validation**: Form validation prevents invalid amounts, empty descriptions, and data corruption.
+*   **API Key Protection**: `.env.local` is gitignored to prevent accidental key exposure.
 
 ## 📂 Project Structure
 

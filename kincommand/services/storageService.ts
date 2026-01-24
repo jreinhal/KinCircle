@@ -6,9 +6,30 @@
  * but can be easily swapped to Supabase in Phase 2.
  */
 
+/**
+ * Interface for storage operations
+ * Generic type T allows type-safe storage of any data structure
+ */
 export interface IStorageService {
+  /**
+   * Saves data to storage
+   * @param key - Storage key identifier
+   * @param data - Data to store (will be JSON serialized)
+   */
   save<T>(key: string, data: T): void;
+
+  /**
+   * Loads data from storage
+   * @param key - Storage key identifier
+   * @param defaultValue - Value to return if key doesn't exist
+   * @returns Stored data or default value
+   */
   load<T>(key: string, defaultValue: T): T;
+
+  /**
+   * Removes data from storage
+   * @param key - Storage key identifier
+   */
   remove(key: string): void;
 }
 

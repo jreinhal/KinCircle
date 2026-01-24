@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { Menu } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -9,7 +9,8 @@ import Vault from './components/Vault';
 import Settings from './components/Settings';
 import ChatAssistant from './components/ChatAssistant';
 import Schedule from './components/Schedule';
-import AgentLab from './components/AgentLab';
+// Lazy load AgentLab for better performance (only loads when user accesses the feature)
+const AgentLab = lazy(() => import('./components/AgentLab'));
 import LockScreen from './components/LockScreen';
 import OnboardingWizard from './components/OnboardingWizard';
 import { User, LedgerEntry, EntryType, FamilySettings, UserRole, Task, VaultDocument } from './types';
@@ -22,11 +23,12 @@ const MOCK_USERS: User[] = [
 ];
 
 // NOTE: hasCompletedOnboarding default is FALSE to trigger wizard for new instances
+// NOTE: autoLockEnabled default is FALSE for development ease (can be enabled in Settings)
 const DEFAULT_SETTINGS: FamilySettings = {
   hourlyRate: 25,
   patientName: '',
   privacyMode: false,
-  autoLockEnabled: true,
+  autoLockEnabled: false,
   hasCompletedOnboarding: false
 };
 
@@ -201,12 +203,14 @@ export default function App() {
         );
       case 'agent-lab':
         return (
-          <AgentLab
-            entries={entries}
-            users={MOCK_USERS}
-            settings={settings}
-            onAddEntries={addEntries}
-          />
+          <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="text-slate-500">Loading Agent Lab...</div></div>}>
+            <AgentLab
+              entries={entries}
+              users={MOCK_USERS}
+              settings={settings}
+              onAddEntries={addEntries}
+            />
+          </Suspense>
         );
       case 'settings':
         return (
@@ -240,6 +244,7 @@ export default function App() {
           onUnlock={(method) => handleUnlock(method)}
           onFailure={handleAuthFailure}
           user={currentUser.name}
+          customPinHash={settings.customPinHash}
         />
       )}
 
