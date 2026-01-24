@@ -1,14 +1,14 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { LedgerEntry, MedicaidReportItem, FamilySettings, User } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY as string });
 
 // Helper to scrub PII if privacy mode is on
 const anonymizeText = (text: string, settings: FamilySettings): string => {
   if (!settings.privacyMode) return text;
-  
+
   let cleanText = text;
-  
+
   // 1. Scrub Patient Name (Case insensitive)
   if (settings.patientName) {
     const regex = new RegExp(settings.patientName, 'gi');
@@ -217,17 +217,17 @@ export const parseVoiceEntry = async (base64Audio: string): Promise<{ type: 'EXP
   } catch (error) {
     console.error("Voice parsing failed:", error);
     // Return a safe fallback so the app doesn't crash
-    return { 
-        type: 'EXPENSE', 
-        amount: 0, 
-        date: new Date().toISOString().split('T')[0], 
-        description: '', 
-        category: 'Uncategorized' 
+    return {
+      type: 'EXPENSE',
+      amount: 0,
+      date: new Date().toISOString().split('T')[0],
+      description: '',
+      category: 'Uncategorized'
     };
   }
 };
 
-export const queryLedger = async (query: string, entries: LedgerEntry[], users: User[], settings: FamilySettings): Promise<{ text: string, sources: Array<{title: string, uri: string}> }> => {
+export const queryLedger = async (query: string, entries: LedgerEntry[], users: User[], settings: FamilySettings): Promise<{ text: string, sources: Array<{ title: string, uri: string }> }> => {
   try {
     // 1. Prepare context by mapping User IDs to Names for the AI
     const enrichedEntries = entries.map(e => ({
@@ -265,23 +265,23 @@ export const queryLedger = async (query: string, entries: LedgerEntry[], users: 
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
-        tools: [{googleSearch: {}}],
+        tools: [{ googleSearch: {} }],
       },
     });
 
     // Extract grounding metadata if available
-    const sources: Array<{title: string, uri: string}> = [];
+    const sources: Array<{ title: string, uri: string }> = [];
     if (response.candidates?.[0]?.groundingMetadata?.groundingChunks) {
-        response.candidates[0].groundingMetadata.groundingChunks.forEach((chunk: any) => {
-            if (chunk.web) {
-                sources.push({ title: chunk.web.title, uri: chunk.web.uri });
-            }
-        });
+      response.candidates[0].groundingMetadata.groundingChunks.forEach((chunk: any) => {
+        if (chunk.web) {
+          sources.push({ title: chunk.web.title, uri: chunk.web.uri });
+        }
+      });
     }
 
     return {
-        text: response.text || "I'm sorry, I couldn't process that query.",
-        sources: sources
+      text: response.text || "I'm sorry, I couldn't process that query.",
+      sources: sources
     };
 
   } catch (error) {

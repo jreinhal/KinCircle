@@ -1,7 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { LedgerEntry, FamilySettings, User, EntryType } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY as string });
 
 // --- AGENT 0: DATA INTEGRITY (UNIT TESTER) ---
 // Deterministic checks for data validity
@@ -82,7 +82,7 @@ export const runScenarioAgent = async (scenario: string, currentUserId: string):
         id: crypto.randomUUID(),
         userId: currentUserId,
         date: new Date().toISOString().split('T')[0],
-        amount: item.type === 'TIME' ? 0 : item.amount 
+        amount: item.type === 'TIME' ? 0 : item.amount
       }));
     }
     return [];
