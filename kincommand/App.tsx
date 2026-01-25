@@ -303,7 +303,7 @@ export default function App() {
           <MedicationTracker
             medications={medications}
             medicationLogs={medicationLogs}
-            currentUser={currentUser}
+            settings={settings}
             onAddMedication={addMedication}
             onUpdateMedication={updateMedication}
             onDeleteMedication={deleteMedication}
