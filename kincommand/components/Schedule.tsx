@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Task, User, LedgerEntry, EntryType, FamilySettings } from '../types';
-import { Calendar, CheckCircle2, Circle, Clock, Plus, User as UserIcon, ArrowRight, DollarSign } from 'lucide-react';
+import { Calendar, CheckCircle2, Circle, Clock, Plus, User as UserIcon, ArrowRight, DollarSign, Pencil, X } from 'lucide-react';
 
 interface ScheduleProps {
     tasks: Task[];
@@ -31,6 +31,12 @@ const Schedule: React.FC<ScheduleProps> = ({
     const [logType, setLogType] = useState<EntryType>(EntryType.TIME);
     const [logAmount, setLogAmount] = useState(''); // Duration in hours OR Amount in $
 
+    // State for editing task
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const [editTitle, setEditTitle] = useState('');
+    const [editDate, setEditDate] = useState('');
+    const [editAssignee, setEditAssignee] = useState('');
+
     const handleAddTask = (e: React.FormEvent) => {
         e.preventDefault();
         if (!newTaskTitle.trim()) return;
@@ -50,6 +56,34 @@ const Schedule: React.FC<ScheduleProps> = ({
     const toggleComplete = (task: Task) => {
         const updated = { ...task, isCompleted: !task.isCompleted };
         onUpdateTask(updated);
+    };
+
+    const handleEditClick = (task: Task) => {
+        setEditingTask(task);
+        setEditTitle(task.title);
+        setEditDate(task.dueDate);
+        setEditAssignee(task.assignedUserId);
+    };
+
+    const handleEditSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingTask || !editTitle.trim()) return;
+
+        const updated: Task = {
+            ...editingTask,
+            title: editTitle,
+            dueDate: editDate,
+            assignedUserId: editAssignee
+        };
+        onUpdateTask(updated);
+        setEditingTask(null);
+    };
+
+    const cancelEdit = () => {
+        setEditingTask(null);
+        setEditTitle('');
+        setEditDate('');
+        setEditAssignee('');
     };
 
     const handleLogSubmit = (e: React.FormEvent) => {
@@ -196,14 +230,24 @@ const Schedule: React.FC<ScheduleProps> = ({
                             </div>
 
                             {/* Action Area */}
-                            {task.isCompleted && !task.relatedEntryId && (
-                                <button
-                                    onClick={() => setLoggingTask(task)}
-                                    className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors flex items-center"
-                                >
-                                    Log to Ledger <ArrowRight size={12} className="ml-1" />
-                                </button>
-                            )}
+                            <div className="flex items-center gap-2">
+                                {!task.isCompleted && (
+                                    <button
+                                        onClick={() => handleEditClick(task)}
+                                        className="text-xs font-medium text-slate-500 hover:text-slate-700 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition-colors flex items-center"
+                                    >
+                                        <Pencil size={14} className="mr-1" /> Edit
+                                    </button>
+                                )}
+                                {task.isCompleted && !task.relatedEntryId && (
+                                    <button
+                                        onClick={() => setLoggingTask(task)}
+                                        className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors flex items-center"
+                                    >
+                                        Log to Ledger <ArrowRight size={12} className="ml-1" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     );
                 })}
@@ -270,6 +314,73 @@ const Schedule: React.FC<ScheduleProps> = ({
                                     className="flex-1 py-2 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800"
                                 >
                                     Save Entry
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Task Modal */}
+            {editingTask && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-xl max-w-sm w-full overflow-hidden">
+                        <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                            <h3 className="font-bold text-slate-800">Edit Task</h3>
+                            <button onClick={cancelEdit} className="text-slate-400 hover:text-slate-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleEditSubmit} className="p-4 space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 mb-1">Task Title</label>
+                                <input
+                                    type="text"
+                                    value={editTitle}
+                                    onChange={(e) => setEditTitle(e.target.value)}
+                                    className="bg-white text-slate-900 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 mb-1">Due Date</label>
+                                <input
+                                    type="date"
+                                    value={editDate}
+                                    onChange={(e) => setEditDate(e.target.value)}
+                                    className="bg-white text-slate-900 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 mb-1">Assignee</label>
+                                <select
+                                    value={editAssignee}
+                                    onChange={(e) => setEditAssignee(e.target.value)}
+                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-slate-900"
+                                >
+                                    {users.map(u => (
+                                        <option key={u.id} value={u.id}>{u.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={cancelEdit}
+                                    className="flex-1 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 py-2 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800"
+                                >
+                                    Save Changes
                                 </button>
                             </div>
                         </form>
