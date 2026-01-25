@@ -37,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'add-entry', label: 'Add Entry', icon: PlusCircle },
     { id: 'chat', label: 'Ask Kin', icon: MessageSquare },
     { id: 'entries', label: 'All Transactions', icon: FileText },
-    { id: 'medicaid', label: 'Medicaid Audit', icon: ShieldAlert },
+    // { id: 'medicaid', label: 'Medicaid Audit', icon: ShieldAlert }, // Moved to Reports (Future)
     { id: 'vault', label: 'Digital Vault', icon: Briefcase },
     // Agent Lab hidden from main menu (accessible via debug: Shift+Click logo 3x)
   ];

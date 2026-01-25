@@ -5,6 +5,8 @@
 
 # testing
 /coverage
+/kincommand/playwright-report
+/kincommand/test-results
 
 # production
 /build

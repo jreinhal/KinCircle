@@ -1,78 +1,65 @@
 import { test, expect } from '@playwright/test';
 
+const seedLocalStorage = async (page: any) => {
+  await page.addInitScript(() => {
+    const settings = {
+      hourlyRate: 25,
+      patientName: '',
+      privacyMode: false,
+      autoLockEnabled: false,
+      hasCompletedOnboarding: true
+    };
+
+    localStorage.setItem('kin_entries', JSON.stringify([]));
+    localStorage.setItem('kin_tasks', JSON.stringify([]));
+    localStorage.setItem('kin_documents', JSON.stringify([]));
+    localStorage.setItem('kin_security_logs', JSON.stringify([]));
+    localStorage.setItem('kin_settings', JSON.stringify(settings));
+  });
+};
+
 test.describe('Ledger Entry Creation', () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+  test.beforeEach(async ({ page }) => {
+    await seedLocalStorage(page);
+    await page.goto('/');
+  });
 
-        // Complete onboarding if present
-        const onboardingVisible = await page.locator('text=Welcome to KinCommand').isVisible().catch(() => false);
-        if (onboardingVisible) {
-            await page.fill('input[placeholder*="patient" i]', 'Test Patient');
-            await page.fill('input[type="number"]', '20');
-            await page.click('button:has-text("Get Started")');
-        }
+  test('should create an expense entry', async ({ page }) => {
+    await page.getByRole('button', { name: /track expenses/i }).click();
 
-        // Navigate to ledger if not already there
-        const ledgerLink = page.locator('text=Ledger').first();
-        if (await ledgerLink.isVisible()) {
-            await ledgerLink.click();
-        }
-    });
+    await page.getByPlaceholder('0.00').fill('45.67');
+    await page.getByPlaceholder('e.g. Prescriptions at CVS').fill('Groceries for Mom');
+    await page.getByPlaceholder('e.g. Medical, Groceries').fill('Groceries');
 
-    test('should create an expense entry', async ({ page }) => {
-        // Click new entry button
-        await page.click('button:has-text("New Entry")');
+    await page.getByRole('button', { name: /save entry/i }).click();
 
-        // Select expense type
-        await page.click('button:has-text("Expense")');
+    await page.getByRole('button', { name: /all transactions/i }).click();
+    await expect(page.getByText('Groceries for Mom')).toBeVisible();
+    await expect(page.getByText('$45.67')).toBeVisible();
 
-        // Fill form
-        await page.fill('input[placeholder*="amount" i]', '45.67');
-        await page.fill('input[placeholder*="description" i], textarea[placeholder*="description" i]', 'Groceries for Mom');
+    await page.getByRole('button', { name: /sibling ledger/i }).click();
+    await expect(page.getByText('Family Journal')).toBeVisible();
+  });
 
-        // Select category if dropdown exists
-        const categoryInput = page.locator('input[placeholder*="category" i]').first();
-        if (await categoryInput.isVisible()) {
-            await categoryInput.fill('Groceries');
-        }
+  test('should create a time entry', async ({ page }) => {
+    await page.getByRole('button', { name: /log care hours/i }).click();
 
-        // Submit
-        await page.click('button:has-text("Add Entry")');
+    await page.getByPlaceholder('1.5').fill('2.5');
+    await page.getByPlaceholder('e.g. Driving Mom to Cardiologist').fill('Doctor appointment with Dad');
+    await page.getByPlaceholder('e.g. Medical, Groceries').fill('Caregiving');
 
-        // Verify entry appears in ledger
-        await expect(page.locator('text=Groceries for Mom')).toBeVisible({ timeout: 5000 });
-        await expect(page.locator('text=$45.67')).toBeVisible();
-    });
+    await page.getByRole('button', { name: /save entry/i }).click();
 
-    test('should create a time entry', async ({ page }) => {
-        // Click new entry button
-        await page.click('button:has-text("New Entry")');
+    await page.getByRole('button', { name: /all transactions/i }).click();
+    await expect(page.getByText('Doctor appointment with Dad')).toBeVisible();
+  });
 
-        // Select time type
-        await page.click('button:has-text("Time")');
+  test('should validate required fields', async ({ page }) => {
+    await page.getByRole('button', { name: /track expenses/i }).click();
 
-        // Fill form
-        await page.fill('input[placeholder*="hours" i], input[type="number"]', '2.5');
-        await page.fill('input[placeholder*="description" i], textarea[placeholder*="description" i]', 'Doctor appointment with Dad');
+    await page.getByPlaceholder('e.g. Prescriptions at CVS').fill('Test');
+    await page.getByRole('button', { name: /save entry/i }).click();
 
-        // Submit
-        await page.click('button:has-text("Add Entry")');
-
-        // Verify entry appears
-        await expect(page.locator('text=Doctor appointment')).toBeVisible({ timeout: 5000 });
-    });
-
-    test('should validate required fields', async ({ page }) => {
-        await page.click('button:has-text("New Entry")');
-        await page.click('button:has-text("Expense")');
-
-        // Try to submit without amount
-        await page.fill('input[placeholder*="description" i], textarea[placeholder*="description" i]', 'Test');
-        await page.click('button:has-text("Add Entry")');
-
-        // Should show validation error or remain on form
-        // This is a basic check - actual validation might vary
-        const formStillVisible = await page.locator('input[placeholder*="amount" i]').isVisible();
-        expect(formStillVisible).toBe(true);
-    });
+    await expect(page.getByRole('heading', { name: /add contribution/i })).toBeVisible();
+  });
 });

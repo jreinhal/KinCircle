@@ -1,62 +1,57 @@
 import { test, expect } from '@playwright/test';
 
+const seedLocalStorage = async (page: any) => {
+  await page.addInitScript(() => {
+    const settings = {
+      hourlyRate: 25,
+      patientName: '',
+      privacyMode: false,
+      autoLockEnabled: true,
+      hasCompletedOnboarding: true
+    };
+
+    localStorage.setItem('kin_entries', JSON.stringify([]));
+    localStorage.setItem('kin_tasks', JSON.stringify([]));
+    localStorage.setItem('kin_documents', JSON.stringify([]));
+    localStorage.setItem('kin_security_logs', JSON.stringify([]));
+    localStorage.setItem('kin_settings', JSON.stringify(settings));
+
+    const originalSetTimeout = window.setTimeout;
+    let lockScheduled = false;
+    window.setTimeout = (handler: TimerHandler, timeout?: number, ...args: any[]) => {
+      if (timeout === 60000 && !lockScheduled) {
+        lockScheduled = true;
+        return originalSetTimeout(handler, 10, ...args);
+      }
+      return originalSetTimeout(handler, timeout, ...args);
+    };
+  });
+};
+
 test.describe('PIN Lock Screen', () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+  test.beforeEach(async ({ page }) => {
+    await seedLocalStorage(page);
+    await page.goto('/');
+  });
 
-        // Complete onboarding
-        const onboardingVisible = await page.locator('text=Welcome to KinCommand').isVisible().catch(() => false);
-        if (onboardingVisible) {
-            await page.fill('input[placeholder*="patient" i]', 'Test Patient');
-            await page.fill('input[type="number"]', '20');
-            await page.click('button:has-text("Get Started")');
-        }
-    });
+  test('should unlock with correct PIN', async ({ page }) => {
+    await expect(page.getByText('KinCircle Protected')).toBeVisible();
 
-    test('should unlock with correct PIN', async ({ page }) => {
-        // Navigate to settings and enable auto-lock
-        await page.click('text=Settings');
+    for (const digit of ['1', '2', '3', '4']) {
+      await page.getByRole('button', { name: digit }).click();
+    }
 
-        // Enable auto-lock if checkbox exists
-        const autoLockCheckbox = page.locator('input[type="checkbox"]').filter({ hasText: /auto.*lock/i });
-        if (await autoLockCheckbox.isVisible()) {
-            await autoLockCheckbox.check();
-        }
+    await expect(page.getByText('KinCircle Protected')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: /sibling ledger/i })).toBeVisible();
+  });
 
-        // Wait for potential auto-lock (in test, we'll trigger manually if needed)
-        // In real app, waiting 60 seconds is impractical for tests
+  test('should reject incorrect PIN', async ({ page }) => {
+    await expect(page.getByText('KinCircle Protected')).toBeVisible();
 
-        // Navigate away and back to simulate activity
-        await page.click('text=Dashboard');
+    for (const digit of ['9', '9', '9', '9']) {
+      await page.getByRole('button', { name: digit }).click();
+    }
 
-        // Try to trigger lock screen by looking for lock button if available
-        const lockButton = page.locator('button:has-text("Lock")');
-        if (await lockButton.isVisible()) {
-            await lockButton.click();
-
-            // Should see PIN entry screen
-            await expect(page.locator('text=Enter PIN')).toBeVisible();
-
-            // Enter default PIN (1234)
-            await page.fill('input[type="password"], input[inputmode="numeric"]', '1234');
-            await page.click('button:has-text("Unlock")');
-
-            // Should be back to normal view
-            await expect(page.locator('text=Dashboard')).toBeVisible();
-        }
-    });
-
-    test('should reject incorrect PIN', async ({ page }) => {
-        const lockButton = page.locator('button:has-text("Lock")');
-        if (await lockButton.isVisible()) {
-            await lockButton.click();
-
-            // Enter wrong PIN
-            await page.fill('input[type="password"], input[inputmode="numeric"]', '9999');
-            await page.click('button:has-text("Unlock")');
-
-            // Should show error or remain locked
-            await expect(page.locator('text=Enter PIN')).toBeVisible();
-        }
-    });
+    await expect(page.getByText(/invalid pin/i)).toBeVisible();
+  });
 });

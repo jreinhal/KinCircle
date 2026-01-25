@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LedgerEntry, Task, VaultDocument, FamilySettings, SecurityEvent, User } from '../types';
-import { storageService } from '../services/storageService';
+import { storageService, getStorageProvider } from '../services/storageService';
+import { initSupabaseAuth } from '../services/supabaseAuth';
 
 /**
  * Custom hook for managing KinCircle's centralized state
@@ -34,6 +35,10 @@ export const useKinStore = (
     useEffect(() => {
         const loadAllData = async () => {
             try {
+                if (getStorageProvider() === 'supabase') {
+                    await initSupabaseAuth();
+                }
+
                 // Determine if we should load defaultTasks or use empty if loading fails
                 // In a real app, defaults might only be used if storage is truly empty
                 const [

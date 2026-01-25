@@ -10,6 +10,9 @@
     "test": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:supabase": "set E2E_SUPABASE=true&& playwright test e2e/supabase-sync.spec.ts --reporter=line",
+    "test:e2e:real": "set E2E_GEMINI_REAL=true&& playwright test e2e/chat-real.spec.ts --reporter=line",
+    "test:ops": "npm run test && npm run test:e2e",
     "gen-types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase.ts"
   },
   "dependencies": {

@@ -1,5 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
+process.env.NODE_NO_WARNINGS = '1';
+
+const useSupabase = process.env.E2E_SUPABASE === 'true';
+const useRealGemini = process.env.E2E_GEMINI_REAL === 'true';
+
 export default defineConfig({
     testDir: './e2e',
     fullyParallel: true,
@@ -23,5 +28,11 @@ export default defineConfig({
         command: 'npm run dev',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
+        env: {
+            VITE_GEMINI_MOCK: useRealGemini ? 'false' : 'true',
+            VITE_STORAGE_PROVIDER: useSupabase ? 'supabase' : 'local',
+            VITE_SUPABASE_AUTH_MODE: useSupabase ? 'anonymous' : 'none',
+            NODE_OPTIONS: '',
+        },
     },
 });

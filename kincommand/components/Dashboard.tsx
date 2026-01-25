@@ -1,43 +1,53 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { LedgerEntry, User, EntryType, FamilySettings } from '../types';
-import { DollarSign, Clock, Users, PlusCircle, ArrowRight } from 'lucide-react';
+import { DollarSign, Clock, Users, PlusCircle, ArrowRight, Heart, Hash, Sun } from 'lucide-react';
 
 interface DashboardProps {
   entries: LedgerEntry[];
   users: User[];
   settings: FamilySettings;
+  onStartEntry: (type: EntryType) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
+const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings, onStartEntry }) => {
 
   // Empty State Handling
   if (entries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[calc(100vh-12rem)] animate-fade-in text-center p-6">
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-lg w-full">
-          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <PlusCircle size={32} />
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-12rem)] animate-fade-in text-center p-6 bg-stone-50">
+        <div className="bg-white p-8 rounded-3xl shadow-lg shadow-stone-200 border border-stone-100 max-w-lg w-full">
+          <div className="w-20 h-20 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Heart size={40} fill="currentColor" className="text-teal-500/20" />
+            <span className="absolute text-teal-600"><PlusCircle size={32} /></span>
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Welcome to KinCircle</h2>
-          <p className="text-slate-500 mb-8">
-            The operating system for your family's caregiving. Start by logging your first expense or care hours to build the sibling ledger.
+          <h2 className="text-2xl font-bold text-stone-900 mb-2">Welcome to KinCircle ❤️</h2>
+          <p className="text-stone-500 mb-8 leading-relaxed">
+            Caring for a loved one is hard work. We're here to help you stay organized, recognize everyone's contributions, and keep your family connected.
           </p>
           <div className="space-y-4">
-            <div className="flex items-center p-4 bg-slate-50 rounded-lg text-left">
-              <div className="p-2 bg-white rounded-md shadow-sm mr-4 text-blue-500"><DollarSign size={20} /></div>
+            <button
+              type="button"
+              onClick={() => onStartEntry(EntryType.EXPENSE)}
+              className="w-full flex items-center p-4 bg-stone-50 rounded-2xl text-left hover:bg-stone-100 transition-colors cursor-pointer"
+            >
+              <div className="p-3 bg-white rounded-xl shadow-sm mr-4 text-teal-500"><DollarSign size={20} /></div>
               <div>
-                <h3 className="font-semibold text-slate-900">Track Expenses</h3>
-                <p className="text-xs text-slate-500">Log receipts and purchases for {settings.patientName}.</p>
+                <h3 className="font-semibold text-stone-900">Track Expenses</h3>
+                <p className="text-xs text-stone-500">Log receipts and purchases for {settings.patientName}.</p>
               </div>
-            </div>
-            <div className="flex items-center p-4 bg-slate-50 rounded-lg text-left">
-              <div className="p-2 bg-white rounded-md shadow-sm mr-4 text-green-500"><Clock size={20} /></div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onStartEntry(EntryType.TIME)}
+              className="w-full flex items-center p-4 bg-stone-50 rounded-2xl text-left hover:bg-stone-100 transition-colors cursor-pointer"
+            >
+              <div className="p-3 bg-white rounded-xl shadow-sm mr-4 text-orange-500"><Clock size={20} /></div>
               <div>
-                <h3 className="font-semibold text-slate-900">Log Care Hours</h3>
-                <p className="text-xs text-slate-500">Record time spent to ensure fair recognition.</p>
+                <h3 className="font-semibold text-stone-900">Log Care Hours</h3>
+                <p className="text-xs text-stone-500">Record time spent to ensure fair recognition.</p>
               </div>
-            </div>
+            </button>
           </div>
           <div className="mt-8 text-sm text-slate-400 flex items-center justify-center">
             <span>Click "Add Entry" in the sidebar to begin</span>
@@ -70,8 +80,8 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
   const totalFamilyContribution = userTotals.reduce((acc, curr) => acc + curr.Total, 0);
 
   const colors = {
-    Cash: '#3b82f6', // blue-500
-    CareHours: '#10b981', // green-500
+    Cash: '#0d9488', // Teal
+    CareHours: '#f97316', // Orange
   };
 
   return (
@@ -97,17 +107,17 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 transition-all hover:shadow-md">
           <div className="flex items-center space-x-4">
-            <div className="p-3 bg-green-100 text-green-600 rounded-lg">
+            <div className="p-3 bg-orange-100 text-orange-600 rounded-2xl">
               <Clock size={24} />
             </div>
             <div>
-              <p className="text-sm text-slate-500 font-medium">Care Hours Value</p>
-              <h3 className="text-2xl font-bold text-slate-900">
+              <p className="text-sm text-stone-500 font-medium">Care Hours Value</p>
+              <h3 className="text-2xl font-bold text-stone-900">
                 ${userTotals.reduce((acc, curr) => acc + curr.CareHours, 0).toLocaleString()}
               </h3>
-              <p className="text-xs text-slate-400">@{settings.hourlyRate}/hr rate</p>
+              <p className="text-xs text-orange-400 font-medium">@{settings.hourlyRate}/hr rate</p>
             </div>
           </div>
         </div>
@@ -169,24 +179,24 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings }) => {
       </div>
 
       {/* Settlement Section */}
-      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-6">
-        <h3 className="text-lg font-semibold text-indigo-900 mb-2">Fair Settlement Calculation</h3>
-        <p className="text-indigo-700 text-sm mb-4">
-          To equalize contributions based on the total value of ${totalFamilyContribution.toLocaleString()}:
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {userTotals.map((u, idx) => {
-            const fairShare = totalFamilyContribution / users.length;
-            const diff = u.Total - fairShare;
-            return (
-              <div key={idx} className="flex items-center justify-between bg-white/60 p-3 rounded-lg">
-                <span className="font-medium text-indigo-900">{u.name}</span>
-                <span className={`font-bold ${diff >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                  {diff >= 0 ? 'Over' : 'Under'} by ${Math.abs(diff).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                </span>
-              </div>
-            );
-          })}
+      {/* Journal Placeholder - New "Heart" of the app */}
+      <div className="bg-white rounded-3xl border border-stone-100 p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-pink-100 text-pink-600 rounded-xl">
+              <Heart size={20} fill="currentColor" />
+            </div>
+            <h3 className="font-bold text-stone-800">Family Journal</h3>
+          </div>
+          <button className="text-sm text-teal-600 font-medium hover:underline">Add Photo</button>
+        </div>
+
+        <div className="bg-stone-50 border-2 border-dashed border-stone-200 rounded-2xl p-8 text-center">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 text-stone-300 shadow-sm">
+            <Sun size={24} />
+          </div>
+          <p className="text-stone-500 font-medium">Share a moment today</p>
+          <p className="text-xs text-stone-400 mt-1">Photos and updates help everyone feel connected to {settings.patientName}.</p>
         </div>
       </div>
     </div>

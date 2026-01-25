@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { storageService } from './storageService';
+import { storageService, setStorageProviderForTests } from './storageService';
 import { supabase } from './supabase';
 
 // Mock Supabase client
@@ -13,13 +13,15 @@ vi.mock('./supabase', () => ({
             eq: vi.fn(),
             single: vi.fn()
         }))
-    }
+    },
+    isSupabaseConfigured: true
 }));
 
 describe('storageService (Supabase Implementation)', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, 'error').mockImplementation(() => { }); // Silence console.error
+        setStorageProviderForTests('supabase');
     });
 
     afterEach(() => {
@@ -38,7 +40,7 @@ describe('storageService (Supabase Implementation)', () => {
 
     it('should handle load errors gracefully by returning default value', async () => {
         const mockSelect = vi.fn().mockResolvedValue({ data: null, error: { message: 'Network Error' } });
-        (supabase.from as any).mockReturnValue({ select: vi.fn(() => mockSelect()) });
+        (supabase.from as any).mockReturnValue({ select: mockSelect });
 
         const result = await storageService.load('kin_entries', []);
 
@@ -49,10 +51,29 @@ describe('storageService (Supabase Implementation)', () => {
         const mockUpsert = vi.fn().mockResolvedValue({ error: null });
         (supabase.from as any).mockReturnValue({ upsert: mockUpsert });
 
-        const testData = [{ userId: 'u1', type: 'EXPENSE' }];
+        const testData = [{
+            id: 'e1',
+            userId: 'u1',
+            type: 'EXPENSE',
+            date: '2026-01-24',
+            description: 'Test',
+            amount: 12.5,
+            category: 'Misc',
+            timeDurationMinutes: 30,
+            isMedicaidFlagged: true,
+            aiAnalysis: 'note',
+            receiptUrl: 'http://example.com'
+        }];
         await storageService.save('kin_entries', testData);
 
-        // userId should become user_id
-        expect(mockUpsert).toHaveBeenCalledWith([{ user_id: 'u1', type: 'EXPENSE' }]);
+        expect(mockUpsert).toHaveBeenCalledWith([
+            expect.objectContaining({
+                user_id: 'u1',
+                time_duration_minutes: 30,
+                is_medicaid_flagged: true,
+                ai_analysis: 'note',
+                receipt_url: 'http://example.com'
+            })
+        ]);
     });
 });

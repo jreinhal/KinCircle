@@ -50,6 +50,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
+  const [entryTypeDraft, setEntryTypeDraft] = useState<EntryType | null>(null);
 
   // State for User Switching
   const [currentUser, setCurrentUser] = useState<User>(MOCK_USERS[0]);
@@ -143,6 +144,7 @@ export default function App() {
 
   const handleAddEntry = (entry: LedgerEntry) => {
     addEntry(entry);
+    setEntryTypeDraft(null);
     setActiveTab('dashboard');
   };
 
@@ -163,7 +165,17 @@ export default function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard entries={entries} users={MOCK_USERS} settings={settings} />;
+        return (
+          <Dashboard
+            entries={entries}
+            users={MOCK_USERS}
+            settings={settings}
+            onStartEntry={(type) => {
+              setEntryTypeDraft(type);
+              setActiveTab('add-entry');
+            }}
+          />
+        );
       case 'schedule':
         return (
           <Schedule
@@ -181,8 +193,12 @@ export default function App() {
           <EntryForm
             currentUser={currentUser}
             settings={settings}
+            initialType={entryTypeDraft ?? EntryType.EXPENSE}
             onAddEntry={handleAddEntry}
-            onCancel={() => setActiveTab('dashboard')}
+            onCancel={() => {
+              setEntryTypeDraft(null);
+              setActiveTab('dashboard');
+            }}
           />
         );
       case 'chat':

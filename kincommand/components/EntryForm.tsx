@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { EntryType, User, FamilySettings, LedgerEntry } from '../types';
 import { suggestCategory, parseReceiptImage, parseVoiceEntry } from '../services/geminiService';
 import { Camera, Clock, DollarSign, Calendar, Loader2, UploadCloud, X, Mic, StopCircle } from 'lucide-react';
@@ -6,12 +6,13 @@ import { Camera, Clock, DollarSign, Calendar, Loader2, UploadCloud, X, Mic, Stop
 interface EntryFormProps {
   currentUser: User;
   settings: FamilySettings;
+  initialType?: EntryType;
   onAddEntry: (entry: LedgerEntry) => void;
   onCancel: () => void;
 }
 
-const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, onAddEntry, onCancel }) => {
-  const [type, setType] = useState<EntryType>(EntryType.EXPENSE);
+const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialType, onAddEntry, onCancel }) => {
+  const [type, setType] = useState<EntryType>(initialType ?? EntryType.EXPENSE);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [duration, setDuration] = useState(''); // in hours
@@ -19,6 +20,12 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, onAddEntry
   const [category, setCategory] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialType) {
+      setType(initialType);
+    }
+  }, [initialType]);
 
   // Voice State
   const [isRecording, setIsRecording] = useState(false);

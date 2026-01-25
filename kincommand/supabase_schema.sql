@@ -3,6 +3,8 @@
 -- Run this in your Supabase SQL Editor to set up the backend.
 -- ============================================================================
 
+create extension if not exists "pgcrypto";
+
 -- 1. Ledger Entries (Expenses & Time)
 create table if not exists ledger_entries (
   id uuid primary key default gen_random_uuid(),
@@ -13,7 +15,10 @@ create table if not exists ledger_entries (
   type text check (type in ('EXPENSE', 'TIME')),
   date timestamp with time zone,
   time_duration_minutes integer,
+  receipt_url text,
   receipt_data jsonb,
+  is_medicaid_flagged boolean default false,
+  ai_analysis text,
   created_at timestamp with time zone default now()
 );
 
@@ -70,23 +75,182 @@ alter table family_settings enable row level security;
 alter table security_logs enable row level security;
 
 -- Policy: Allow full access to authenticated users
-create policy "Allow full access to authenticated users" on ledger_entries
-  for all using ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'ledger_entries'
+      and policyname = 'Allow full access to authenticated users'
+  ) then
+    create policy "Allow full access to authenticated users" on ledger_entries
+      for all
+      using ( auth.role() = 'anon' or auth.role() = 'authenticated' )
+      with check ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+  else
+    alter policy "Allow full access to authenticated users" on ledger_entries
+      using ( auth.role() = 'anon' or auth.role() = 'authenticated' )
+      with check ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+  end if;
+end
+$$;
 
-create policy "Allow full access to authenticated users" on tasks
-  for all using ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'tasks'
+      and policyname = 'Allow full access to authenticated users'
+  ) then
+    create policy "Allow full access to authenticated users" on tasks
+      for all
+      using ( auth.role() = 'anon' or auth.role() = 'authenticated' )
+      with check ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+  else
+    alter policy "Allow full access to authenticated users" on tasks
+      using ( auth.role() = 'anon' or auth.role() = 'authenticated' )
+      with check ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+  end if;
+end
+$$;
 
-create policy "Allow full access to authenticated users" on vault_documents
-  for all using ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'vault_documents'
+      and policyname = 'Allow full access to authenticated users'
+  ) then
+    create policy "Allow full access to authenticated users" on vault_documents
+      for all
+      using ( auth.role() = 'anon' or auth.role() = 'authenticated' )
+      with check ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+  else
+    alter policy "Allow full access to authenticated users" on vault_documents
+      using ( auth.role() = 'anon' or auth.role() = 'authenticated' )
+      with check ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+  end if;
+end
+$$;
 
-create policy "Allow full access to authenticated users" on family_settings
-  for all using ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'family_settings'
+      and policyname = 'Allow full access to authenticated users'
+  ) then
+    create policy "Allow full access to authenticated users" on family_settings
+      for all
+      using ( auth.role() = 'anon' or auth.role() = 'authenticated' )
+      with check ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+  else
+    alter policy "Allow full access to authenticated users" on family_settings
+      using ( auth.role() = 'anon' or auth.role() = 'authenticated' )
+      with check ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+  end if;
+end
+$$;
 
-create policy "Allow full access to authenticated users" on security_logs
-  for all using ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'security_logs'
+      and policyname = 'Allow full access to authenticated users'
+  ) then
+    create policy "Allow full access to authenticated users" on security_logs
+      for all
+      using ( auth.role() = 'anon' or auth.role() = 'authenticated' )
+      with check ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+  else
+    alter policy "Allow full access to authenticated users" on security_logs
+      using ( auth.role() = 'anon' or auth.role() = 'authenticated' )
+      with check ( auth.role() = 'anon' or auth.role() = 'authenticated' );
+  end if;
+end
+$$;
 
 -- ============================================================================
 -- Realtime
 -- Enable Realtime for all tables
 -- ============================================================================
-alter publication supabase_realtime add table ledger_entries, tasks, vault_documents, family_settings;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_rel pr
+    join pg_class c on c.oid = pr.prrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where pr.prpubid = (select oid from pg_publication where pubname = 'supabase_realtime')
+      and n.nspname = 'public'
+      and c.relname = 'ledger_entries'
+  ) then
+    alter publication supabase_realtime add table ledger_entries;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_publication_rel pr
+    join pg_class c on c.oid = pr.prrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where pr.prpubid = (select oid from pg_publication where pubname = 'supabase_realtime')
+      and n.nspname = 'public'
+      and c.relname = 'tasks'
+  ) then
+    alter publication supabase_realtime add table tasks;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_publication_rel pr
+    join pg_class c on c.oid = pr.prrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where pr.prpubid = (select oid from pg_publication where pubname = 'supabase_realtime')
+      and n.nspname = 'public'
+      and c.relname = 'vault_documents'
+  ) then
+    alter publication supabase_realtime add table vault_documents;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_publication_rel pr
+    join pg_class c on c.oid = pr.prrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where pr.prpubid = (select oid from pg_publication where pubname = 'supabase_realtime')
+      and n.nspname = 'public'
+      and c.relname = 'family_settings'
+  ) then
+    alter publication supabase_realtime add table family_settings;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_publication_rel pr
+    join pg_class c on c.oid = pr.prrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where pr.prpubid = (select oid from pg_publication where pubname = 'supabase_realtime')
+      and n.nspname = 'public'
+      and c.relname = 'security_logs'
+  ) then
+    alter publication supabase_realtime add table security_logs;
+  end if;
+end
+$$;
+
+-- ========================================================================
+-- Schema evolution (safe to re-run)
+-- ========================================================================
+alter table if exists ledger_entries add column if not exists receipt_url text;
+alter table if exists ledger_entries add column if not exists is_medicaid_flagged boolean default false;
+alter table if exists ledger_entries add column if not exists ai_analysis text;

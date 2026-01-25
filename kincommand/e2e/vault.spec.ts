@@ -1,58 +1,50 @@
 import { test, expect } from '@playwright/test';
 
+const seedLocalStorage = async (page: any) => {
+  await page.addInitScript(() => {
+    const settings = {
+      hourlyRate: 25,
+      patientName: 'Test Patient',
+      privacyMode: false,
+      autoLockEnabled: false,
+      hasCompletedOnboarding: true
+    };
+
+    localStorage.setItem('kin_entries', JSON.stringify([]));
+    localStorage.setItem('kin_tasks', JSON.stringify([]));
+    localStorage.setItem('kin_documents', JSON.stringify([]));
+    localStorage.setItem('kin_security_logs', JSON.stringify([]));
+    localStorage.setItem('kin_settings', JSON.stringify(settings));
+  });
+};
+
 test.describe('Document Vault', () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+  test.use({ viewport: { width: 1280, height: 720 } });
 
-        // Complete onboarding if present
-        const onboardingVisible = await page.locator('text=Welcome to KinCommand').isVisible().catch(() => false);
-        if (onboardingVisible) {
-            await page.fill('input[placeholder*="patient" i]', 'Test Patient');
-            await page.fill('input[type="number"]', '20');
-            await page.click('button:has-text("Get Started")');
-        }
+  test.beforeEach(async ({ page }) => {
+    await seedLocalStorage(page);
+    await page.goto('/');
+    await page.getByRole('button', { name: /digital vault/i }).click();
+  });
 
-        // Navigate to vault
-        await page.click('text=Vault');
+  test('should add a document to the vault', async ({ page }) => {
+    await page.setInputFiles('input[type="file"]', {
+      name: 'power-of-attorney.pdf',
+      mimeType: 'application/pdf',
+      buffer: Buffer.from('test document')
     });
 
-    test('should add a document to the vault', async ({ page }) => {
-        // Click add document button
-        await page.click('button:has-text("Add Document")');
+    await expect(page.getByText('power-of-attorney.pdf')).toBeVisible();
+  });
 
-        // Fill document form
-        await page.fill('input[placeholder*="name" i]', 'Power of Attorney');
+  test('should activate emergency access view', async ({ page }) => {
+    await page.getByRole('button', { name: /emergency access/i }).click();
+    await expect(page.getByText('Emergency Responder View')).toBeVisible();
+  });
 
-        // Select document type if dropdown exists
-        const typeSelect = page.locator('select, input[placeholder*="type" i]').first();
-        if (await typeSelect.isVisible()) {
-            await typeSelect.click();
-            await page.click('text=Legal', { timeout: 2000 }).catch(() => {
-                // If dropdown doesn't work, try input
-                typeSelect.fill('Legal');
-            });
-        }
-
-        // Submit
-        await page.click('button:has-text("Add"), button:has-text("Save")');
-
-        // Verify document appears in vault
-        await expect(page.locator('text=Power of Attorney')).toBeVisible({ timeout: 5000 });
-    });
-
-    test('should activate emergency mode', async ({ page }) => {
-        // Click emergency mode button
-        await page.click('button:has-text("Emergency Mode")');
-
-        // Verify emergency overlay is visible
-        await expect(page.locator('text=EMERGENCY MODE')).toBeVisible();
-
-        // Verify high contrast styling (red/black theme)
-        const emergencyOverlay = page.locator('[class*="emergency"], [class*="red-"]').first();
-        await expect(emergencyOverlay).toBeVisible();
-
-        // Exit emergency mode
-        await page.click('button:has-text("Exit Emergency")');
-        await expect(page.locator('text=EMERGENCY MODE')).not.toBeVisible();
-    });
+  test('emergency access view matches snapshot', async ({ page }) => {
+    await page.getByRole('button', { name: /emergency access/i }).click();
+    await expect(page.getByText('Emergency Responder View')).toBeVisible();
+    await expect(page).toHaveScreenshot('vault-emergency-view.png', { fullPage: true });
+  });
 });

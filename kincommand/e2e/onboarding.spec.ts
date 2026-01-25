@@ -1,35 +1,37 @@
 import { test, expect } from '@playwright/test';
 
+const seedLocalStorage = async (page: any) => {
+  await page.addInitScript(() => {
+    localStorage.removeItem('kin_settings');
+    localStorage.removeItem('kin_entries');
+    localStorage.removeItem('kin_tasks');
+    localStorage.removeItem('kin_documents');
+    localStorage.removeItem('kin_security_logs');
+  });
+};
+
 test.describe('Onboarding Wizard', () => {
-    test('should complete onboarding and reach dashboard', async ({ page }) => {
-        await page.goto('/');
+  test('should complete onboarding and reach dashboard', async ({ page }) => {
+    await seedLocalStorage(page);
+    await page.goto('/');
 
-        // Check for onboarding wizard
-        await expect(page.locator('text=Welcome to KinCommand')).toBeVisible();
+    await expect(page.getByRole('heading', { name: /welcome to kincircle/i })).toBeVisible();
+    await page.getByRole('button', { name: /let's get started/i }).click();
 
-        // Fill out patient name
-        await page.fill('input[placeholder*="patient" i]', 'Martha Jones');
+    await page.getByPlaceholder('e.g. Mom, Dad, Aunt Marie').fill('Martha Jones');
+    await page.getByRole('button', { name: /continue/i }).click();
 
-        // Fill out hourly rate
-        await page.fill('input[type="number"]', '25');
+    await page.getByRole('button', { name: /looks good/i }).click();
+    await page.getByRole('button', { name: /finish setup/i }).click();
 
-        // Click Get Started button
-        await page.click('button:has-text("Get Started")');
+    await expect(page.getByRole('heading', { name: /the sibling ledger/i })).toBeVisible();
+  });
 
-        // Should reach dashboard
-        await expect(page).toHaveURL(/.*dashboard/i);
+  test('should require patient name before continuing', async ({ page }) => {
+    await seedLocalStorage(page);
+    await page.goto('/');
 
-        // Verify dashboard elements are visible
-        await expect(page.locator('text=Dashboard')).toBeVisible();
-    });
-
-    test('should validate required fields', async ({ page }) => {
-        await page.goto('/');
-
-        // Try to submit without filling fields
-        await page.click('button:has-text("Get Started")');
-
-        // Should still be on onboarding (basic validation check)
-        await expect(page.locator('text=Welcome to KinCommand')).toBeVisible();
-    });
+    await page.getByRole('button', { name: /let's get started/i }).click();
+    await expect(page.getByRole('button', { name: /continue/i })).toBeDisabled();
+  });
 });

@@ -1,11 +1,20 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { LedgerEntry, MedicaidReportItem, FamilySettings, User } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY as string });
+const isMock = import.meta.env.VITE_GEMINI_MOCK === 'true';
+const ai = isMock ? null : new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY as string });
 
 import { anonymizeText } from "../utils/privacyUtils";
 
 export const analyzeLedgerForMedicaid = async (entries: LedgerEntry[], settings: FamilySettings): Promise<MedicaidReportItem[]> => {
+  if (isMock) {
+    return entries.map(entry => ({
+      entryId: entry.id,
+      status: 'COMPLIANT',
+      reason: 'Mock analysis',
+      categorySuggestion: entry.category || 'General'
+    }));
+  }
   try {
     // Anonymize the data before sending to LLM
     const promptData = entries.map(e => ({
@@ -64,6 +73,9 @@ export const analyzeLedgerForMedicaid = async (entries: LedgerEntry[], settings:
 };
 
 export const suggestCategory = async (description: string, type: 'EXPENSE' | 'TIME', settings: FamilySettings): Promise<{ category: string, isRisky: boolean }> => {
+  if (isMock) {
+    return { category: type === 'TIME' ? 'Caregiving' : 'General', isRisky: false };
+  }
   try {
     const cleanDescription = anonymizeText(description, settings);
 
@@ -93,6 +105,14 @@ export const suggestCategory = async (description: string, type: 'EXPENSE' | 'TI
 };
 
 export const parseReceiptImage = async (base64Image: string): Promise<{ amount: number, date: string, description: string, category: string }> => {
+  if (isMock) {
+    return {
+      amount: 42.5,
+      date: new Date().toISOString().split('T')[0],
+      description: 'Mock Receipt',
+      category: 'Medical'
+    };
+  }
   try {
     const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
 
@@ -140,6 +160,16 @@ export const parseReceiptImage = async (base64Image: string): Promise<{ amount: 
 };
 
 export const parseVoiceEntry = async (base64Audio: string): Promise<{ type: 'EXPENSE' | 'TIME', amount: number, date: string, description: string, category: string, durationHours?: number }> => {
+  if (isMock) {
+    return {
+      type: 'TIME',
+      amount: 0,
+      durationHours: 1.5,
+      date: new Date().toISOString().split('T')[0],
+      description: 'Mock voice entry',
+      category: 'Caregiving'
+    };
+  }
   try {
     // Determine mimeType (assuming webm from MediaRecorder, or fallback)
     const mimeType = base64Audio.includes('audio/mp4') ? 'audio/mp4' : 'audio/webm';
@@ -203,6 +233,15 @@ export const parseVoiceEntry = async (base64Audio: string): Promise<{ type: 'EXP
 };
 
 export const queryLedger = async (query: string, entries: LedgerEntry[], users: User[], settings: FamilySettings): Promise<{ text: string, sources: Array<{ title: string, uri: string }> }> => {
+  if (isMock) {
+    const expenseTotal = entries
+      .filter(entry => entry.type === 'EXPENSE')
+      .reduce((sum, entry) => sum + entry.amount, 0);
+    return {
+      text: `Mock response: "${query}" (Total expenses: $${expenseTotal.toFixed(2)})`,
+      sources: []
+    };
+  }
   try {
     // 1. Prepare context by mapping User IDs to Names for the AI
     const enrichedEntries = entries.map(e => ({
@@ -236,7 +275,7 @@ export const queryLedger = async (query: string, entries: LedgerEntry[], users: 
     `;
 
     // 3. Call Gemini with Search Grounding
-    const response = await ai.models.generateContent({
+    const response = await ai!.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
