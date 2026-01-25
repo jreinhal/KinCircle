@@ -36,8 +36,8 @@ test.describe('Supabase multi-session sync', () => {
     await completeOnboarding(pageA);
 
     const entryDescription = `Sync Entry ${Date.now()}`;
-    await pageA.getByRole('button', { name: /sibling ledger/i }).click();
-    await pageA.getByRole('button', { name: /track expenses/i }).click();
+    await pageA.getByRole('button', { name: /add entry/i }).click();
+    await expect(pageA.getByRole('heading', { name: /add contribution/i })).toBeVisible();
     await pageA.getByPlaceholder('0.00').fill('12.34');
     await pageA.getByPlaceholder('e.g. Prescriptions at CVS').fill(entryDescription);
     await pageA.getByPlaceholder('e.g. Medical, Groceries').fill('Medical');
