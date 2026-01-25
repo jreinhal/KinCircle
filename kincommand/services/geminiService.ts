@@ -1,13 +1,19 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { LedgerEntry, MedicaidReportItem, FamilySettings, User } from "../types";
-
-const isMock = import.meta.env.VITE_GEMINI_MOCK === 'true';
-const ai = isMock ? null : new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY as string });
-
 import { anonymizeText } from "../utils/privacyUtils";
 
+const mockFlag = import.meta.env.VITE_GEMINI_MOCK;
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+const isMock = mockFlag !== 'false';
+const shouldMock = isMock || !apiKey;
+const ai = shouldMock ? null : new GoogleGenAI({ apiKey });
+
+if (!isMock && !apiKey) {
+  console.warn('Gemini API key is missing. Falling back to mock responses.');
+}
+
 export const analyzeLedgerForMedicaid = async (entries: LedgerEntry[], settings: FamilySettings): Promise<MedicaidReportItem[]> => {
-  if (isMock) {
+  if (shouldMock) {
     return entries.map(entry => ({
       entryId: entry.id,
       status: 'COMPLIANT',
@@ -73,7 +79,7 @@ export const analyzeLedgerForMedicaid = async (entries: LedgerEntry[], settings:
 };
 
 export const suggestCategory = async (description: string, type: 'EXPENSE' | 'TIME', settings: FamilySettings): Promise<{ category: string, isRisky: boolean }> => {
-  if (isMock) {
+  if (shouldMock) {
     return { category: type === 'TIME' ? 'Caregiving' : 'General', isRisky: false };
   }
   try {
@@ -105,7 +111,7 @@ export const suggestCategory = async (description: string, type: 'EXPENSE' | 'TI
 };
 
 export const parseReceiptImage = async (base64Image: string): Promise<{ amount: number, date: string, description: string, category: string }> => {
-  if (isMock) {
+  if (shouldMock) {
     return {
       amount: 42.5,
       date: new Date().toISOString().split('T')[0],
@@ -160,7 +166,7 @@ export const parseReceiptImage = async (base64Image: string): Promise<{ amount: 
 };
 
 export const parseVoiceEntry = async (base64Audio: string): Promise<{ type: 'EXPENSE' | 'TIME', amount: number, date: string, description: string, category: string, durationHours?: number }> => {
-  if (isMock) {
+  if (shouldMock) {
     return {
       type: 'TIME',
       amount: 0,
@@ -233,7 +239,7 @@ export const parseVoiceEntry = async (base64Audio: string): Promise<{ type: 'EXP
 };
 
 export const queryLedger = async (query: string, entries: LedgerEntry[], users: User[], settings: FamilySettings): Promise<{ text: string, sources: Array<{ title: string, uri: string }> }> => {
-  if (isMock) {
+  if (shouldMock) {
     const expenseTotal = entries
       .filter(entry => entry.type === 'EXPENSE')
       .reduce((sum, entry) => sum + entry.amount, 0);

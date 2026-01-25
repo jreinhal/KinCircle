@@ -11,6 +11,12 @@ jobs:
     defaults:
       run:
         working-directory: ./kincommand
+    env:
+      E2E_SUPABASE: 'true'
+      E2E_GEMINI_REAL: 'true'
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
@@ -29,16 +35,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run Supabase sync tests
-        if: ${{ secrets.VITE_SUPABASE_URL != '' && secrets.VITE_SUPABASE_ANON_KEY != '' }}
-        env:
-          E2E_SUPABASE: 'true'
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npx playwright test e2e/supabase-sync.spec.ts --reporter=line
 
       - name: Run real Gemini tests
-        if: ${{ secrets.VITE_GEMINI_API_KEY != '' }}
-        env:
-          E2E_GEMINI_REAL: 'true'
-          VITE_GEMINI_API_KEY: ${{ secrets.VITE_GEMINI_API_KEY }}
         run: npx playwright test e2e/chat-real.spec.ts --reporter=line
