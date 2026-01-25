@@ -1,7 +1,6 @@
 name: Real Backend E2E
 
 on:
-  workflow_dispatch:
   schedule:
     - cron: '0 6 * * 1'
 
