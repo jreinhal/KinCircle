@@ -305,7 +305,46 @@ export const queryLedger = async (query: string, entries: LedgerEntry[], users: 
     };
 
   } catch (error) {
-    console.error("Chat query failed:", error);
-    return { text: "I'm having trouble accessing the network right now. Please try again.", sources: [] };
+    console.warn("Chat query failed with search grounding, retrying without search.", error);
+
+    try {
+      const enrichedEntries = entries.map(e => ({
+        ...e,
+        userName: users.find(u => u.id === e.userId)?.name || 'Unknown',
+        description: anonymizeText(e.description, settings)
+      }));
+
+      const fallbackPrompt = `
+        You are "Kin", a helpful family care assistant.
+
+        Family Settings:
+        - Patient: ${settings.patientName} (If Privacy Mode is active, refer to as 'The Patient')
+        - Hourly Sweat Equity Rate: $${settings.hourlyRate}/hr
+
+        Ledger Data:
+        ${JSON.stringify(enrichedEntries)}
+
+        User Question: "${query}"
+
+        Instructions:
+        - If the question is about the ledger (expenses, time, history), answer using the data provided.
+        - If the question requires external knowledge, answer based on general knowledge.
+        - Be empathetic but factual.
+        - Keep responses concise (under 150 words).
+      `;
+
+      const fallbackResponse = await ai!.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: fallbackPrompt,
+      });
+
+      return {
+        text: fallbackResponse.text || "I'm sorry, I couldn't process that query.",
+        sources: []
+      };
+    } catch (fallbackError) {
+      console.error("Chat query failed:", fallbackError);
+      return { text: "I'm having trouble accessing the network right now. Please try again.", sources: [] };
+    }
   }
 };
