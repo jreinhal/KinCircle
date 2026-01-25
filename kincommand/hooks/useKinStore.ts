@@ -5,6 +5,7 @@ import {
 } from '../types';
 import { storageService, getStorageProvider } from '../services/storageService';
 import { initSupabaseAuth } from '../services/supabaseAuth';
+import { logger } from '../utils/logger';
 
 /**
  * Custom hook for managing KinCircle's centralized state
@@ -87,8 +88,8 @@ export const useKinStore = (
                 setMedications(loadedMeds);
                 setMedicationLogs(loadedMedLogs);
             } catch (error) {
-                console.error("Failed to load application data:", error);
-                // Fallback to defaults is redundant here as they are initial state, 
+                logger.error("Failed to load application data:", error);
+                // Fallback to defaults is redundant here as they are initial state,
                 // but good practice to handle critical failures.
             } finally {
                 setIsLoading(false);
@@ -227,12 +228,22 @@ export const useKinStore = (
         setSettings(newSettings);
     };
 
+    // Type for backup data import
+    interface BackupData {
+        version?: string;
+        timestamp?: string;
+        settings: FamilySettings;
+        entries: LedgerEntry[];
+        tasks?: Task[];
+        documents?: VaultDocument[];
+    }
+
     /**
      * Imports data from backup file with smart merge logic
      * Merges by ID - updates existing items, adds new ones
      * @param data - Backup data object containing entries, tasks, documents, and settings
      */
-    const importData = (data: any) => {
+    const importData = (data: BackupData) => {
         try {
             if (!data.entries || !data.settings) throw new Error("Invalid backup format");
 
@@ -277,10 +288,10 @@ export const useKinStore = (
             }
 
             logSecurityEvent("External data imported via Sync", "WARNING", "DATA_RESET");
-            alert(`Sync Complete!\\nImported ${data.entries.length} entries and settings.`);
+            alert(`Sync Complete!\nImported ${data.entries.length} entries and settings.`);
 
         } catch (e) {
-            console.error(e);
+            logger.error('Import failed:', e);
             alert("Import Failed: Invalid JSON file.");
         }
     };

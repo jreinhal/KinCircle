@@ -1,49 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Lock, ShieldCheck, Fingerprint, Loader2 } from 'lucide-react';
+import { verifyPin, hashPinLegacy } from '../utils/crypto';
 
 interface LockScreenProps {
   onUnlock: (method: string) => void;
   onFailure: () => void;
   user: string;
-  customPinHash?: string; // Hash of user's custom PIN
+  customPinHash?: string; // Hash of user's custom PIN (secure or legacy)
+  isSecureHash?: boolean; // Whether the hash uses new secure format
 }
 
-// Simple hash function matching Settings component
-const hashPin = (pin: string): string => {
-  let hash = 0;
-  for (let i = 0; i < pin.length; i++) {
-    const char = pin.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
-};
-
-const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, customPinHash }) => {
+const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, customPinHash, isSecureHash }) => {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [isBiometricScanning, setIsBiometricScanning] = useState(false);
 
+  const verifyPinEntry = useCallback(async (enteredPin: string) => {
+    setIsVerifying(true);
+    try {
+      // Default PIN is "1234" if no custom PIN set
+      const defaultHash = hashPinLegacy('1234');
+      const expectedHash = customPinHash || defaultHash;
+
+      let isValid = false;
+
+      if (isSecureHash && customPinHash) {
+        // Use secure async verification
+        isValid = await verifyPin(enteredPin, expectedHash);
+      } else {
+        // Legacy verification for backwards compatibility
+        const enteredHash = hashPinLegacy(enteredPin);
+        isValid = enteredHash === expectedHash;
+      }
+
+      if (isValid) {
+        onUnlock('PIN');
+        setPin('');
+      } else {
+        setError(true);
+        setPin('');
+        onFailure();
+      }
+    } finally {
+      setIsVerifying(false);
+    }
+  }, [customPinHash, isSecureHash, onUnlock, onFailure]);
+
   const handleNumClick = (num: string) => {
-    if (pin.length < 4) {
+    if (pin.length < 4 && !isVerifying) {
       const newPin = pin + num;
       setPin(newPin);
       setError(false);
 
       if (newPin.length === 4) {
-        // Validate against custom PIN hash or default "1234"
+        // Validate PIN with slight delay for UX
         setTimeout(() => {
-          const expectedHash = customPinHash || hashPin('1234');
-          const enteredHash = hashPin(newPin);
-
-          if (enteredHash === expectedHash) {
-            onUnlock('PIN');
-            setPin('');
-          } else {
-            setError(true);
-            setPin('');
-            onFailure(); // Log the failure
-          }
+          verifyPinEntry(newPin);
         }, 300);
       }
     }

@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase';
+import { logger } from '../utils/logger';
 
 type SupabaseAuthMode = 'none' | 'anonymous';
 
@@ -20,7 +21,7 @@ export const initSupabaseAuth = async (): Promise<void> => {
       if (anonError) throw anonError;
     }
   } catch (error) {
-    console.warn('Supabase auth initialization failed:', error);
+    logger.warn('Supabase auth initialization failed:', error);
   }
 };
 

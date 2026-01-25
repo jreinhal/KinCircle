@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
-import { FileText, Download, Shield, Siren, X, Trash2, Upload } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { FileText, Download, Shield, Siren, X, Trash2, Upload, Eye, Calendar, HardDrive, Lock, AlertTriangle } from 'lucide-react';
 import { VaultDocument, FamilySettings, User } from '../types';
+import { verifyPin, hashPinLegacy } from '../utils/crypto';
 
 interface VaultProps {
     documents: VaultDocument[];
@@ -13,13 +14,53 @@ interface VaultProps {
 
 const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument, onDeleteDocument, onLogSecurityEvent }) => {
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
+  const [showEmergencyPinModal, setShowEmergencyPinModal] = useState(false);
+  const [emergencyPin, setEmergencyPin] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [viewingDoc, setViewingDoc] = useState<VaultDocument | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const adminUser = users.find(u => u.role === 'ADMIN') || users[0];
 
+  const verifyEmergencyPin = useCallback(async () => {
+    if (emergencyPin.length !== 4) {
+      setPinError('PIN must be 4 digits');
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      const defaultHash = hashPinLegacy('1234');
+      const expectedHash = settings.customPinHash || defaultHash;
+
+      let isValid = false;
+      if (settings.isSecurePinHash && settings.customPinHash) {
+        isValid = await verifyPin(emergencyPin, expectedHash);
+      } else {
+        const enteredHash = hashPinLegacy(emergencyPin);
+        isValid = enteredHash === expectedHash;
+      }
+
+      if (isValid) {
+        setIsEmergencyMode(true);
+        setShowEmergencyPinModal(false);
+        setEmergencyPin('');
+        setPinError('');
+        onLogSecurityEvent('Emergency Responder Mode Activated (PIN verified)', 'CRITICAL');
+      } else {
+        setPinError('Invalid PIN');
+        onLogSecurityEvent('Failed emergency access attempt - Invalid PIN', 'WARNING');
+      }
+    } finally {
+      setIsVerifying(false);
+    }
+  }, [emergencyPin, settings, onLogSecurityEvent]);
+
   const handleEmergencyClick = () => {
-    setIsEmergencyMode(true);
-    onLogSecurityEvent('Emergency Responder Mode Activated', 'CRITICAL');
+    setShowEmergencyPinModal(true);
+    setEmergencyPin('');
+    setPinError('');
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,13 +106,17 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {documents.map((doc) => (
-          <div key={doc.id} className="bg-white p-5 rounded-xl border border-slate-200 hover:shadow-md transition-shadow group relative">
+          <div
+            key={doc.id}
+            className="bg-white p-5 rounded-xl border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all group relative cursor-pointer"
+            onClick={() => setViewingDoc(doc)}
+          >
             <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-slate-100 rounded-lg group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
                 <FileText size={24} />
               </div>
-              <button 
-                onClick={() => onDeleteDocument(doc.id)}
+              <button
+                onClick={(e) => { e.stopPropagation(); onDeleteDocument(doc.id); }}
                 className="text-slate-400 hover:text-red-500 p-1"
                 title="Delete Document"
               >
@@ -85,8 +130,12 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
                 <span className="text-xs font-medium text-slate-400 uppercase">{doc.type}</span>
-                <button className="text-slate-400 hover:text-blue-600">
-                    <Download size={16} />
+                <button
+                  onClick={(e) => { e.stopPropagation(); setViewingDoc(doc); }}
+                  className="text-slate-400 hover:text-blue-600 flex items-center gap-1 text-xs"
+                >
+                    <Eye size={14} />
+                    <span>View</span>
                 </button>
             </div>
           </div>
@@ -109,6 +158,138 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
             />
         </div>
       </div>
+
+      {/* Document View Modal */}
+      {viewingDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
+            <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-bold text-slate-800">Document Details</h3>
+              <button onClick={() => setViewingDoc(null)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-4 bg-blue-50 text-blue-600 rounded-xl">
+                  <FileText size={32} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-slate-900 truncate">{viewingDoc.name}</h4>
+                  <p className="text-sm text-slate-500">{viewingDoc.type}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-3 text-sm">
+                  <Calendar size={16} className="text-slate-400" />
+                  <span className="text-slate-600">Added: {viewingDoc.date}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <HardDrive size={16} className="text-slate-400" />
+                  <span className="text-slate-600">Size: {viewingDoc.size}</span>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
+                <p className="text-sm text-amber-800">
+                  <strong>Demo Mode:</strong> In a production app, clicking "Open Document" would display or download the actual file.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    onLogSecurityEvent(`Document accessed: ${viewingDoc.name}`, 'INFO');
+                    alert(`Opening "${viewingDoc.name}"...\n\nIn production, this would open or download the actual document.`);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  <Eye size={18} />
+                  Open Document
+                </button>
+                <button
+                  onClick={() => {
+                    onLogSecurityEvent(`Document downloaded: ${viewingDoc.name}`, 'INFO');
+                    alert(`Downloading "${viewingDoc.name}"...\n\nIn production, this would download the actual file.`);
+                  }}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  <Download size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Emergency PIN Modal */}
+      {showEmergencyPinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full overflow-hidden">
+            <div className="p-4 bg-red-50 border-b border-red-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="text-red-600" size={20} />
+                <h3 className="font-bold text-red-900">Emergency Access</h3>
+              </div>
+              <button
+                onClick={() => setShowEmergencyPinModal(false)}
+                className="text-red-400 hover:text-red-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-sm text-slate-600 mb-4">
+                Enter your PIN to activate Emergency Responder Mode. This action will be logged.
+              </p>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <Lock size={14} className="inline mr-1" />
+                  Security PIN
+                </label>
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={emergencyPin}
+                  onChange={(e) => {
+                    setEmergencyPin(e.target.value.replace(/\D/g, ''));
+                    setPinError('');
+                  }}
+                  onKeyDown={(e) => e.key === 'Enter' && verifyEmergencyPin()}
+                  placeholder="••••"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg text-center text-2xl tracking-widest focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"
+                  autoFocus
+                />
+                {pinError && (
+                  <p className="text-red-600 text-sm mt-2">{pinError}</p>
+                )}
+              </div>
+
+              <button
+                onClick={verifyEmergencyPin}
+                disabled={emergencyPin.length !== 4 || isVerifying}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                {isVerifying ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <Siren size={18} />
+                    Activate Emergency Mode
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* EMERGENCY MODE OVERLAY */}
       {isEmergencyMode && (

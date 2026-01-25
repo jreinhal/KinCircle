@@ -54,7 +54,9 @@ export interface FamilySettings {
   privacyMode: boolean; // If true, anonymize names before sending to AI
   autoLockEnabled: boolean; // Controls whether idle timer is active
   hasCompletedOnboarding: boolean; // Tracks if the user has finished the setup wizard
-  customPinHash?: string; // Hash of user's custom PIN (default: simple hash of "1234")
+  customPinHash?: string; // Hash of user's custom PIN (PBKDF2 or legacy)
+  isSecurePinHash?: boolean; // True if using PBKDF2, false/undefined for legacy hash
+  familyId?: string; // Unique ID for multi-tenant data isolation
 }
 
 export interface MedicaidReportItem {

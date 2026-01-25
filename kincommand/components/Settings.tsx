@@ -1,7 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { FamilySettings, LedgerEntry, User, SecurityEvent, Task, VaultDocument } from '../types';
-import { Save, Shield, DollarSign, User as UserIcon, Trash2, AlertTriangle, Lock, FileText, Activity, Download, Upload, Share2, GitBranch, Cloud } from 'lucide-react';
+import { Save, Shield, DollarSign, User as UserIcon, Trash2, AlertTriangle, Lock, Activity, Download, Upload, Share2, GitBranch, Cloud } from 'lucide-react';
 import { storageService } from '../services/storageService';
+import { hashPinSecure } from '../utils/crypto';
+import { logger } from '../utils/logger';
+import { hasPermission } from '../utils/rbac';
 
 interface SettingsProps {
   settings: FamilySettings;
@@ -10,23 +13,30 @@ interface SettingsProps {
   tasks: Task[];
   documents: VaultDocument[];
   users: User[];
-  onImport: (data: any) => void;
+  currentUser: User;
+  onImport: (data: BackupData) => void;
   securityLogs: SecurityEvent[];
 }
 
-// Simple hash function for PIN storage (Phase 1 - not cryptographically secure)
-const hashPin = (pin: string): string => {
-  let hash = 0;
-  for (let i = 0; i < pin.length; i++) {
-    const char = pin.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash.toString(36);
-};
+// Schema for backup data validation
+interface BackupData {
+  version?: string;
+  timestamp?: string;
+  settings: FamilySettings;
+  entries: LedgerEntry[];
+  tasks?: Task[];
+  documents?: VaultDocument[];
+}
 
-const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, documents, users, onImport, securityLogs }) => {
+const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, documents, users, currentUser, onImport, securityLogs }) => {
   const [formData, setFormData] = React.useState<FamilySettings>(settings);
+
+  // Permission checks
+  const canUpdateSettings = hasPermission(currentUser, 'settings:update');
+  const canExportData = hasPermission(currentUser, 'data:export');
+  const canImportData = hasPermission(currentUser, 'data:import');
+  const canResetData = hasPermission(currentUser, 'data:reset');
+  const canViewSecurityLogs = hasPermission(currentUser, 'security_logs:read');
   const [isSaved, setIsSaved] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newPin, setNewPin] = React.useState('');
@@ -35,12 +45,20 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, d
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canUpdateSettings) {
+      alert('You do not have permission to update settings.');
+      return;
+    }
     onSave(formData);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
   };
 
   const handleReset = () => {
+    if (!canResetData) {
+      alert('You do not have permission to reset application data.');
+      return;
+    }
     if (window.confirm('Are you sure you want to erase all data and reset the app? This action cannot be undone.')) {
       localStorage.clear();
       window.location.reload();
@@ -48,6 +66,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, d
   };
 
   const handleExport = () => {
+    if (!canExportData) {
+      alert('You do not have permission to export data.');
+      return;
+    }
     const exportData = {
       version: '1.0',
       timestamp: new Date().toISOString(),
@@ -68,6 +90,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, d
   };
 
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canImportData) {
+      alert('You do not have permission to import data.');
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -228,7 +254,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, d
               {pinError && <p className="text-xs text-red-600 mt-2">{pinError}</p>}
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   if (newPin.length !== 4) {
                     setPinError('PIN must be exactly 4 digits');
                     return;
@@ -237,11 +263,16 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, d
                     setPinError('PINs do not match');
                     return;
                   }
-                  setFormData({ ...formData, customPinHash: hashPin(newPin) });
-                  setNewPin('');
-                  setConfirmPin('');
-                  setIsSaved(false);
-                  alert('PIN updated! Remember to save your settings.');
+                  try {
+                    const secureHash = await hashPinSecure(newPin);
+                    setFormData({ ...formData, customPinHash: secureHash, isSecurePinHash: true });
+                    setNewPin('');
+                    setConfirmPin('');
+                    setIsSaved(false);
+                    alert('PIN updated with secure encryption! Remember to save your settings.');
+                  } catch (err) {
+                    setPinError('Failed to encrypt PIN. Please try again.');
+                  }
                 }}
                 className="mt-3 w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
               >
@@ -302,8 +333,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, entries, tasks, d
                   alert("Migration Success! Your data is now in the cloud.");
                   window.location.reload(); // Refresh to load from cloud
                 } catch (e) {
-                  console.error(e);
-                  alert("Migration Failed. Check console.");
+                  logger.error("Cloud migration failed:", e);
+                  alert("Migration Failed. Please try again.");
                 }
               }}
               className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"

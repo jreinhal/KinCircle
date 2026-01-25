@@ -1,5 +1,49 @@
-import { LedgerEntry, Task, VaultDocument, SecurityEvent } from '../types';
+import { LedgerEntry, Task, VaultDocument, SecurityEvent, EntryType } from '../types';
 import { supabase, isSupabaseConfigured } from './supabase';
+import { logger } from '../utils/logger';
+
+// Supabase row types for type-safe mapping
+interface SupabaseEntryRow {
+  id: string;
+  user_id: string;
+  type: string;
+  date: string;
+  description: string | null;
+  amount: number | null;
+  time_duration_minutes: number | null;
+  receipt_url: string | null;
+  is_medicaid_flagged: boolean | null;
+  ai_analysis: string | null;
+  category: string | null;
+}
+
+interface SupabaseTaskRow {
+  id: string;
+  title: string | null;
+  assigned_user_id: string | null;
+  due_date: string | null;
+  is_completed: boolean | null;
+  related_entry_id: string | null;
+}
+
+interface SupabaseDocumentRow {
+  id: string;
+  name: string | null;
+  type: string | null;
+  size: string | null;
+  date: string | null;
+}
+
+interface SupabaseLogRow {
+  id: string;
+  timestamp: string | null;
+  type: string;
+  details: string | null;
+  severity: string | null;
+  user_name: string | null;
+}
+
+type SupabaseRow = SupabaseEntryRow | SupabaseTaskRow | SupabaseDocumentRow | SupabaseLogRow;
 
 /**
  * Storage Service Abstraction
@@ -36,7 +80,17 @@ export interface IStorageService {
   remove(key: string): Promise<void>;
 }
 
-type StorageKey = 'kin_entries' | 'kin_tasks' | 'kin_documents' | 'kin_settings' | 'kin_security_logs';
+type StorageKey =
+  | 'kin_entries'
+  | 'kin_tasks'
+  | 'kin_documents'
+  | 'kin_settings'
+  | 'kin_security_logs'
+  | 'kin_recurring_expenses'
+  | 'kin_family_invites'
+  | 'kin_help_tasks'
+  | 'kin_medications'
+  | 'kin_medication_logs';
 type StorageProvider = 'local' | 'supabase';
 type StorageProviderOverride = StorageProvider | 'auto';
 
@@ -66,7 +120,7 @@ class LocalStorageService implements IStorageService {
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
-      console.error(`Failed to save ${key} to localStorage:`, error);
+      logger.error(`Failed to save ${key} to localStorage:`, error);
     }
   }
 
@@ -75,7 +129,7 @@ class LocalStorageService implements IStorageService {
       const saved = localStorage.getItem(key);
       return saved ? JSON.parse(saved) : defaultValue;
     } catch (error) {
-      console.error(`Failed to load ${key} from localStorage:`, error);
+      logger.error(`Failed to load ${key} from localStorage:`, error);
       return defaultValue;
     }
   }
@@ -84,7 +138,7 @@ class LocalStorageService implements IStorageService {
     try {
       localStorage.removeItem(key);
     } catch (error) {
-      console.error(`Failed to remove ${key} from localStorage:`, error);
+      logger.error(`Failed to remove ${key} from localStorage:`, error);
     }
   }
 }
@@ -101,9 +155,17 @@ class SupabaseStorageService implements IStorageService {
       case 'kin_entries': return 'ledger_entries';
       case 'kin_tasks': return 'tasks';
       case 'kin_documents': return 'vault_documents';
-      case 'kin_settings': return 'family_settings'; // Singleton table
+      case 'kin_settings': return 'family_settings';
       case 'kin_security_logs': return 'security_logs';
-      default: throw new Error(`Unknown storage key: ${key}`);
+      case 'kin_recurring_expenses': return 'recurring_expenses';
+      case 'kin_family_invites': return 'family_invites';
+      case 'kin_help_tasks': return 'help_tasks';
+      case 'kin_medications': return 'medications';
+      case 'kin_medication_logs': return 'medication_logs';
+      default: {
+        const exhaustiveCheck: never = key;
+        throw new Error(`Unknown storage key: ${exhaustiveCheck}`);
+      }
     }
   }
 
@@ -127,11 +189,11 @@ class SupabaseStorageService implements IStorageService {
     };
   }
 
-  private mapRowToEntry(row: any): LedgerEntry {
+  private mapRowToEntry(row: SupabaseEntryRow): LedgerEntry {
     return {
       id: row.id,
       userId: row.user_id,
-      type: row.type,
+      type: row.type as EntryType,
       date: toDateOnly(row.date),
       description: row.description ?? '',
       amount: Number(row.amount ?? 0),
@@ -154,7 +216,7 @@ class SupabaseStorageService implements IStorageService {
     };
   }
 
-  private mapRowToTask(row: any): Task {
+  private mapRowToTask(row: SupabaseTaskRow): Task {
     return {
       id: row.id,
       title: row.title ?? '',
@@ -175,7 +237,7 @@ class SupabaseStorageService implements IStorageService {
     };
   }
 
-  private mapRowToDocument(row: any): VaultDocument {
+  private mapRowToDocument(row: SupabaseDocumentRow): VaultDocument {
     return {
       id: row.id,
       name: row.name ?? '',
@@ -196,13 +258,13 @@ class SupabaseStorageService implements IStorageService {
     };
   }
 
-  private mapRowToLog(row: any): SecurityEvent {
+  private mapRowToLog(row: SupabaseLogRow): SecurityEvent {
     return {
       id: row.id,
       timestamp: row.timestamp ?? new Date().toISOString(),
-      type: row.type,
+      type: row.type as SecurityEvent['type'],
       details: row.details ?? '',
-      severity: row.severity ?? 'INFO',
+      severity: (row.severity ?? 'INFO') as SecurityEvent['severity'],
       user: row.user_name ?? undefined
     };
   }
@@ -217,12 +279,12 @@ class SupabaseStorageService implements IStorageService {
     }
   }
 
-  private mapFromRow(key: StorageKey, item: any) {
+  private mapFromRow(key: StorageKey, item: SupabaseRow): LedgerEntry | Task | VaultDocument | SecurityEvent {
     switch (key) {
-      case 'kin_entries': return this.mapRowToEntry(item);
-      case 'kin_tasks': return this.mapRowToTask(item);
-      case 'kin_documents': return this.mapRowToDocument(item);
-      case 'kin_security_logs': return this.mapRowToLog(item);
+      case 'kin_entries': return this.mapRowToEntry(item as SupabaseEntryRow);
+      case 'kin_tasks': return this.mapRowToTask(item as SupabaseTaskRow);
+      case 'kin_documents': return this.mapRowToDocument(item as SupabaseDocumentRow);
+      case 'kin_security_logs': return this.mapRowToLog(item as SupabaseLogRow);
       default: throw new Error(`Unknown storage key: ${key}`);
     }
   }
@@ -250,7 +312,7 @@ class SupabaseStorageService implements IStorageService {
       const { error } = await supabase.from(table).upsert(mappedData);
       if (error) throw error;
     } catch (error) {
-      console.error(`Supabase Save Error (${key}):`, error);
+      logger.error(`Supabase Save Error (${key}):`, error);
     }
   }
 
@@ -276,14 +338,14 @@ class SupabaseStorageService implements IStorageService {
       return mappedData as unknown as T;
 
     } catch (error) {
-      console.error(`Supabase Load Error (${key}):`, error);
+      logger.error(`Supabase Load Error (${key}):`, error);
       return defaultValue;
     }
   }
 
   async remove(key: string): Promise<void> {
     // In Phase 2, we probably don't want to drop tables via app code
-    console.warn('Remove operation not fully supported in Supabase mode for safety');
+    logger.warn('Remove operation not fully supported in Supabase mode for safety');
   }
 }
 

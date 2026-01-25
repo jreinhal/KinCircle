@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { EntryType, User, FamilySettings, LedgerEntry } from '../types';
 import { suggestCategory, parseReceiptImage, parseVoiceEntry } from '../services/geminiService';
 import { Camera, Clock, DollarSign, Calendar, Loader2, UploadCloud, X, Mic, StopCircle } from 'lucide-react';
+import { logger } from '../utils/logger';
+import { entryFormSchema, formatZodErrors } from '../utils/validation';
 
 interface EntryFormProps {
   currentUser: User;
@@ -69,7 +71,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
       mediaRecorder.start();
       setIsRecording(true);
     } catch (err) {
-      console.error("Error accessing microphone:", err);
+      logger.error("Error accessing microphone:", err);
       alert("Microphone access is required for voice entry.");
     }
   };
@@ -102,7 +104,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
         }
 
       } catch (e) {
-        console.error("Voice processing failed", e);
+        logger.error("Voice processing failed", e);
       } finally {
         setIsAnalyzing(false);
       }
@@ -130,7 +132,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
         if (result.description) setDescription(result.description);
         if (result.category) setCategory(result.category);
       } catch (err) {
-        console.error("Failed to parse receipt", err);
+        logger.error("Failed to parse receipt", err);
       } finally {
         setIsAnalyzing(false);
       }
@@ -146,34 +148,31 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
-    if (!description || description.trim().length < 3) {
-      alert('Please enter a description (at least 3 characters)');
-      return;
-    }
-
+    // Calculate amounts based on type
     let finalAmount = 0;
-    let timeMinutes = 0;
+    let timeMinutes: number | undefined = undefined;
 
     if (type === EntryType.EXPENSE) {
-      const parsedAmount = parseFloat(amount);
-      if (isNaN(parsedAmount) || parsedAmount <= 0) {
-        alert('Please enter a valid positive amount');
-        return;
-      }
-      finalAmount = parsedAmount;
+      finalAmount = parseFloat(amount) || 0;
     } else {
-      const hours = parseFloat(duration);
-      if (isNaN(hours) || hours <= 0) {
-        alert('Please enter a valid positive duration');
-        return;
-      }
-      timeMinutes = hours * 60;
+      const hours = parseFloat(duration) || 0;
+      timeMinutes = Math.round(hours * 60);
       finalAmount = hours * settings.hourlyRate;
     }
 
-    if (!category || category.trim().length < 2) {
-      alert('Please enter a category');
+    // Validate using Zod schema
+    const validationResult = entryFormSchema.safeParse({
+      type,
+      description: description.trim(),
+      amount: finalAmount,
+      category: category.trim(),
+      date,
+      timeDurationMinutes: timeMinutes
+    });
+
+    if (!validationResult.success) {
+      const errors = formatZodErrors(validationResult.error);
+      alert(`Validation errors:\n${errors.join('\n')}`);
       return;
     }
 

@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { LedgerEntry, FamilySettings, User, EntryType } from "../types";
+import { logger } from "../utils/logger";
 
 const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY as string });
 
@@ -87,7 +88,7 @@ export const runScenarioAgent = async (scenario: string, currentUserId: string):
     }
     return [];
   } catch (error) {
-    console.error("Scenario Agent failed:", error);
+    logger.error("Scenario Agent failed:", error);
     return [];
   }
 };

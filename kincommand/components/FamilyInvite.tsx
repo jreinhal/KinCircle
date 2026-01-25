@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserPlus, Copy, Check, Mail, Users, Clock, CheckCircle, XCircle, Link2 } from 'lucide-react';
+import { UserPlus, Copy, Check, Mail, Users, Clock, CheckCircle, XCircle, Link2, X, Shield, Calendar } from 'lucide-react';
 import { FamilyInvite as FamilyInviteType, User, UserRole } from '../types';
 
 interface FamilyInviteProps {
@@ -11,11 +11,13 @@ interface FamilyInviteProps {
 }
 
 const generateInviteCode = (): string => {
-  // Generate a readable 8-character code
+  // Generate a readable 8-character code using cryptographically secure random values
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const randomValues = new Uint32Array(8);
+  crypto.getRandomValues(randomValues);
   let code = '';
   for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
+    code += chars.charAt(randomValues[i] % chars.length);
   }
   return code;
 };
@@ -29,6 +31,7 @@ const FamilyInvite: React.FC<FamilyInviteProps> = ({
 }) => {
   const [isInviting, setIsInviting] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [viewingMember, setViewingMember] = useState<User | null>(null);
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -186,9 +189,10 @@ const FamilyInvite: React.FC<FamilyInviteProps> = ({
         </h3>
         <div className="space-y-3">
           {users.map(user => (
-            <div
+            <button
               key={user.id}
-              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+              onClick={() => setViewingMember(user)}
+              className="w-full flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors text-left"
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-medium">
@@ -207,10 +211,76 @@ const FamilyInvite: React.FC<FamilyInviteProps> = ({
                 </div>
               </div>
               <CheckCircle size={20} className="text-green-500" />
-            </div>
+            </button>
           ))}
         </div>
       </div>
+
+      {/* Member Detail Modal */}
+      {viewingMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full overflow-hidden">
+            <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="font-bold text-slate-800">Member Details</h3>
+              <button onClick={() => setViewingMember(null)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="flex flex-col items-center mb-6">
+                <div className="w-20 h-20 rounded-full bg-teal-500 flex items-center justify-center text-white text-2xl font-bold mb-3">
+                  {viewingMember.name.charAt(0)}
+                </div>
+                <h4 className="text-xl font-semibold text-slate-900">{viewingMember.name}</h4>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                    viewingMember.role === UserRole.ADMIN
+                      ? 'bg-purple-100 text-purple-700'
+                      : viewingMember.role === UserRole.CONTRIBUTOR
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-slate-100 text-slate-700'
+                  }`}>
+                    {viewingMember.role === UserRole.ADMIN ? 'Administrator' : viewingMember.role === UserRole.CONTRIBUTOR ? 'Contributor' : 'Viewer'}
+                  </span>
+                  {viewingMember.id === currentUser.id && (
+                    <span className="text-xs text-teal-600 bg-teal-50 px-2 py-1 rounded-full">You</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                  <Shield size={18} className="text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-500">Permissions</p>
+                    <p className="text-sm font-medium text-slate-900">
+                      {viewingMember.role === UserRole.ADMIN
+                        ? 'Full access - Can manage family, settings, and all entries'
+                        : viewingMember.role === UserRole.CONTRIBUTOR
+                          ? 'Can add and edit their own entries'
+                          : 'View only - Cannot make changes'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+                  <Calendar size={18} className="text-slate-400" />
+                  <div>
+                    <p className="text-xs text-slate-500">Member Since</p>
+                    <p className="text-sm font-medium text-slate-900">Original Member</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                <p className="text-sm text-blue-800">
+                  <strong>Demo Mode:</strong> In production, you could view this member's contribution history and contact them directly.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pending Invites */}
       {pendingInvites.length > 0 && (

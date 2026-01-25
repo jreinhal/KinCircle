@@ -10,16 +10,17 @@ import Settings from './components/Settings';
 import ChatAssistant from './components/ChatAssistant';
 import Schedule from './components/Schedule';
 import RecurringExpenses from './components/RecurringExpenses';
-import DebtSummary from './components/DebtSummary';
 import FamilyInvite from './components/FamilyInvite';
 import HelpCalendar from './components/HelpCalendar';
 import MedicationTracker from './components/MedicationTracker';
+import ErrorBoundary from './components/ErrorBoundary';
 // Lazy load AgentLab for better performance (only loads when user accesses the feature)
 const AgentLab = lazy(() => import('./components/AgentLab'));
 import LockScreen from './components/LockScreen';
 import OnboardingWizard from './components/OnboardingWizard';
 import { User, LedgerEntry, EntryType, FamilySettings, UserRole, Task, VaultDocument } from './types';
 import { useKinStore } from './hooks/useKinStore';
+import { generateSecureToken } from './utils/crypto';
 
 // Mock Data
 const MOCK_USERS: User[] = [
@@ -318,6 +319,7 @@ export default function App() {
             tasks={tasks}
             documents={documents}
             users={MOCK_USERS}
+            currentUser={currentUser}
             onImport={importData}
             securityLogs={securityLogs}
           />
@@ -354,6 +356,7 @@ export default function App() {
           onFailure={handleAuthFailure}
           user={currentUser.name}
           customPinHash={settings.customPinHash}
+          isSecureHash={settings.isSecurePinHash}
         />
       )}
 
@@ -367,20 +370,27 @@ export default function App() {
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header */}
-        <header className="md:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-900">KinCircle</span>
-          </div>
-          <button onClick={() => setIsMobileOpen(true)} className="text-slate-600">
-            <Menu size={24} />
-          </button>
-        </header>
+        {/* Mobile Header - with safe area padding for notched devices */}
+        <div className="md:hidden bg-white">
+          {/* Status bar spacer */}
+          <div className="h-8 bg-slate-900" />
+          {/* Actual header content */}
+          <header className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="font-bold text-slate-900">KinCircle</span>
+            </div>
+            <button onClick={() => setIsMobileOpen(true)} className="text-slate-600 p-2 -mr-2">
+              <Menu size={24} />
+            </button>
+          </header>
+        </div>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto p-4 pb-36 md:p-8 md:pb-8">
+        <main className="flex-1 overflow-auto p-4 pb-20 md:p-8 md:pb-8">
           <div className="max-w-6xl mx-auto">
-            {renderContent()}
+            <ErrorBoundary>
+              {renderContent()}
+            </ErrorBoundary>
           </div>
         </main>
       </div>
@@ -391,6 +401,6 @@ export default function App() {
 // Add type definition for window to support custom timeout property
 declare global {
   interface Window {
-    idleTimer: any;
+    idleTimer: ReturnType<typeof setTimeout> | undefined;
   }
 }

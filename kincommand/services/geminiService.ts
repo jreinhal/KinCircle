@@ -1,6 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { LedgerEntry, MedicaidReportItem, FamilySettings, User } from "../types";
 import { anonymizeText } from "../utils/privacyUtils";
+import { geminiRateLimiter, chatRateLimiter, receiptScanRateLimiter, RateLimitError } from "../utils/rateLimit";
+import { logger } from "../utils/logger";
 
 const mockFlag = import.meta.env.VITE_GEMINI_MOCK;
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
@@ -9,7 +11,7 @@ const shouldMock = isMock || !apiKey;
 const ai = shouldMock ? null : new GoogleGenAI({ apiKey });
 
 if (!isMock && !apiKey) {
-  console.warn('Gemini API key is missing. Falling back to mock responses.');
+  logger.warn('Gemini API key is missing. Falling back to mock responses.');
 }
 
 export const analyzeLedgerForMedicaid = async (entries: LedgerEntry[], settings: FamilySettings): Promise<MedicaidReportItem[]> => {
@@ -21,6 +23,14 @@ export const analyzeLedgerForMedicaid = async (entries: LedgerEntry[], settings:
       categorySuggestion: entry.category || 'General'
     }));
   }
+
+  // Check rate limit
+  if (!geminiRateLimiter.isAllowed()) {
+    const resetTime = geminiRateLimiter.getResetTime();
+    logger.warn('Rate limit exceeded for Medicaid analysis', { resetTime });
+    throw new RateLimitError(resetTime);
+  }
+
   try {
     // Anonymize the data before sending to LLM
     const promptData = entries.map(e => ({
@@ -73,7 +83,7 @@ export const analyzeLedgerForMedicaid = async (entries: LedgerEntry[], settings:
     return [];
 
   } catch (error) {
-    console.error("Gemini analysis failed:", error);
+    logger.error("Gemini analysis failed:", error);
     return [];
   }
 };
@@ -82,6 +92,14 @@ export const suggestCategory = async (description: string, type: 'EXPENSE' | 'TI
   if (shouldMock) {
     return { category: type === 'TIME' ? 'Caregiving' : 'General', isRisky: false };
   }
+
+  // Check rate limit
+  if (!geminiRateLimiter.isAllowed()) {
+    const resetTime = geminiRateLimiter.getResetTime();
+    logger.warn('Rate limit exceeded for category suggestion', { resetTime });
+    throw new RateLimitError(resetTime);
+  }
+
   try {
     const cleanDescription = anonymizeText(description, settings);
 
@@ -119,6 +137,14 @@ export const parseReceiptImage = async (base64Image: string): Promise<{ amount: 
       category: 'Medical'
     };
   }
+
+  // Check rate limit - receipt scanning has stricter limits
+  if (!receiptScanRateLimiter.isAllowed()) {
+    const resetTime = receiptScanRateLimiter.getResetTime();
+    logger.warn('Rate limit exceeded for receipt scanning', { resetTime });
+    throw new RateLimitError(resetTime);
+  }
+
   try {
     const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
 
@@ -160,7 +186,7 @@ export const parseReceiptImage = async (base64Image: string): Promise<{ amount: 
     }
     throw new Error("No response text");
   } catch (error) {
-    console.error("Receipt parsing failed:", error);
+    logger.error("Receipt parsing failed:", error);
     return { amount: 0, date: new Date().toISOString().split('T')[0], description: '', category: 'Uncategorized' };
   }
 };
@@ -176,6 +202,14 @@ export const parseVoiceEntry = async (base64Audio: string): Promise<{ type: 'EXP
       category: 'Caregiving'
     };
   }
+
+  // Check rate limit
+  if (!geminiRateLimiter.isAllowed()) {
+    const resetTime = geminiRateLimiter.getResetTime();
+    logger.warn('Rate limit exceeded for voice parsing', { resetTime });
+    throw new RateLimitError(resetTime);
+  }
+
   try {
     // Determine mimeType (assuming webm from MediaRecorder, or fallback)
     const mimeType = base64Audio.includes('audio/mp4') ? 'audio/mp4' : 'audio/webm';
@@ -226,7 +260,7 @@ export const parseVoiceEntry = async (base64Audio: string): Promise<{ type: 'EXP
     }
     throw new Error("No response");
   } catch (error) {
-    console.error("Voice parsing failed:", error);
+    logger.error("Voice parsing failed:", error);
     // Return a safe fallback so the app doesn't crash
     return {
       type: 'EXPENSE',
@@ -248,6 +282,14 @@ export const queryLedger = async (query: string, entries: LedgerEntry[], users: 
       sources: []
     };
   }
+
+  // Check rate limit for chat queries
+  if (!chatRateLimiter.isAllowed()) {
+    const resetTime = chatRateLimiter.getResetTime();
+    logger.warn('Rate limit exceeded for chat query', { resetTime });
+    throw new RateLimitError(resetTime);
+  }
+
   try {
     // 1. Prepare context by mapping User IDs to Names for the AI
     const enrichedEntries = entries.map(e => ({
@@ -266,8 +308,8 @@ export const queryLedger = async (query: string, entries: LedgerEntry[], users: 
 
       Family Settings:
       - Patient: ${settings.patientName} (If Privacy Mode is active, refer to as 'The Patient')
-      - Hourly Sweat Equity Rate: $${settings.hourlyRate}/hr
-      
+      - Care Time Value: $${settings.hourlyRate}/hr
+
       Ledger Data:
       ${JSON.stringify(enrichedEntries)}
 
@@ -305,7 +347,7 @@ export const queryLedger = async (query: string, entries: LedgerEntry[], users: 
     };
 
   } catch (error) {
-    console.warn("Chat query failed with search grounding, retrying without search.", error);
+    logger.warn("Chat query failed with search grounding, retrying without search.", error);
 
     try {
       const enrichedEntries = entries.map(e => ({
@@ -319,7 +361,7 @@ export const queryLedger = async (query: string, entries: LedgerEntry[], users: 
 
         Family Settings:
         - Patient: ${settings.patientName} (If Privacy Mode is active, refer to as 'The Patient')
-        - Hourly Sweat Equity Rate: $${settings.hourlyRate}/hr
+        - Care Time Value: $${settings.hourlyRate}/hr
 
         Ledger Data:
         ${JSON.stringify(enrichedEntries)}
@@ -343,7 +385,7 @@ export const queryLedger = async (query: string, entries: LedgerEntry[], users: 
         sources: []
       };
     } catch (fallbackError) {
-      console.error("Chat query failed:", fallbackError);
+      logger.error("Chat query failed:", fallbackError);
       return { text: "I'm having trouble accessing the network right now. Please try again.", sources: [] };
     }
   }
