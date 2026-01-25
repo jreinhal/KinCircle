@@ -295,6 +295,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
                     ref={fileInputRef}
                     className="hidden"
                     accept="image/*"
+                    capture="environment"
                     onChange={handleFileChange}
                   />
                 </div>
