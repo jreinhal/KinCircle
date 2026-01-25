@@ -3,7 +3,8 @@ import {
   Calendar, Plus, ChevronLeft, ChevronRight,
   UtensilsCrossed, Car, ShoppingBag, Heart,
   Stethoscope, Home, MoreHorizontal, Hand,
-  CheckCircle, Clock, AlertCircle, User as UserIcon
+  CheckCircle, Clock, AlertCircle, User as UserIcon,
+  Pencil, X
 } from 'lucide-react';
 import { HelpTask, HelpTaskCategory, HelpTaskStatus, User, FamilySettings, LedgerEntry, EntryType } from '../types';
 
@@ -13,6 +14,7 @@ interface HelpCalendarProps {
   currentUser: User;
   settings: FamilySettings;
   onAddTask: (task: HelpTask) => void;
+  onUpdateTask: (task: HelpTask) => void;
   onClaimTask: (taskId: string, userId: string) => void;
   onCompleteTask: (taskId: string) => void;
   onConvertToEntry: (task: HelpTask) => void;
@@ -36,6 +38,7 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
   currentUser,
   settings,
   onAddTask,
+  onUpdateTask,
   onClaimTask,
   onCompleteTask,
   onConvertToEntry
@@ -49,6 +52,7 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
 
   const [isAdding, setIsAdding] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [editingTask, setEditingTask] = useState<HelpTask | null>(null);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -117,6 +121,56 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
 
   const handleClaimTask = (task: HelpTask) => {
     onClaimTask(task.id, currentUser.id);
+  };
+
+  const handleEditTask = (task: HelpTask) => {
+    setEditingTask(task);
+    setForm({
+      title: task.title,
+      description: task.description || '',
+      category: task.category,
+      date: task.date,
+      timeSlot: task.timeSlot,
+      estimatedMinutes: task.estimatedMinutes?.toString() || ''
+    });
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTask || !form.title || !form.date) return;
+
+    const updatedTask: HelpTask = {
+      ...editingTask,
+      title: form.title,
+      description: form.description || undefined,
+      category: form.category,
+      date: form.date,
+      timeSlot: form.timeSlot,
+      estimatedMinutes: form.estimatedMinutes ? parseInt(form.estimatedMinutes) : undefined
+    };
+
+    onUpdateTask(updatedTask);
+    setEditingTask(null);
+    setForm({
+      title: '',
+      description: '',
+      category: 'other',
+      date: new Date().toISOString().split('T')[0],
+      timeSlot: 'Flexible',
+      estimatedMinutes: ''
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingTask(null);
+    setForm({
+      title: '',
+      description: '',
+      category: 'other',
+      date: new Date().toISOString().split('T')[0],
+      timeSlot: 'Flexible',
+      estimatedMinutes: ''
+    });
   };
 
   const handleCompleteAndLog = (task: HelpTask) => {
@@ -423,7 +477,7 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2 pl-10">
+                    <div className="flex gap-2 pl-10 flex-wrap">
                       {task.status === 'available' && (
                         <button
                           onClick={() => handleClaimTask(task)}
@@ -448,6 +502,16 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
                           </button>
                         </>
                       )}
+                      {/* Edit button - only for non-completed tasks */}
+                      {task.status !== 'completed' && (
+                        <button
+                          onClick={() => handleEditTask(task)}
+                          className="px-3 py-1.5 text-slate-600 text-sm hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1"
+                        >
+                          <Pencil size={14} />
+                          Edit
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -456,6 +520,119 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
             {helpTasks.filter(t => t.date === selectedDate).length === 0 && (
               <p className="text-center text-slate-500 py-4">No tasks for this day</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Task Modal */}
+      {editingTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-slate-900">Edit Task</h3>
+                <button
+                  onClick={cancelEdit}
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleSaveEdit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Task Title
+                  </label>
+                  <input
+                    type="text"
+                    value={form.title}
+                    onChange={(e) => setForm({ ...form, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Category
+                    </label>
+                    <select
+                      value={form.category}
+                      onChange={(e) => setForm({ ...form, category: e.target.value as HelpTaskCategory })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    >
+                      {Object.entries(CATEGORY_CONFIG).map(([key, config]) => (
+                        <option key={key} value={key}>{config.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={form.date}
+                      onChange={(e) => setForm({ ...form, date: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Time
+                    </label>
+                    <select
+                      value={form.timeSlot}
+                      onChange={(e) => setForm({ ...form, timeSlot: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    >
+                      {TIME_SLOTS.map(slot => (
+                        <option key={slot} value={slot}>{slot}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Est. Minutes
+                    </label>
+                    <input
+                      type="number"
+                      value={form.estimatedMinutes}
+                      onChange={(e) => setForm({ ...form, estimatedMinutes: e.target.value })}
+                      placeholder="Optional"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Notes
+                  </label>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

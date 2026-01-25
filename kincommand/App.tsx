@@ -265,13 +265,12 @@ export default function App() {
       case 'recurring':
         return (
           <RecurringExpenses
-            expenses={recurringExpenses}
+            recurringExpenses={recurringExpenses}
             currentUser={currentUser}
-            settings={settings}
-            onAddExpense={addRecurringExpense}
-            onUpdateExpense={updateRecurringExpense}
-            onDeleteExpense={deleteRecurringExpense}
-            onAddEntry={addEntry}
+            onAdd={addRecurringExpense}
+            onUpdate={updateRecurringExpense}
+            onDelete={deleteRecurringExpense}
+            onGenerateEntry={addEntry}
           />
         );
       case 'family':
@@ -379,7 +378,7 @@ export default function App() {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto p-4 md:p-8">
+        <main className="flex-1 overflow-auto p-4 pb-24 md:p-8 md:pb-8">
           <div className="max-w-6xl mx-auto h-full">
             {renderContent()}
           </div>
