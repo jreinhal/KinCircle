@@ -155,7 +155,7 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings, current
           </div>
         </div>
 
-        <div className="h-80 w-full min-w-0">
+        <div className="h-80 w-full min-w-0 [&_*]:outline-none [&_*]:focus:outline-none">
           <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
             <BarChart
               data={userTotals}
