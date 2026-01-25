@@ -7,6 +7,13 @@ const shouldRun =
 
 const completeOnboarding = async (page: any) => {
   const welcome = page.getByRole('heading', { name: /welcome to kincircle/i });
+  const dashboardNav = page.getByRole('button', { name: /sibling ledger/i });
+
+  await Promise.race([
+    welcome.waitFor({ state: 'visible', timeout: 15000 }),
+    dashboardNav.waitFor({ state: 'visible', timeout: 15000 })
+  ]).catch(() => {});
+
   if (await welcome.isVisible().catch(() => false)) {
     await page.getByRole('button', { name: /let's get started/i }).click();
     await page.getByPlaceholder('e.g. Mom, Dad, Aunt Marie').fill('Sync Patient');
@@ -14,9 +21,12 @@ const completeOnboarding = async (page: any) => {
     await page.getByRole('button', { name: /looks good/i }).click();
     await page.getByRole('button', { name: /finish setup/i }).click();
   }
+
+  await dashboardNav.waitFor({ state: 'visible', timeout: 15000 });
 };
 
 test.describe('Supabase multi-session sync', () => {
+  test.setTimeout(60000);
   test.skip(!shouldRun, 'Set E2E_SUPABASE=true with Supabase env vars to run.');
 
   test('entry created in one session can be seen in another after refresh', async ({ browser }) => {
@@ -26,6 +36,7 @@ test.describe('Supabase multi-session sync', () => {
     await completeOnboarding(pageA);
 
     const entryDescription = `Sync Entry ${Date.now()}`;
+    await pageA.getByRole('button', { name: /sibling ledger/i }).click();
     await pageA.getByRole('button', { name: /track expenses/i }).click();
     await pageA.getByPlaceholder('0.00').fill('12.34');
     await pageA.getByPlaceholder('e.g. Prescriptions at CVS').fill(entryDescription);
