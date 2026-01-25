@@ -67,7 +67,6 @@ const MedicationTracker: React.FC<MedicationTrackerProps> = ({
           notes: form.notes || undefined
         });
       }
-      setEditingId(null);
     } else {
       const newMed: Medication = {
         id: crypto.randomUUID(),
@@ -83,8 +82,11 @@ const MedicationTracker: React.FC<MedicationTrackerProps> = ({
       onAddMedication(newMed);
     }
 
-    resetForm();
+    // Clean up all form state together
+    setEditingId(null);
     setIsAdding(false);
+    setExpandedId(null);
+    resetForm();
   };
 
   const startEdit = (med: Medication) => {
