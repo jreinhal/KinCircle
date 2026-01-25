@@ -87,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings, current
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-16 md:pb-0">
       <header className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">The Sibling Ledger</h1>
         <p className="text-slate-500">Tracking financial and time contributions for {settings.patientName}.</p>
