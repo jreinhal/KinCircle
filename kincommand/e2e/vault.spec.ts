@@ -8,6 +8,7 @@ const seedLocalStorage = async (page: any) => {
       privacyMode: false,
       autoLockEnabled: false,
       hasCompletedOnboarding: true
+      // Note: No customPinHash means default PIN '1234' will work
     };
 
     localStorage.setItem('kin_entries', JSON.stringify([]));
@@ -16,6 +17,19 @@ const seedLocalStorage = async (page: any) => {
     localStorage.setItem('kin_security_logs', JSON.stringify([]));
     localStorage.setItem('kin_settings', JSON.stringify(settings));
   });
+};
+
+// Helper to enter PIN and activate emergency mode
+const activateEmergencyMode = async (page: any) => {
+  await page.getByRole('button', { name: /emergency access/i }).click();
+  // Wait for PIN modal to appear
+  await page.waitForSelector('input[type="password"]');
+  // Enter default PIN '1234'
+  await page.fill('input[type="password"]', '1234');
+  // Click the activate button
+  await page.getByRole('button', { name: /activate emergency mode/i }).click();
+  // Wait for emergency view to appear
+  await page.waitForSelector('text=Emergency Responder View');
 };
 
 test.describe('Document Vault', () => {
@@ -38,12 +52,12 @@ test.describe('Document Vault', () => {
   });
 
   test('should activate emergency access view', async ({ page }) => {
-    await page.getByRole('button', { name: /emergency access/i }).click();
+    await activateEmergencyMode(page);
     await expect(page.getByText('Emergency Responder View')).toBeVisible();
   });
 
   test('emergency access view matches snapshot', async ({ page }) => {
-    await page.getByRole('button', { name: /emergency access/i }).click();
+    await activateEmergencyMode(page);
     await expect(page.getByText('Emergency Responder View')).toBeVisible();
     await expect(page).toHaveScreenshot('vault-emergency-view.png', { fullPage: true });
   });
