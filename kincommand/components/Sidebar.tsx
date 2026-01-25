@@ -3,14 +3,16 @@ import {
   LayoutDashboard,
   PlusCircle,
   FileText,
-  ShieldAlert,
   Briefcase,
   Settings,
   MessageSquare,
   Repeat,
   X,
   CalendarCheck,
-  Zap
+  Users,
+  Pill,
+  HandHelping,
+  RefreshCw
 } from 'lucide-react';
 import { User } from '../types';
 
@@ -34,12 +36,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   const menuItems = [
     { id: 'dashboard', label: 'Sibling Ledger', icon: LayoutDashboard },
     { id: 'schedule', label: 'Care Schedule', icon: CalendarCheck },
+    { id: 'help-calendar', label: 'Help Calendar', icon: HandHelping },
     { id: 'add-entry', label: 'Add Entry', icon: PlusCircle },
+    { id: 'recurring', label: 'Recurring Expenses', icon: RefreshCw },
+    { id: 'medications', label: 'Medications', icon: Pill },
     { id: 'chat', label: 'Ask Kin', icon: MessageSquare },
     { id: 'entries', label: 'All Transactions', icon: FileText },
-    // { id: 'medicaid', label: 'Medicaid Audit', icon: ShieldAlert }, // Moved to Reports (Future)
     { id: 'vault', label: 'Digital Vault', icon: Briefcase },
-    // Agent Lab hidden from main menu (accessible via debug: Shift+Click logo 3x)
+    { id: 'family', label: 'Family Circle', icon: Users },
   ];
 
   const handleNav = (id: string) => {

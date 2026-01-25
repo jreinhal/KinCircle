@@ -1,16 +1,18 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { LedgerEntry, User, EntryType, FamilySettings } from '../types';
-import { DollarSign, Clock, Users, PlusCircle, ArrowRight, Heart, Hash, Sun } from 'lucide-react';
+import { DollarSign, Clock, Users, PlusCircle, ArrowRight, Heart, Sun } from 'lucide-react';
+import DebtSummary from './DebtSummary';
 
 interface DashboardProps {
   entries: LedgerEntry[];
   users: User[];
   settings: FamilySettings;
+  currentUser: User;
   onStartEntry: (type: EntryType) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings, onStartEntry }) => {
+const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings, currentUser, onStartEntry }) => {
 
   // Empty State Handling
   if (entries.length === 0) {
@@ -178,8 +180,10 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings, onStart
         </p>
       </div>
 
-      {/* Settlement Section */}
-      {/* Journal Placeholder - New "Heart" of the app */}
+      {/* Debt Summary - Simplified Balances (Splitwise-style) */}
+      <DebtSummary entries={entries} users={users} currentUser={currentUser} />
+
+      {/* Family Journal Placeholder */}
       <div className="bg-white rounded-3xl border border-stone-100 p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">

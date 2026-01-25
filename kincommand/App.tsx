@@ -9,6 +9,11 @@ import Vault from './components/Vault';
 import Settings from './components/Settings';
 import ChatAssistant from './components/ChatAssistant';
 import Schedule from './components/Schedule';
+import RecurringExpenses from './components/RecurringExpenses';
+import DebtSummary from './components/DebtSummary';
+import FamilyInvite from './components/FamilyInvite';
+import HelpCalendar from './components/HelpCalendar';
+import MedicationTracker from './components/MedicationTracker';
 // Lazy load AgentLab for better performance (only loads when user accesses the feature)
 const AgentLab = lazy(() => import('./components/AgentLab'));
 import LockScreen from './components/LockScreen';
@@ -62,18 +67,45 @@ export default function App() {
     documents,
     settings,
     securityLogs,
+    isLoading,
+    // Phase 1 & 2: New feature state
+    recurringExpenses,
+    familyInvites,
+    helpTasks,
+    medications,
+    medicationLogs,
+    // Entry Operations
     addEntry,
     addEntries,
     deleteEntry,
+    // Task Operations
     addTask,
     updateTask,
     convertTaskToEntry,
+    // Document Operations
     addDocument,
     deleteDocument,
+    // Settings & Import
     updateSettings,
     importData,
     logSecurityEvent,
-    isLoading
+    // Recurring Expense Operations
+    addRecurringExpense,
+    updateRecurringExpense,
+    deleteRecurringExpense,
+    // Family Invite Operations
+    addFamilyInvite,
+    cancelFamilyInvite,
+    // Help Task Operations
+    addHelpTask,
+    updateHelpTask,
+    claimHelpTask,
+    completeHelpTask,
+    // Medication Operations
+    addMedication,
+    updateMedication,
+    deleteMedication,
+    logMedication
   } = useKinStore(MOCK_ENTRIES, MOCK_TASKS, MOCK_DOCS, DEFAULT_SETTINGS, currentUser);
 
   // Initial App Load Log
@@ -170,6 +202,7 @@ export default function App() {
             entries={entries}
             users={MOCK_USERS}
             settings={settings}
+            currentUser={currentUser}
             onStartEntry={(type) => {
               setEntryTypeDraft(type);
               setActiveTab('add-entry');
@@ -229,6 +262,54 @@ export default function App() {
             />
           </Suspense>
         );
+      case 'recurring':
+        return (
+          <RecurringExpenses
+            expenses={recurringExpenses}
+            currentUser={currentUser}
+            settings={settings}
+            onAddExpense={addRecurringExpense}
+            onUpdateExpense={updateRecurringExpense}
+            onDeleteExpense={deleteRecurringExpense}
+            onAddEntry={addEntry}
+          />
+        );
+      case 'family':
+        return (
+          <FamilyInvite
+            invites={familyInvites}
+            users={MOCK_USERS}
+            currentUser={currentUser}
+            onCreateInvite={addFamilyInvite}
+            onCancelInvite={cancelFamilyInvite}
+          />
+        );
+      case 'help-calendar':
+        return (
+          <HelpCalendar
+            helpTasks={helpTasks}
+            users={MOCK_USERS}
+            currentUser={currentUser}
+            settings={settings}
+            onAddTask={addHelpTask}
+            onUpdateTask={updateHelpTask}
+            onClaimTask={claimHelpTask}
+            onCompleteTask={completeHelpTask}
+            onConvertToEntry={addEntry}
+          />
+        );
+      case 'medications':
+        return (
+          <MedicationTracker
+            medications={medications}
+            medicationLogs={medicationLogs}
+            currentUser={currentUser}
+            onAddMedication={addMedication}
+            onUpdateMedication={updateMedication}
+            onDeleteMedication={deleteMedication}
+            onLogMedication={logMedication}
+          />
+        );
       case 'settings':
         return (
           <Settings
@@ -243,7 +324,7 @@ export default function App() {
           />
         );
       default:
-        return <Dashboard entries={entries} users={MOCK_USERS} settings={settings} />;
+        return <Dashboard entries={entries} users={MOCK_USERS} settings={settings} currentUser={currentUser} onStartEntry={() => setActiveTab('add-entry')} />;
     }
   };
 

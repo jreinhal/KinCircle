@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { LedgerEntry, Task, VaultDocument, FamilySettings, SecurityEvent, User } from '../types';
+import {
+    LedgerEntry, Task, VaultDocument, FamilySettings, SecurityEvent, User,
+    RecurringExpense, FamilyInvite, HelpTask, Medication, MedicationLog
+} from '../types';
 import { storageService, getStorageProvider } from '../services/storageService';
 import { initSupabaseAuth } from '../services/supabaseAuth';
 
@@ -31,6 +34,13 @@ export const useKinStore = (
     const [settings, setSettings] = useState<FamilySettings>(defaultSettings);
     const [securityLogs, setSecurityLogs] = useState<SecurityEvent[]>([]);
 
+    // Phase 1 & 2: New feature state
+    const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
+    const [familyInvites, setFamilyInvites] = useState<FamilyInvite[]>([]);
+    const [helpTasks, setHelpTasks] = useState<HelpTask[]>([]);
+    const [medications, setMedications] = useState<Medication[]>([]);
+    const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
+
     // Async Data Loading
     useEffect(() => {
         const loadAllData = async () => {
@@ -46,13 +56,23 @@ export const useKinStore = (
                     loadedTasks,
                     loadedDocs,
                     loadedSettings,
-                    loadedLogs
+                    loadedLogs,
+                    loadedRecurring,
+                    loadedInvites,
+                    loadedHelpTasks,
+                    loadedMeds,
+                    loadedMedLogs
                 ] = await Promise.all([
                     storageService.load('kin_entries', defaultEntries),
                     storageService.load('kin_tasks', defaultTasks),
                     storageService.load('kin_documents', defaultDocuments),
                     storageService.load('kin_settings', defaultSettings),
-                    storageService.load('kin_security_logs', [])
+                    storageService.load('kin_security_logs', []),
+                    storageService.load('kin_recurring_expenses', []),
+                    storageService.load('kin_family_invites', []),
+                    storageService.load('kin_help_tasks', []),
+                    storageService.load('kin_medications', []),
+                    storageService.load('kin_medication_logs', [])
                 ]);
 
                 // Batch updates to reduce renders (React 18 does this automatically)
@@ -61,6 +81,11 @@ export const useKinStore = (
                 setDocuments(loadedDocs);
                 setSettings(loadedSettings);
                 setSecurityLogs(loadedLogs);
+                setRecurringExpenses(loadedRecurring);
+                setFamilyInvites(loadedInvites);
+                setHelpTasks(loadedHelpTasks);
+                setMedications(loadedMeds);
+                setMedicationLogs(loadedMedLogs);
             } catch (error) {
                 console.error("Failed to load application data:", error);
                 // Fallback to defaults is redundant here as they are initial state, 
@@ -94,6 +119,26 @@ export const useKinStore = (
     useEffect(() => {
         if (!isLoading) storageService.save('kin_security_logs', securityLogs);
     }, [securityLogs, isLoading]);
+
+    useEffect(() => {
+        if (!isLoading) storageService.save('kin_recurring_expenses', recurringExpenses);
+    }, [recurringExpenses, isLoading]);
+
+    useEffect(() => {
+        if (!isLoading) storageService.save('kin_family_invites', familyInvites);
+    }, [familyInvites, isLoading]);
+
+    useEffect(() => {
+        if (!isLoading) storageService.save('kin_help_tasks', helpTasks);
+    }, [helpTasks, isLoading]);
+
+    useEffect(() => {
+        if (!isLoading) storageService.save('kin_medications', medications);
+    }, [medications, isLoading]);
+
+    useEffect(() => {
+        if (!isLoading) storageService.save('kin_medication_logs', medicationLogs);
+    }, [medicationLogs, isLoading]);
 
     // Logging helper
     const logSecurityEvent = useCallback((
@@ -240,6 +285,84 @@ export const useKinStore = (
         }
     };
 
+    // ============================================
+    // Recurring Expense Operations
+    // ============================================
+    const addRecurringExpense = (expense: RecurringExpense) => {
+        setRecurringExpenses(prev => [expense, ...prev]);
+    };
+
+    const updateRecurringExpense = (expense: RecurringExpense) => {
+        setRecurringExpenses(prev => prev.map(e => e.id === expense.id ? expense : e));
+    };
+
+    const deleteRecurringExpense = (id: string) => {
+        if (window.confirm("Delete this recurring expense?")) {
+            setRecurringExpenses(prev => prev.filter(e => e.id !== id));
+        }
+    };
+
+    // ============================================
+    // Family Invite Operations
+    // ============================================
+    const addFamilyInvite = (invite: FamilyInvite) => {
+        setFamilyInvites(prev => [invite, ...prev]);
+    };
+
+    const updateFamilyInvite = (invite: FamilyInvite) => {
+        setFamilyInvites(prev => prev.map(i => i.id === invite.id ? invite : i));
+    };
+
+    const cancelFamilyInvite = (id: string) => {
+        setFamilyInvites(prev => prev.filter(i => i.id !== id));
+    };
+
+    // ============================================
+    // Help Task Operations
+    // ============================================
+    const addHelpTask = (task: HelpTask) => {
+        setHelpTasks(prev => [task, ...prev]);
+    };
+
+    const updateHelpTask = (task: HelpTask) => {
+        setHelpTasks(prev => prev.map(t => t.id === task.id ? task : t));
+    };
+
+    const claimHelpTask = (taskId: string, userId: string) => {
+        setHelpTasks(prev => prev.map(t =>
+            t.id === taskId
+                ? { ...t, claimedByUserId: userId || undefined, status: userId ? 'claimed' : 'available' }
+                : t
+        ));
+    };
+
+    const completeHelpTask = (taskId: string) => {
+        setHelpTasks(prev => prev.map(t =>
+            t.id === taskId ? { ...t, status: 'completed' } : t
+        ));
+    };
+
+    // ============================================
+    // Medication Operations
+    // ============================================
+    const addMedication = (med: Medication) => {
+        setMedications(prev => [med, ...prev]);
+    };
+
+    const updateMedication = (med: Medication) => {
+        setMedications(prev => prev.map(m => m.id === med.id ? med : m));
+    };
+
+    const deleteMedication = (id: string) => {
+        if (window.confirm("Delete this medication?")) {
+            setMedications(prev => prev.filter(m => m.id !== id));
+        }
+    };
+
+    const logMedication = (log: MedicationLog) => {
+        setMedicationLogs(prev => [log, ...prev]);
+    };
+
     return {
         // State
         entries,
@@ -247,19 +370,54 @@ export const useKinStore = (
         documents,
         settings,
         securityLogs,
-        isLoading, // Exposed for UI
+        isLoading,
 
-        // Operations
+        // Phase 1 & 2: New feature state
+        recurringExpenses,
+        familyInvites,
+        helpTasks,
+        medications,
+        medicationLogs,
+
+        // Entry Operations
         addEntry,
         addEntries,
         deleteEntry,
+
+        // Task Operations
         addTask,
         updateTask,
         convertTaskToEntry,
+
+        // Document Operations
         addDocument,
         deleteDocument,
+
+        // Settings & Import Operations
         updateSettings,
         importData,
-        logSecurityEvent
+        logSecurityEvent,
+
+        // Recurring Expense Operations
+        addRecurringExpense,
+        updateRecurringExpense,
+        deleteRecurringExpense,
+
+        // Family Invite Operations
+        addFamilyInvite,
+        updateFamilyInvite,
+        cancelFamilyInvite,
+
+        // Help Task Operations
+        addHelpTask,
+        updateHelpTask,
+        claimHelpTask,
+        completeHelpTask,
+
+        // Medication Operations
+        addMedication,
+        updateMedication,
+        deleteMedication,
+        logMedication
     };
 };

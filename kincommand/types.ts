@@ -79,3 +79,81 @@ export interface SecurityEvent {
   severity: 'INFO' | 'WARNING' | 'CRITICAL';
   user?: string;
 }
+
+// ============================================
+// Phase 1: Recurring Expenses & Family Features
+// ============================================
+
+export type RecurrenceFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
+
+export interface RecurringExpense {
+  id: string;
+  userId: string;
+  description: string;
+  amount: number;
+  category: string;
+  frequency: RecurrenceFrequency;
+  nextDueDate: string; // ISO date string
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface FamilyInvite {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  status: 'pending' | 'accepted' | 'declined';
+  invitedByUserId: string;
+  invitedAt: string;
+  inviteCode: string; // Shareable code for joining
+}
+
+// Simplified debt between two family members
+export interface DebtSummary {
+  fromUserId: string;
+  toUserId: string;
+  netAmount: number; // Positive = fromUser owes toUser
+}
+
+// ============================================
+// Phase 2: Help Calendar & Medications
+// ============================================
+
+export type HelpTaskCategory = 'meals' | 'transport' | 'errands' | 'companionship' | 'medical' | 'household' | 'other';
+export type HelpTaskStatus = 'available' | 'claimed' | 'completed' | 'missed';
+
+export interface HelpTask {
+  id: string;
+  title: string;
+  description?: string;
+  category: HelpTaskCategory;
+  date: string; // ISO date
+  timeSlot?: string; // e.g., "Morning", "2:00 PM"
+  createdByUserId: string;
+  claimedByUserId?: string;
+  status: HelpTaskStatus;
+  estimatedMinutes?: number;
+  convertedToEntryId?: string; // Links to ledger entry when logged
+}
+
+export interface Medication {
+  id: string;
+  name: string;
+  dosage: string; // e.g., "10mg", "1 tablet"
+  frequency: string; // e.g., "twice daily", "as needed"
+  prescribedFor?: string; // e.g., "blood pressure"
+  pharmacy?: string;
+  refillDate?: string;
+  monthlyCost?: number;
+  notes?: string;
+  isActive: boolean;
+}
+
+export interface MedicationLog {
+  id: string;
+  medicationId: string;
+  takenAt: string; // ISO timestamp
+  status: 'taken' | 'skipped' | 'late';
+  notes?: string;
+}

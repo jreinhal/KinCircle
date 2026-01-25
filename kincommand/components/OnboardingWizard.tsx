@@ -80,7 +80,11 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                     autoFocus
                     placeholder="e.g. Mom, Dad, Aunt Marie"
                     value={settings.patientName}
-                    onChange={(e) => setSettings({ ...settings, patientName: e.target.value })}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const capitalized = value.charAt(0).toUpperCase() + value.slice(1);
+                      setSettings({ ...settings, patientName: capitalized });
+                    }}
                     className="w-full pl-12 pr-4 py-3 bg-white text-slate-900 placeholder:text-slate-400 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-0 outline-none text-lg transition-colors"
                   />
                 </div>
