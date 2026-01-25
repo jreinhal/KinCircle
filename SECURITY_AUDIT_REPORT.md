@@ -78,7 +78,7 @@ A comprehensive security audit was conducted using five specialized agents (Secu
 
 | Issue | Severity | File | Status |
 |-------|----------|------|--------|
-| HelpCalendar.tsx over 800 lines | MEDIUM | components/HelpCalendar.tsx | PENDING |
+| HelpCalendar.tsx over 800 lines | MEDIUM | components/HelpCalendar/ | ✅ FIXED - Split into 7 modules |
 | MedicationTracker.tsx 556 lines | LOW | components/MedicationTracker.tsx | PENDING |
 | useKinStore returns 42+ values (God Hook) | MEDIUM | hooks/useKinStore.ts | PENDING |
 | TypeScript strict mode disabled | LOW | tsconfig.json | PENDING |
@@ -95,8 +95,9 @@ A comprehensive security audit was conducted using five specialized agents (Secu
 
 | Metric | Current | Target |
 |--------|---------|--------|
-| Test Files | 6 | 33+ |
-| Coverage | ~18% | 80% |
+| Test Files | 7 | 33+ |
+| Test Cases | 41 | 200+ |
+| Coverage | ~25% | 80% |
 
 ---
 
@@ -141,10 +142,10 @@ A comprehensive security audit was conducted using five specialized agents (Secu
 2. ✅ Verify .env.local is in .gitignore and not in git history
 
 ### Short-term (P1)
-1. Split HelpCalendar.tsx into smaller components
+1. ✅ Split HelpCalendar.tsx into smaller components (7 modules)
 2. Refactor useKinStore into domain-specific hooks
 3. Enable TypeScript strict mode incrementally
-4. Add unit tests for crypto utilities
+4. ✅ Add unit tests for crypto utilities (18 tests)
 
 ### Long-term (P2)
 1. Implement familyId filtering in storage queries for multi-tenant isolation
@@ -161,3 +162,10 @@ All fixes have been:
 - ✅ TypeScript type-checked with `tsc --noEmit`
 - ✅ Build verified with `npm run build`
 - ✅ Pushed to remote repository
+
+### Additional Updates (a12e14c)
+- ✅ HelpCalendar refactored into 7 focused components
+- ✅ Crypto utility tests added (18 new tests)
+- ✅ Vault E2E tests updated for PIN verification flow
+- ✅ package-lock.json synchronized
+- ✅ All 41 tests passing
