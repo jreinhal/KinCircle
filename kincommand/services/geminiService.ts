@@ -3,6 +3,7 @@ import { LedgerEntry, MedicaidReportItem, FamilySettings, User } from "../types"
 import { anonymizeText } from "../utils/privacyUtils";
 import { geminiRateLimiter, chatRateLimiter, receiptScanRateLimiter, RateLimitError } from "../utils/rateLimit";
 import { logger } from "../utils/logger";
+import { isOcrServiceAvailable, ocrReceipt as lightOnOcrReceipt, isOcrEnabled } from "./ocrService";
 
 const mockFlag = import.meta.env.VITE_GEMINI_MOCK;
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
@@ -142,6 +143,20 @@ export const parseReceiptImage = async (base64Image: string): Promise<{ amount: 
   if (!receiptScanRateLimiter.isAllowed()) {
     const resetTime = receiptScanRateLimiter.getResetTime();
     logger.warn('Rate limit exceeded for receipt scanning', { resetTime });
+
+    // Try LightOnOCR as fallback when rate limited
+    if (isOcrEnabled()) {
+      logger.info('Attempting LightOnOCR fallback due to rate limit');
+      try {
+        const ocrAvailable = await isOcrServiceAvailable();
+        if (ocrAvailable) {
+          return await lightOnOcrReceipt(base64Image);
+        }
+      } catch (ocrError) {
+        logger.warn('LightOnOCR fallback failed:', ocrError);
+      }
+    }
+
     throw new RateLimitError(resetTime);
   }
 

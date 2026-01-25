@@ -30,6 +30,10 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
     Create a `.env.local` file in the `kincommand` directory:
     ```bash
     VITE_GEMINI_API_KEY=your_api_key_here
+
+    # Optional: LightOnOCR for offline/fallback receipt scanning
+    VITE_OCR_ENABLED=false
+    VITE_OCR_SERVICE_URL=http://localhost:8090
     ```
     Get a free API key from [Google AI Studio](https://ai.google.dev/)
 
@@ -42,6 +46,14 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
     ```bash
     npm run dev
     ```
+
+4.  **Optional: LightOnOCR Service** (for offline receipt scanning):
+    ```bash
+    cd D:/Projects/lightonocr-service
+    pip install -r requirements.txt
+    python ocr_service.py
+    ```
+    When enabled, LightOnOCR serves as a fallback when Gemini is rate-limited or unavailable.
 
 ## 🔐 Security Features
 
@@ -69,6 +81,7 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
 *   **Multimodal Input**:
     *   *Voice*: Uses `gemini-2.5-flash-native-audio-preview` to parse raw audio into structured JSON transactions (Expense vs Time).
     *   *Vision*: Uses `gemini-3-flash-preview` to extract date, merchant, and total from receipt images.
+*   **LightOnOCR Fallback**: When Gemini is rate-limited or unavailable, receipt scanning falls back to the local LightOnOCR-2-1B model. This 1B parameter vision-language model runs entirely offline, extracting structured data (amount, date, merchant, category) from receipt images.
 *   **Privacy Scrubbing**: The app includes a "Privacy Mode" that regex-scrubs the patient's name before sending data to the LLM.
 
 ## 🤝 Contributing

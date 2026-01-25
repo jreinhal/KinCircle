@@ -7,6 +7,8 @@ interface ImportMetaEnv {
     readonly VITE_STORAGE_PROVIDER?: string;
     readonly VITE_SUPABASE_AUTH_MODE?: string;
     readonly VITE_GEMINI_MOCK?: string;
+    readonly VITE_OCR_ENABLED?: string;
+    readonly VITE_OCR_SERVICE_URL?: string;
 }
 
 interface ImportMeta {
