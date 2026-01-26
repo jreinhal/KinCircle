@@ -12,6 +12,7 @@ dist
 dist-ssr
 .env.local
 *.local
+.vitest-localstorage*
 
 
 # Editor directories and files

@@ -10,7 +10,7 @@
     "build": "vite build",
     "postbuild": "node scripts/update-sw-cache.js",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "set NODE_OPTIONS=--localstorage-file=./.vitest-localstorage&& vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:supabase": "set E2E_SUPABASE=true&& playwright test e2e/supabase-sync.spec.ts --reporter=line",
