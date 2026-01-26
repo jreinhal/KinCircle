@@ -1,14 +1,12 @@
 import { render, screen } from '@testing-library/react';
 import Ledger from './Ledger';
-import { EntryType } from '../types';
-
 const { mockEntriesStore, mockAppContext } = vi.hoisted(() => ({
   mockEntriesStore: {
     entries: [
       {
         id: 'e1',
         userId: 'u1',
-        type: EntryType.EXPENSE,
+        type: 'EXPENSE',
         date: '2025-01-01',
         description: 'Groceries',
         amount: 25,

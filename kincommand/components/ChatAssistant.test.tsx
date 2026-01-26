@@ -36,6 +36,9 @@ vi.mock('../context/AppContext', () => ({
 describe('ChatAssistant', () => {
   beforeEach(() => {
     queryLedgerMock.mockReset();
+    if (!Element.prototype.scrollIntoView) {
+      Element.prototype.scrollIntoView = vi.fn();
+    }
   });
 
   it('sends a query and renders the response', async () => {

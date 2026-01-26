@@ -1,8 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Vault from './Vault';
-import { hashPinLegacy } from '../utils/crypto';
-
 const { mockDocumentsStore, mockSettingsStore, mockAppContext } = vi.hoisted(() => ({
   mockDocumentsStore: {
     documents: [],
@@ -16,7 +14,7 @@ const { mockDocumentsStore, mockSettingsStore, mockAppContext } = vi.hoisted(() 
       privacyMode: false,
       autoLockEnabled: true,
       hasCompletedOnboarding: true,
-      customPinHash: hashPinLegacy('1234'),
+      customPinHash: 'legacy-pin-placeholder',
       isSecurePinHash: false
     },
     logSecurityEvent: vi.fn()
@@ -44,12 +42,17 @@ vi.mock('./ConfirmDialog', () => ({
 }));
 
 describe('Vault', () => {
+  beforeEach(async () => {
+    const { hashPinLegacy } = await import('../utils/crypto');
+    mockSettingsStore.settings.customPinHash = hashPinLegacy('1234');
+  });
+
   it('opens the emergency PIN modal', async () => {
     render(<Vault />);
 
     await userEvent.click(screen.getByRole('button', { name: /emergency access/i }));
 
-    expect(screen.getByText(/emergency access/i)).toBeVisible();
+    expect(screen.getByRole('heading', { name: /emergency access/i })).toBeVisible();
     expect(screen.getByText(/enter your pin/i)).toBeVisible();
   });
 

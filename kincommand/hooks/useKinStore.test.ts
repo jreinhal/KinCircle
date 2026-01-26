@@ -11,7 +11,10 @@ vi.mock('../services/storageService', () => ({
         save: vi.fn().mockResolvedValue(undefined),
         remove: vi.fn().mockResolvedValue(undefined)
     },
-    getStorageProvider: vi.fn(() => 'local')
+    getStorageProvider: vi.fn(() => 'local'),
+    getActiveFamilyId: vi.fn(() => null),
+    setActiveFamilyId: vi.fn(),
+    migrateLegacyLocalStorage: vi.fn()
 }));
 
 const mockUser = { id: 'u1', name: 'Test User', role: UserRole.ADMIN };
