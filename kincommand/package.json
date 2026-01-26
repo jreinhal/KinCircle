@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "node server/index.js",
+    "dev:full": "concurrently \"npm run dev\" \"npm run dev:api\"",
     "build": "vite build",
+    "postbuild": "node scripts/update-sw-cache.js",
     "preview": "vite preview",
     "test": "vitest",
     "test:e2e": "playwright test",
@@ -13,9 +16,14 @@
     "test:e2e:supabase": "set E2E_SUPABASE=true&& playwright test e2e/supabase-sync.spec.ts --reporter=line",
     "test:e2e:real": "set E2E_GEMINI_REAL=true&& playwright test e2e/chat-real.spec.ts --reporter=line",
     "test:ops": "npm run test && npm run test:e2e",
+    "lint": "eslint . --ext .ts,.tsx",
+    "analyze": "set ANALYZE=true&& vite build",
     "gen-types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase.ts"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "@google/genai": "^1.38.0",
     "@supabase/supabase-js": "^2.91.1",
     "lucide-react": "^0.563.0",
@@ -30,10 +38,24 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.14.0",
+    "@types/react": "^19.0.12",
+    "@types/react-dom": "^19.0.5",
     "@vitejs/plugin-react": "^5.1.2",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.3",
+    "eslint-plugin-react-hooks": "^4.6.2",
     "jsdom": "^27.4.0",
+    "postcss": "^8.5.6",
+    "prettier": "^3.5.2",
+    "rollup-plugin-visualizer": "^5.12.0",
+    "tailwindcss": "^3.4.17",
     "typescript": "~5.8.2",
     "vite": "^7.3.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0"
   }
 }

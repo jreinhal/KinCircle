@@ -1,7 +1,7 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useKinStore } from './useKinStore';
 import { storageService } from '../services/storageService';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { EntryType, FamilySettings, UserRole } from '../types';
 
 // Mock storage service
@@ -26,6 +26,11 @@ const defaultSettings: FamilySettings = {
 describe('useKinStore', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.spyOn(window, 'alert').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     it('should start with isLoading = true', () => {
@@ -97,5 +102,32 @@ describe('useKinStore', () => {
             // Loose match for the entry in the array
             expect(entryCall[1]).toEqual(expect.arrayContaining([expect.objectContaining({ id: '2' })]));
         });
+    });
+
+    it('should block destructive actions for viewer role', async () => {
+        const viewerUser = { id: 'u2', name: 'Viewer', role: UserRole.VIEWER };
+        const mockEntries = [{
+            id: 'entry-1',
+            userId: 'u1',
+            type: EntryType.EXPENSE,
+            amount: 100,
+            description: 'Test',
+            date: '2023-01-01',
+            category: 'Test'
+        }];
+
+        (storageService.load as any).mockImplementation((key: string, def: any) => {
+            if (key === 'kin_entries') return Promise.resolve(mockEntries);
+            return Promise.resolve(def);
+        });
+
+        const { result } = renderHook(() => useKinStore(mockEntries as any, [], [], defaultSettings, viewerUser));
+        await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+        act(() => {
+            result.current.deleteEntry('entry-1');
+        });
+
+        expect(result.current.entries).toEqual(mockEntries);
     });
 });

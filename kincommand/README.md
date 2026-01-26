@@ -29,7 +29,11 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
 1.  **Environment Variables**:
     Create a `.env.local` file in the `kincommand` directory:
     ```bash
-    VITE_GEMINI_API_KEY=your_api_key_here
+    # Server-side Gemini key (used by the local API proxy)
+    GEMINI_API_KEY=your_api_key_here
+
+    # Optional: Base URL for the local API proxy
+    VITE_API_BASE_URL=http://localhost:8787
 
     # Optional: LightOnOCR for offline/fallback receipt scanning
     VITE_OCR_ENABLED=false
@@ -45,6 +49,7 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
 3.  **Running Locally**:
     ```bash
     npm run dev
+    npm run dev:api
     ```
 
 4.  **Optional: LightOnOCR Service** (for offline receipt scanning):
@@ -55,12 +60,19 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
     ```
     When enabled, LightOnOCR serves as a fallback when Gemini is rate-limited or unavailable.
 
+5.  **Quality & Analysis**:
+    ```bash
+    npm run lint
+    npm run analyze
+    ```
+
 ## 🔐 Security Features
 
-*   **Custom PIN Lock**: Set your own 4-digit PIN in Settings (default: `1234`). PIN is hashed before storage.
-*   **Auto-Lock**: Configurable 60-second idle timeout. Can be disabled in Settings for development.
-*   **Security Audit Logs**: Immutable trail of auth attempts, settings changes, and data imports.
-*   **Privacy Mode**: Regex-based PII scrubbing removes patient names, emails, phone numbers, and SSNs before sending data to AI.
+*   **Custom PIN Lock**: Set your own 4-digit PIN in Settings. PINs are hashed before storage.
+*   **Auto-Lock**: Enabled by default with a 60-second idle timeout. Can be disabled in Settings for development.
+*   **Security Audit Logs**: Append-only event log in-app (local storage can still be reset).
+*   **Privacy Mode**: Regex-based PII scrubbing removes patient and user names, emails, phone numbers, and SSNs before sending data to AI.
+*   **Local Encryption**: When a PIN is set, local storage is encrypted at rest.
 *   **Input Validation**: Form validation prevents invalid amounts, empty descriptions, and data corruption.
 *   **API Key Protection**: `.env.local` is gitignored to prevent accidental key exposure.
 
@@ -82,7 +94,7 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
     *   *Voice*: Uses `gemini-2.5-flash-native-audio-preview` to parse raw audio into structured JSON transactions (Expense vs Time).
     *   *Vision*: Uses `gemini-3-flash-preview` to extract date, merchant, and total from receipt images.
 *   **LightOnOCR Fallback**: When Gemini is rate-limited or unavailable, receipt scanning falls back to the local LightOnOCR-2-1B model. This 1B parameter vision-language model runs entirely offline, extracting structured data (amount, date, merchant, category) from receipt images.
-*   **Privacy Scrubbing**: The app includes a "Privacy Mode" that regex-scrubs the patient's name before sending data to the LLM.
+*   **Privacy Scrubbing**: The app includes a "Privacy Mode" that regex-scrubs patient and user names before sending data to the LLM.
 
 ## 🤝 Contributing
 

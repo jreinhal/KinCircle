@@ -1,26 +1,88 @@
 import React, { useState } from 'react';
 import { FamilySettings } from '../types';
 import { ArrowRight, Heart, DollarSign, ShieldCheck, CheckCircle2, User } from 'lucide-react';
+import { hashPinSecure } from '../utils/crypto';
+import { pinSchema } from '../utils/validation';
+import { deriveKeyFromPin, generateSaltHex } from '../utils/storageCrypto';
+import { getSecurityMeta, updateSecurityMeta } from '../utils/securityMeta';
+import { encryptAllLocalStorage, getStorageProvider, refreshEncryptionState, setEncryptionEnabled, setEncryptionKey } from '../services/storageService';
 
 interface OnboardingWizardProps {
   onComplete: (settings: FamilySettings) => void;
+  initialSettings?: FamilySettings;
 }
 
-const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
+const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initialSettings }) => {
   const [step, setStep] = useState(1);
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [pinError, setPinError] = useState('');
+  const [isFinishing, setIsFinishing] = useState(false);
   const [settings, setSettings] = useState<FamilySettings>({
-    patientName: '',
-    hourlyRate: 25,
-    privacyMode: false,
-    autoLockEnabled: true,
-    hasCompletedOnboarding: true
+    patientName: initialSettings?.patientName ?? '',
+    hourlyRate: initialSettings?.hourlyRate ?? 25,
+    privacyMode: initialSettings?.privacyMode ?? false,
+    autoLockEnabled: initialSettings?.autoLockEnabled ?? true,
+    hasCompletedOnboarding: true,
+    customPinHash: initialSettings?.customPinHash,
+    isSecurePinHash: initialSettings?.isSecurePinHash,
+    familyId: initialSettings?.familyId
   });
 
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
 
-  const finish = () => {
-    onComplete(settings);
+  const finish = async () => {
+    setIsFinishing(true);
+    setPinError('');
+
+    try {
+      if (!settings.customPinHash) {
+        const pinValidation = pinSchema.safeParse(pin);
+        if (!pinValidation.success) {
+          setPinError(pinValidation.error.errors[0]?.message || 'Invalid PIN');
+          return;
+        }
+        if (pin !== confirmPin) {
+          setPinError('PINs do not match');
+          return;
+        }
+
+        const secureHash = await hashPinSecure(pin);
+        const updatedSettings = {
+          ...settings,
+          customPinHash: secureHash,
+          isSecurePinHash: true
+        };
+
+        // Enable encryption at rest for local storage
+        if (getStorageProvider() === 'local') {
+          const meta = getSecurityMeta();
+          const saltHex = meta.saltHex || generateSaltHex();
+          const key = await deriveKeyFromPin(pin, saltHex);
+
+          setEncryptionKey(key);
+          setEncryptionEnabled(true);
+          refreshEncryptionState();
+          updateSecurityMeta({
+            pinHash: secureHash,
+            isSecurePinHash: true,
+            encryptionEnabled: true,
+            saltHex,
+            version: 1
+          });
+
+          await encryptAllLocalStorage();
+        }
+
+        onComplete(updatedSettings);
+        return;
+      }
+
+      onComplete(settings);
+    } finally {
+      setIsFinishing(false);
+    }
   };
 
   return (
@@ -148,7 +210,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
           )}
 
           {/* STEP 4: SECURITY */}
-          {step === 4 && (
+        {step === 4 && (
             <div className="animate-slide-up space-y-6">
               <div className="text-center mb-6">
                 <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -156,7 +218,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 </div>
                 <h2 className="text-2xl font-bold text-slate-900">Stay Secure</h2>
                 <p className="text-slate-500">
-                  We recommend enabling Auto-Lock for HIPAA compliance.
+                  We recommend enabling Auto-Lock to follow healthcare privacy best practices.
                 </p>
               </div>
 
@@ -186,10 +248,44 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 </div>
               </div>
 
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <h3 className="font-bold text-slate-900 mb-2">Set Your Security PIN</h3>
+                <p className="text-xs text-slate-500 mb-3">Required to unlock the app and encrypt local data.</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="password"
+                    maxLength={4}
+                    placeholder="PIN"
+                    value={pin}
+                    onChange={(e) => {
+                      setPin(e.target.value.replace(/\D/g, ''));
+                      setPinError('');
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-center text-lg tracking-widest focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <input
+                    type="password"
+                    maxLength={4}
+                    placeholder="Confirm"
+                    value={confirmPin}
+                    onChange={(e) => {
+                      setConfirmPin(e.target.value.replace(/\D/g, ''));
+                      setPinError('');
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-center text-lg tracking-widest focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                {pinError && <p className="text-xs text-red-600 mt-2">{pinError}</p>}
+              </div>
+
               <div className="pt-8 flex space-x-4">
                 <button onClick={prevStep} className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl">Back</button>
-                <button onClick={finish} className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-blue-900/20">
-                  Finish Setup
+                <button
+                  onClick={finish}
+                  disabled={isFinishing}
+                  className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-blue-900/20 disabled:opacity-60"
+                >
+                  {isFinishing ? 'Saving...' : 'Finish Setup'}
                 </button>
               </div>
             </div>

@@ -12,14 +12,14 @@
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
   <meta http-equiv="Permissions-Policy" content="camera=(self), microphone=(self), geolocation=()" />
 
-  <!-- Content Security Policy - Development mode allows CDN resources -->
+  <!-- Content Security Policy -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://esm.sh;
+    script-src 'self';
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' data: blob:;
-    connect-src 'self' https://generativelanguage.googleapis.com https://*.supabase.co wss://*.supabase.co;
+    connect-src 'self' %VITE_API_BASE_URL% %VITE_OCR_SERVICE_URL% http://localhost:8787 http://localhost:8090 https://generativelanguage.googleapis.com https://*.supabase.co wss://*.supabase.co;
     frame-ancestors 'none';
     form-action 'self';
     base-uri 'self';
@@ -45,115 +45,15 @@
   <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
   <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167x167.png" />
-  <script src="https://cdn.tailwindcss.com"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Outfit', 'Inter', 'sans-serif'], // Prioritize rounder font if available
-          },
-          colors: {
-            primary: '#1c1917', // Stone 900 (Warmer Black)
-            secondary: '#44403c', // Stone 700 (Warm Gray)
-            accent: '#0d9488', // Teal 600 (Healing/Calm)
-            warm: '#f97316', // Orange 500 (Warmth)
-            success: '#10b981',
-            warning: '#f59e0b',
-            danger: '#ef4444',
-          },
-          borderRadius: {
-            'xl': '1rem',
-            '2xl': '1.5rem',
-            '3xl': '2rem',
-          },
-          animation: {
-            'fade-in': 'fadeIn 0.5s ease-out',
-            'slide-up': 'slideUp 0.5s ease-out',
-          },
-          keyframes: {
-            fadeIn: {
-              '0%': { opacity: '0' },
-              '100%': { opacity: '1' },
-            },
-            slideUp: {
-              '0%': { transform: 'translateY(20px)', opacity: '0' },
-              '100%': { transform: 'translateY(0)', opacity: '1' },
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    /* Custom scrollbar for webkit */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-
-    /* Safe area padding for mobile browsers */
-    .pb-safe {
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-
-    /* Ensure content doesn't get hidden behind mobile browser chrome */
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      main {
-        padding-bottom: max(6rem, env(safe-area-inset-bottom, 6rem));
-      }
-    }
-  </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
-    "recharts": "https://esm.sh/recharts@^3.7.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "vite": "https://esm.sh/vite@^7.3.1"
-  }
-}
-</script>
-  <link rel="stylesheet" href="/index.css">
 </head>
 
 <body class="bg-stone-50 text-stone-900 font-sans antialiased h-screen overflow-hidden">
   <div id="root" class="h-full"></div>
   <script type="module" src="/index.tsx"></script>
 
-  <!-- Register Service Worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((registration) => {
-            console.log('SW registered:', registration.scope);
-          })
-          .catch((error) => {
-            console.log('SW registration failed:', error);
-          });
-      });
-    }
-  </script>
 </body>
 
 </html>

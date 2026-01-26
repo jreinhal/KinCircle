@@ -2,20 +2,24 @@ import { test, expect } from '@playwright/test';
 
 const seedLocalStorage = async (page: any) => {
   await page.addInitScript(() => {
+    const familyId = 'family-test';
     const settings = {
       hourlyRate: 25,
       patientName: 'Test Patient',
       privacyMode: false,
       autoLockEnabled: false,
-      hasCompletedOnboarding: true
-      // Note: No customPinHash means default PIN '1234' will work
+      hasCompletedOnboarding: true,
+      familyId,
+      customPinHash: 'wcoy',
+      isSecurePinHash: false
     };
 
-    localStorage.setItem('kin_entries', JSON.stringify([]));
-    localStorage.setItem('kin_tasks', JSON.stringify([]));
-    localStorage.setItem('kin_documents', JSON.stringify([]));
-    localStorage.setItem('kin_security_logs', JSON.stringify([]));
-    localStorage.setItem('kin_settings', JSON.stringify(settings));
+    localStorage.setItem('kin_family_id', familyId);
+    localStorage.setItem(`kin_entries:${familyId}`, JSON.stringify([]));
+    localStorage.setItem(`kin_tasks:${familyId}`, JSON.stringify([]));
+    localStorage.setItem(`kin_documents:${familyId}`, JSON.stringify([]));
+    localStorage.setItem(`kin_security_logs:${familyId}`, JSON.stringify([]));
+    localStorage.setItem(`kin_settings:${familyId}`, JSON.stringify(settings));
   });
 };
 
@@ -24,7 +28,7 @@ const activateEmergencyMode = async (page: any) => {
   await page.getByRole('button', { name: /emergency access/i }).click();
   // Wait for PIN modal to appear
   await page.waitForSelector('input[type="password"]');
-  // Enter default PIN '1234'
+  // Enter configured PIN '1234'
   await page.fill('input[type="password"]', '1234');
   // Click the activate button
   await page.getByRole('button', { name: /activate emergency mode/i }).click();

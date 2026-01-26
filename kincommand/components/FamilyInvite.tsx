@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
 import { UserPlus, Copy, Check, Mail, Users, Clock, CheckCircle, XCircle, Link2, X, Shield, Calendar } from 'lucide-react';
 import { FamilyInvite as FamilyInviteType, User, UserRole } from '../types';
-
-interface FamilyInviteProps {
-  invites: FamilyInviteType[];
-  users: User[];
-  currentUser: User;
-  onCreateInvite: (invite: FamilyInviteType) => void;
-  onCancelInvite: (id: string) => void;
-}
+import { useFamilyInvitesStore } from '../hooks/useFamilyInvitesStore';
+import { useAppContext } from '../context/AppContext';
+import { hasPermission } from '../utils/rbac';
 
 const generateInviteCode = (): string => {
   // Generate a readable 8-character code using cryptographically secure random values
@@ -22,20 +17,18 @@ const generateInviteCode = (): string => {
   return code;
 };
 
-const FamilyInvite: React.FC<FamilyInviteProps> = ({
-  invites,
-  users,
-  currentUser,
-  onCreateInvite,
-  onCancelInvite
-}) => {
+const FamilyInvite: React.FC = () => {
+  const { familyInvites, addFamilyInvite, cancelFamilyInvite } = useFamilyInvitesStore();
+  const { users, currentUser } = useAppContext();
+  const canInvite = hasPermission(currentUser, 'family:invite');
+  const canManage = hasPermission(currentUser, 'family:manage');
   const [isInviting, setIsInviting] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [viewingMember, setViewingMember] = useState<User | null>(null);
   const [form, setForm] = useState({
     name: '',
     email: '',
-    role: 'CONTRIBUTOR' as UserRole
+    role: UserRole.CONTRIBUTOR
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -53,9 +46,10 @@ const FamilyInvite: React.FC<FamilyInviteProps> = ({
       inviteCode: generateInviteCode()
     };
 
-    onCreateInvite(newInvite);
+    if (!canInvite) return;
+    addFamilyInvite(newInvite);
     setIsInviting(false);
-    setForm({ name: '', email: '', role: 'CONTRIBUTOR' });
+    setForm({ name: '', email: '', role: UserRole.CONTRIBUTOR });
   };
 
   const copyInviteLink = async (invite: FamilyInviteType) => {
@@ -87,8 +81,8 @@ const FamilyInvite: React.FC<FamilyInviteProps> = ({
     }
   };
 
-  const pendingInvites = invites.filter(i => i.status === 'pending');
-  const acceptedInvites = invites.filter(i => i.status === 'accepted');
+  const pendingInvites = familyInvites.filter(i => i.status === 'pending');
+  const acceptedInvites = familyInvites.filter(i => i.status === 'accepted');
 
   return (
     <div className="space-y-6">
@@ -100,10 +94,11 @@ const FamilyInvite: React.FC<FamilyInviteProps> = ({
             Invite family members to collaborate on care tracking
           </p>
         </div>
-        {!isInviting && currentUser.role === UserRole.ADMIN && (
+        {!isInviting && canInvite && (
           <button
-            onClick={() => setIsInviting(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+            onClick={() => canInvite && setIsInviting(true)}
+            disabled={!canInvite}
+            className={`flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg transition-colors ${canInvite ? 'hover:bg-teal-700' : 'opacity-50 cursor-not-allowed'}`}
           >
             <UserPlus size={18} />
             Invite Family
@@ -307,13 +302,15 @@ const FamilyInvite: React.FC<FamilyInviteProps> = ({
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => onCancelInvite(invite.id)}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Cancel invite"
-                  >
-                    <XCircle size={18} />
-                  </button>
+                  {canManage && (
+                    <button
+                      onClick={() => cancelFamilyInvite(invite.id)}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Cancel invite"
+                    >
+                      <XCircle size={18} />
+                    </button>
+                  )}
                 </div>
 
                 {/* Share Options */}
@@ -378,8 +375,9 @@ const FamilyInvite: React.FC<FamilyInviteProps> = ({
             They can add their own expenses and see what everyone contributes.
           </p>
           <button
-            onClick={() => setIsInviting(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+            onClick={() => canInvite && setIsInviting(true)}
+            disabled={!canInvite}
+            className={`inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg transition-colors ${canInvite ? 'hover:bg-teal-700' : 'opacity-50 cursor-not-allowed'}`}
           >
             <UserPlus size={18} />
             Invite Your First Family Member

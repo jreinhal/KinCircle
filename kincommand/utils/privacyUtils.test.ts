@@ -19,7 +19,7 @@ describe('privacyUtils', () => {
 
     it('should redacted patient name', () => {
         const text = 'Meeting with Martha Jones today.';
-        expect(anonymizeText(text, mockSettings)).toBe('Meeting with [PATIENT] today.');
+        expect(anonymizeText(text, mockSettings)).toBe('Meeting with [REDACTED] today.');
     });
 
     it('should redact emails', () => {

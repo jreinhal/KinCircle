@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import { Plus, Repeat, Pause, Play, Trash2, Calendar, DollarSign } from 'lucide-react';
-import { RecurringExpense, RecurrenceFrequency, User, LedgerEntry, EntryType } from '../types';
-
-interface RecurringExpensesProps {
-  recurringExpenses: RecurringExpense[];
-  currentUser: User;
-  onAdd: (expense: RecurringExpense) => void;
-  onUpdate: (expense: RecurringExpense) => void;
-  onDelete: (id: string) => void;
-  onGenerateEntry: (expense: RecurringExpense) => void;
-}
+import { RecurringExpense, RecurrenceFrequency, EntryType } from '../types';
+import { useConfirm } from './ConfirmDialog';
+import { useRecurringExpensesStore } from '../hooks/useRecurringExpensesStore';
+import { useEntriesStore } from '../hooks/useEntriesStore';
+import { useAppContext } from '../context/AppContext';
+import { hasPermission } from '../utils/rbac';
 
 const FREQUENCY_LABELS: Record<RecurrenceFrequency, string> = {
   weekly: 'Weekly',
@@ -23,15 +19,15 @@ const CATEGORY_OPTIONS = [
   'Utilities', 'Insurance', 'Home Care', 'Other'
 ];
 
-const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
-  recurringExpenses,
-  currentUser,
-  onAdd,
-  onUpdate,
-  onDelete,
-  onGenerateEntry
-}) => {
+const RecurringExpenses: React.FC = () => {
+  const { recurringExpenses, addRecurringExpense, updateRecurringExpense, deleteRecurringExpense } = useRecurringExpensesStore();
+  const { addEntry } = useEntriesStore();
+  const { currentUser } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
+  const confirm = useConfirm();
+  const canAdd = hasPermission(currentUser, 'recurring_expenses:create');
+  const canUpdate = hasPermission(currentUser, 'recurring_expenses:update');
+  const canDelete = hasPermission(currentUser, 'recurring_expenses:delete');
   const [form, setForm] = useState({
     description: '',
     amount: '',
@@ -56,7 +52,8 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
       createdAt: new Date().toISOString()
     };
 
-    onAdd(newExpense);
+    if (!canAdd) return;
+    addRecurringExpense(newExpense);
     setIsAdding(false);
     setForm({
       description: '',
@@ -68,7 +65,8 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
   };
 
   const toggleActive = (expense: RecurringExpense) => {
-    onUpdate({ ...expense, isActive: !expense.isActive });
+    if (!canUpdate) return;
+    updateRecurringExpense({ ...expense, isActive: !expense.isActive });
   };
 
   const isDueSoon = (dateStr: string) => {
@@ -97,8 +95,9 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
         </div>
         {!isAdding && (
           <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+            onClick={() => canAdd && setIsAdding(true)}
+            disabled={!canAdd}
+            className={`flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg transition-colors ${canAdd ? 'hover:bg-teal-700' : 'opacity-50 cursor-not-allowed'}`}
           >
             <Plus size={18} />
             Add Recurring
@@ -245,7 +244,15 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
                   </div>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => onGenerateEntry(expense)}
+                      onClick={() => addEntry({
+                        id: crypto.randomUUID(),
+                        userId: currentUser.id,
+                        type: EntryType.EXPENSE,
+                        date: new Date().toISOString().split('T')[0],
+                        description: expense.description,
+                        amount: expense.amount,
+                        category: expense.category
+                      })}
                       className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
                       title="Log this expense now"
                     >
@@ -253,18 +260,29 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
                     </button>
                     <button
                       onClick={() => toggleActive(expense)}
-                      className="p-2 text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+                      disabled={!canUpdate}
+                      className={`p-2 rounded-lg transition-colors ${canUpdate ? 'text-slate-400 hover:bg-slate-100' : 'text-slate-300 cursor-not-allowed'}`}
                       title="Pause recurring"
                     >
                       <Pause size={18} />
                     </button>
-                    <button
-                      onClick={() => onDelete(expense.id)}
-                      className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {canDelete && (
+                      <button
+                        onClick={async () => {
+                          const ok = await confirm({
+                            title: 'Delete recurring expense',
+                            message: `Delete "${expense.description}"? This cannot be undone.`,
+                            confirmLabel: 'Delete',
+                            destructive: true
+                          });
+                          if (ok) deleteRecurringExpense(expense.id);
+                        }}
+                        className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -301,18 +319,29 @@ const RecurringExpenses: React.FC<RecurringExpensesProps> = ({
                     <span className="font-semibold text-slate-600">${expense.amount.toFixed(2)}</span>
                     <button
                       onClick={() => toggleActive(expense)}
-                      className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
+                      disabled={!canUpdate}
+                      className={`p-2 rounded-lg transition-colors ${canUpdate ? 'text-teal-600 hover:bg-teal-50' : 'text-slate-300 cursor-not-allowed'}`}
                       title="Resume recurring"
                     >
                       <Play size={18} />
                     </button>
-                    <button
-                      onClick={() => onDelete(expense.id)}
-                      className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {canDelete && (
+                      <button
+                        onClick={async () => {
+                          const ok = await confirm({
+                            title: 'Delete recurring expense',
+                            message: `Delete "${expense.description}"? This cannot be undone.`,
+                            confirmLabel: 'Delete',
+                            destructive: true
+                          });
+                          if (ok) deleteRecurringExpense(expense.id);
+                        }}
+                        className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

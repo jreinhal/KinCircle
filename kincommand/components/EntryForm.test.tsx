@@ -1,25 +1,34 @@
 import { render, screen } from '@testing-library/react';
 import EntryForm from './EntryForm';
-import { EntryType, FamilySettings, User } from '../types';
+import { EntryType } from '../types';
 
-const settings: FamilySettings = {
-  hourlyRate: 25,
-  patientName: '',
-  privacyMode: false,
-  autoLockEnabled: false,
-  hasCompletedOnboarding: true
-};
+vi.mock('../hooks/useEntriesStore', () => ({
+  useEntriesStore: () => ({ addEntry: vi.fn() })
+}));
 
-const user: User = { id: 'u1', name: 'Sarah Miller', role: 'ADMIN' as any };
+vi.mock('../hooks/useSettingsStore', () => ({
+  useSettingsStore: () => ({
+    settings: {
+      hourlyRate: 25,
+      patientName: '',
+      privacyMode: false,
+      autoLockEnabled: true,
+      hasCompletedOnboarding: true
+    }
+  })
+}));
+
+vi.mock('../context/AppContext', () => ({
+  useAppContext: () => ({
+    currentUser: { id: 'u1', name: 'Test User', role: 'ADMIN' }
+  })
+}));
 
 describe('EntryForm', () => {
   it('honors initialType for TIME entries', () => {
     render(
       <EntryForm
-        currentUser={user}
-        settings={settings}
         initialType={EntryType.TIME}
-        onAddEntry={() => {}}
         onCancel={() => {}}
       />
     );

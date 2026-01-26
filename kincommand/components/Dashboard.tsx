@@ -1,18 +1,20 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { LedgerEntry, User, EntryType, FamilySettings } from '../types';
+import { EntryType } from '../types';
 import { DollarSign, Clock, Users, PlusCircle, ArrowRight, Heart, Sun } from 'lucide-react';
 import DebtSummary from './DebtSummary';
+import { useEntriesStore } from '../hooks/useEntriesStore';
+import { useSettingsStore } from '../hooks/useSettingsStore';
+import { useAppContext } from '../context/AppContext';
 
 interface DashboardProps {
-  entries: LedgerEntry[];
-  users: User[];
-  settings: FamilySettings;
-  currentUser: User;
   onStartEntry: (type: EntryType) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings, currentUser, onStartEntry }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
+  const { entries } = useEntriesStore();
+  const { settings } = useSettingsStore();
+  const { users, currentUser } = useAppContext();
 
   // Empty State Handling
   if (entries.length === 0) {
@@ -167,7 +169,10 @@ const Dashboard: React.FC<DashboardProps> = ({ entries, users, settings, current
               <YAxis dataKey="name" type="category" stroke="#64748b" width={80} />
               <Tooltip
                 cursor={{ fill: '#f1f5f9' }}
-                formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
+                formatter={(value) => {
+                  const numeric = typeof value === 'number' ? value : Number(value || 0);
+                  return [`$${numeric.toLocaleString()}`, ''];
+                }}
                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
               />
               <Bar dataKey="Cash" stackId="a" fill={colors.Cash} radius={[0, 4, 4, 0]} barSize={32} />

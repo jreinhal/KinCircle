@@ -1,13 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, User as UserIcon, Bot, Loader2, ExternalLink, Globe, DollarSign, Clock, Search, HelpCircle } from 'lucide-react';
-import { LedgerEntry, User, FamilySettings, ChatMessage } from '../types';
+import { ChatMessage } from '../types';
 import { queryLedger } from '../services/geminiService';
-
-interface ChatAssistantProps {
-  entries: LedgerEntry[];
-  users: User[];
-  settings: FamilySettings;
-}
+import { useEntriesStore } from '../hooks/useEntriesStore';
+import { useSettingsStore } from '../hooks/useSettingsStore';
+import { useAppContext } from '../context/AppContext';
 
 interface ExtendedChatMessage extends ChatMessage {
   sources?: Array<{title: string, uri: string}>;
@@ -69,7 +66,10 @@ const formatMessage = (text: string): React.ReactNode[] => {
   });
 };
 
-const ChatAssistant: React.FC<ChatAssistantProps> = ({ entries, users, settings }) => {
+const ChatAssistant: React.FC = () => {
+  const { entries } = useEntriesStore();
+  const { settings } = useSettingsStore();
+  const { users } = useAppContext();
   const [messages, setMessages] = useState<ExtendedChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -83,7 +83,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ entries, users, settings 
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async (e: React.FormEvent) => {
+  const handleSend = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
@@ -121,7 +121,7 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ entries, users, settings 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [entries, input, isLoading, settings, users]);
 
   // Suggested prompts for empty state
   const suggestedPrompts = [
@@ -131,9 +131,9 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ entries, users, settings 
     { icon: HelpCircle, text: "What are signs of caregiver burnout?", bgClass: "bg-orange-50", textClass: "text-orange-600", hoverClass: "group-hover:bg-orange-100" },
   ];
 
-  const handleSuggestedPrompt = (prompt: string) => {
+  const handleSuggestedPrompt = useCallback((prompt: string) => {
     setInput(prompt);
-  };
+  }, []);
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in">

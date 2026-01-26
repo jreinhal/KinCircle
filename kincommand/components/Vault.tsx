@@ -1,18 +1,17 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { FileText, Download, Shield, Siren, X, Trash2, Upload, Eye, Calendar, HardDrive, Lock, AlertTriangle } from 'lucide-react';
-import { VaultDocument, FamilySettings, User } from '../types';
+import { VaultDocument } from '../types';
 import { verifyPin, hashPinLegacy } from '../utils/crypto';
+import { useConfirm } from './ConfirmDialog';
+import { useDocumentsStore } from '../hooks/useDocumentsStore';
+import { useSettingsStore } from '../hooks/useSettingsStore';
+import { useAppContext } from '../context/AppContext';
+import { hasPermission } from '../utils/rbac';
 
-interface VaultProps {
-    documents: VaultDocument[];
-    settings: FamilySettings;
-    users: User[];
-    onAddDocument: (doc: VaultDocument) => void;
-    onDeleteDocument: (id: string) => void;
-    onLogSecurityEvent: (details: string, severity: 'INFO' | 'WARNING' | 'CRITICAL') => void;
-}
-
-const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument, onDeleteDocument, onLogSecurityEvent }) => {
+const Vault: React.FC = () => {
+  const { documents, addDocument, deleteDocument } = useDocumentsStore();
+  const { settings, logSecurityEvent } = useSettingsStore();
+  const { users, currentUser } = useAppContext();
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const [showEmergencyPinModal, setShowEmergencyPinModal] = useState(false);
   const [emergencyPin, setEmergencyPin] = useState('');
@@ -20,8 +19,11 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
   const [isVerifying, setIsVerifying] = useState(false);
   const [viewingDoc, setViewingDoc] = useState<VaultDocument | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const confirm = useConfirm();
 
   const adminUser = users.find(u => u.role === 'ADMIN') || users[0];
+  const canAddDocument = hasPermission(currentUser, 'documents:create');
+  const canDeleteDocument = hasPermission(currentUser, 'documents:delete');
 
   const verifyEmergencyPin = useCallback(async () => {
     if (emergencyPin.length !== 4) {
@@ -31,8 +33,12 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
 
     setIsVerifying(true);
     try {
-      const defaultHash = hashPinLegacy('1234');
-      const expectedHash = settings.customPinHash || defaultHash;
+      if (!settings.customPinHash) {
+        setPinError('Please set a PIN in Settings before using Emergency Access.');
+        return;
+      }
+
+      const expectedHash = settings.customPinHash;
 
       let isValid = false;
       if (settings.isSecurePinHash && settings.customPinHash) {
@@ -47,15 +53,15 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
         setShowEmergencyPinModal(false);
         setEmergencyPin('');
         setPinError('');
-        onLogSecurityEvent('Emergency Responder Mode Activated (PIN verified)', 'CRITICAL');
+        logSecurityEvent('Emergency Responder Mode Activated (PIN verified)', 'CRITICAL', 'EMERGENCY_ACCESS');
       } else {
         setPinError('Invalid PIN');
-        onLogSecurityEvent('Failed emergency access attempt - Invalid PIN', 'WARNING');
+        logSecurityEvent('Failed emergency access attempt - Invalid PIN', 'WARNING', 'EMERGENCY_ACCESS');
       }
     } finally {
       setIsVerifying(false);
     }
-  }, [emergencyPin, settings, onLogSecurityEvent]);
+  }, [emergencyPin, settings, logSecurityEvent]);
 
   const handleEmergencyClick = () => {
     setShowEmergencyPinModal(true);
@@ -65,7 +71,7 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file) {
+      if (file && canAddDocument) {
           const newDoc: VaultDocument = {
               id: crypto.randomUUID(),
               name: file.name,
@@ -73,7 +79,7 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
               type: 'Uploaded',
               size: (file.size / 1024 / 1024).toFixed(1) + ' MB'
           };
-          onAddDocument(newDoc);
+          addDocument(newDoc);
           if (fileInputRef.current) fileInputRef.current.value = '';
       }
   };
@@ -99,7 +105,7 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
         <div>
             <h3 className="text-sm font-semibold text-blue-900">Security Note</h3>
             <p className="text-sm text-blue-800 mt-1">
-                Documents stored here are encrypted. "Emergency Access" creates a read-only view for First Responders.
+                This prototype stores document metadata locally. Enable a PIN to encrypt local storage. "Emergency Access" creates a read-only view for First Responders.
             </p>
         </div>
       </div>
@@ -115,13 +121,24 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
               <div className="p-3 bg-slate-100 rounded-lg group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
                 <FileText size={24} />
               </div>
-              <button
-                onClick={(e) => { e.stopPropagation(); onDeleteDocument(doc.id); }}
-                className="text-slate-400 hover:text-red-500 p-1"
-                title="Delete Document"
-              >
-                <Trash2 size={18} />
-              </button>
+              {canDeleteDocument && (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const ok = await confirm({
+                      title: 'Delete document',
+                      message: `Delete "${doc.name}"? This cannot be undone.`,
+                      confirmLabel: 'Delete',
+                      destructive: true
+                    });
+                    if (ok) deleteDocument(doc.id);
+                  }}
+                  className="text-slate-400 hover:text-red-500 p-1"
+                  title="Delete Document"
+                >
+                  <Trash2 size={18} />
+                </button>
+              )}
             </div>
             <h3 className="font-semibold text-slate-800 truncate" title={doc.name}>{doc.name}</h3>
             <div className="flex items-center justify-between mt-4 text-xs text-slate-500">
@@ -142,21 +159,23 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
         ))}
         
         {/* Upload Placeholder */}
-        <div 
-            onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors cursor-pointer min-h-[180px]"
-        >
-            <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3">
-                <Upload size={24} />
-            </div>
-            <span className="font-medium">Upload Document</span>
-            <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                onChange={handleFileUpload}
-            />
-        </div>
+        {canAddDocument && (
+          <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors cursor-pointer min-h-[180px]"
+          >
+              <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3">
+                  <Upload size={24} />
+              </div>
+              <span className="font-medium">Upload Document</span>
+              <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  onChange={handleFileUpload}
+              />
+          </div>
+        )}
       </div>
 
       {/* Document View Modal */}
@@ -201,7 +220,7 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
               <div className="flex gap-3">
                 <button
                   onClick={() => {
-                    onLogSecurityEvent(`Document accessed: ${viewingDoc.name}`, 'INFO');
+                    logSecurityEvent(`Document accessed: ${viewingDoc.name}`, 'INFO', 'EMERGENCY_ACCESS');
                     alert(`Opening "${viewingDoc.name}"...\n\nIn production, this would open or download the actual document.`);
                   }}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
@@ -211,7 +230,7 @@ const Vault: React.FC<VaultProps> = ({ documents, settings, users, onAddDocument
                 </button>
                 <button
                   onClick={() => {
-                    onLogSecurityEvent(`Document downloaded: ${viewingDoc.name}`, 'INFO');
+                    logSecurityEvent(`Document downloaded: ${viewingDoc.name}`, 'INFO', 'EMERGENCY_ACCESS');
                     alert(`Downloading "${viewingDoc.name}"...\n\nIn production, this would download the actual file.`);
                   }}
                   className="flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { LedgerEntry, MedicaidReportItem, FamilySettings } from '../types';
+import { MedicaidReportItem } from '../types';
 import { analyzeLedgerForMedicaid } from '../services/geminiService';
 import { ShieldAlert, CheckCircle, AlertTriangle, Loader2, FileCheck } from 'lucide-react';
+import { useEntriesStore } from '../hooks/useEntriesStore';
+import { useSettingsStore } from '../hooks/useSettingsStore';
 
-interface MedicaidReportProps {
-  entries: LedgerEntry[];
-  settings: FamilySettings;
-}
-
-const MedicaidReport: React.FC<MedicaidReportProps> = ({ entries, settings }) => {
+const MedicaidReport: React.FC = () => {
+  const { entries } = useEntriesStore();
+  const { settings } = useSettingsStore();
   const [report, setReport] = useState<MedicaidReportItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasRun, setHasRun] = useState(false);

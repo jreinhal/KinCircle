@@ -1,26 +1,14 @@
 import React, { useState } from 'react';
-import { Task, User, LedgerEntry, EntryType, FamilySettings } from '../types';
+import { Task, EntryType, LedgerEntry } from '../types';
 import { Calendar, CheckCircle2, Circle, Clock, Plus, User as UserIcon, ArrowRight, DollarSign, Pencil, X } from 'lucide-react';
+import { useTasksStore } from '../hooks/useTasksStore';
+import { useSettingsStore } from '../hooks/useSettingsStore';
+import { useAppContext } from '../context/AppContext';
 
-interface ScheduleProps {
-    tasks: Task[];
-    users: User[];
-    currentUser: User;
-    settings: FamilySettings;
-    onAddTask: (task: Task) => void;
-    onUpdateTask: (task: Task) => void;
-    onConvertTaskToEntry: (task: Task, entry: LedgerEntry) => void;
-}
-
-const Schedule: React.FC<ScheduleProps> = ({
-    tasks,
-    users,
-    currentUser,
-    settings,
-    onAddTask,
-    onUpdateTask,
-    onConvertTaskToEntry
-}) => {
+const Schedule: React.FC = () => {
+    const { tasks, addTask, updateTask, convertTaskToEntry } = useTasksStore();
+    const { settings } = useSettingsStore();
+    const { users, currentUser } = useAppContext();
     const [filter, setFilter] = useState<'UPCOMING' | 'COMPLETED'>('UPCOMING');
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [newTaskDate, setNewTaskDate] = useState(new Date().toISOString().split('T')[0]);
@@ -49,13 +37,13 @@ const Schedule: React.FC<ScheduleProps> = ({
             isCompleted: false
         };
 
-        onAddTask(task);
+        addTask(task);
         setNewTaskTitle('');
     };
 
     const toggleComplete = (task: Task) => {
         const updated = { ...task, isCompleted: !task.isCompleted };
-        onUpdateTask(updated);
+        updateTask(updated);
     };
 
     const handleEditClick = (task: Task) => {
@@ -75,7 +63,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             dueDate: editDate,
             assignedUserId: editAssignee
         };
-        onUpdateTask(updated);
+        updateTask(updated);
         setEditingTask(null);
     };
 
@@ -113,7 +101,7 @@ const Schedule: React.FC<ScheduleProps> = ({
             isMedicaidFlagged: false
         };
 
-        onConvertTaskToEntry(loggingTask, entry);
+        convertTaskToEntry(loggingTask, entry);
         setLoggingTask(null);
         setLogAmount('');
     };

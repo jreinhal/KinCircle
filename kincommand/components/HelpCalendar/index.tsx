@@ -1,23 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar, Plus, List, CalendarDays } from 'lucide-react';
-import { HelpTask } from '../../types';
-import { HelpCalendarProps, ViewMode, FilterStatus, TaskFormData, DEFAULT_FORM_DATA } from './types';
+import { HelpTask, EntryType, LedgerEntry } from '../../types';
+import { ViewMode, FilterStatus, TaskFormData, DEFAULT_FORM_DATA } from './types';
 import TaskCard from './TaskCard';
 import TaskForm from './TaskForm';
 import FilterStats from './FilterStats';
 import CalendarWeekView from './CalendarWeekView';
+import { useHelpTasksStore } from '../../hooks/useHelpTasksStore';
+import { useEntriesStore } from '../../hooks/useEntriesStore';
+import { useSettingsStore } from '../../hooks/useSettingsStore';
+import { useAppContext } from '../../context/AppContext';
 
-const HelpCalendar: React.FC<HelpCalendarProps> = ({
-  helpTasks,
-  users,
-  currentUser,
-  settings,
-  onAddTask,
-  onUpdateTask,
-  onClaimTask,
-  onCompleteTask,
-  onConvertToEntry
-}) => {
+const HelpCalendar: React.FC = () => {
+  const { helpTasks, addHelpTask, updateHelpTask, claimHelpTask, completeHelpTask } = useHelpTasksStore();
+  const { addEntry } = useEntriesStore();
+  const { settings } = useSettingsStore();
+  const { users, currentUser } = useAppContext();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [isAdding, setIsAdding] = useState(false);
@@ -101,7 +99,7 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
       estimatedMinutes: form.estimatedMinutes ? parseInt(form.estimatedMinutes) : undefined
     };
 
-    onAddTask(newTask);
+    addHelpTask(newTask);
     setIsAdding(false);
     resetForm();
   };
@@ -113,7 +111,7 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
       description: task.description || '',
       category: task.category,
       date: task.date,
-      timeSlot: task.timeSlot,
+      timeSlot: task.timeSlot ?? 'Flexible',
       estimatedMinutes: task.estimatedMinutes?.toString() || ''
     });
   };
@@ -132,7 +130,7 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
       estimatedMinutes: form.estimatedMinutes ? parseInt(form.estimatedMinutes) : undefined
     };
 
-    onUpdateTask(updatedTask);
+    updateHelpTask(updatedTask);
     setEditingTask(null);
     resetForm();
   };
@@ -143,12 +141,24 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
   };
 
   const handleClaimTask = (task: HelpTask) => {
-    onClaimTask(task.id, currentUser.id);
+    claimHelpTask(task.id, currentUser.id);
   };
 
   const handleCompleteAndLog = (task: HelpTask) => {
-    onCompleteTask(task.id);
-    onConvertToEntry(task);
+    completeHelpTask(task.id);
+    const minutes = task.estimatedMinutes ?? 60;
+    const hours = minutes / 60;
+    const entry: LedgerEntry = {
+      id: crypto.randomUUID(),
+      userId: currentUser.id,
+      type: EntryType.TIME,
+      date: task.date,
+      description: task.title,
+      amount: hours * settings.hourlyRate,
+      timeDurationMinutes: minutes,
+      category: task.category
+    };
+    addEntry(entry);
   };
 
   const navigateWeek = (direction: 'prev' | 'next') => {
@@ -265,7 +275,7 @@ const HelpCalendar: React.FC<HelpCalendarProps> = ({
                       onToggleExpand={setExpandedTaskId}
                       onClaimTask={handleClaimTask}
                       onCompleteAndLog={handleCompleteAndLog}
-                      onUnclaimTask={(taskId) => onClaimTask(taskId, '')}
+                      onUnclaimTask={(taskId) => claimHelpTask(taskId, '')}
                       onEditTask={handleEditTask}
                     />
                   ))}

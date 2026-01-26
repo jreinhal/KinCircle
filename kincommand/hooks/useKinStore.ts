@@ -3,9 +3,19 @@ import {
     LedgerEntry, Task, VaultDocument, FamilySettings, SecurityEvent, User,
     RecurringExpense, FamilyInvite, HelpTask, Medication, MedicationLog
 } from '../types';
-import { storageService, getStorageProvider } from '../services/storageService';
+import {
+    storageService,
+    getStorageProvider,
+    setActiveFamilyId,
+    getActiveFamilyId,
+    migrateLegacyLocalStorage
+} from '../services/storageService';
 import { initSupabaseAuth } from '../services/supabaseAuth';
 import { logger } from '../utils/logger';
+import { ensureFamilyContext } from '../services/familyService';
+import { generateSecureToken } from '../utils/crypto';
+import { backupDataSchema, formatZodErrors } from '../utils/validation';
+import { hasPermission } from '../utils/rbac';
 
 /**
  * Custom hook for managing KinCircle's centralized state
@@ -46,9 +56,24 @@ export const useKinStore = (
     useEffect(() => {
         const loadAllData = async () => {
             try {
+                let familyId = getActiveFamilyId();
+
                 if (getStorageProvider() === 'supabase') {
                     await initSupabaseAuth();
+                    familyId = await ensureFamilyContext();
                 }
+
+                if (!familyId) {
+                    familyId = generateSecureToken(16);
+                    migrateLegacyLocalStorage(familyId);
+                }
+
+                setActiveFamilyId(familyId);
+
+                const settingsDefaults: FamilySettings = {
+                    ...defaultSettings,
+                    familyId
+                };
 
                 // Determine if we should load defaultTasks or use empty if loading fails
                 // In a real app, defaults might only be used if storage is truly empty
@@ -67,7 +92,7 @@ export const useKinStore = (
                     storageService.load('kin_entries', defaultEntries),
                     storageService.load('kin_tasks', defaultTasks),
                     storageService.load('kin_documents', defaultDocuments),
-                    storageService.load('kin_settings', defaultSettings),
+                    storageService.load('kin_settings', settingsDefaults),
                     storageService.load('kin_security_logs', []),
                     storageService.load('kin_recurring_expenses', []),
                     storageService.load('kin_family_invites', []),
@@ -80,7 +105,15 @@ export const useKinStore = (
                 setEntries(loadedEntries);
                 setTasks(loadedTasks);
                 setDocuments(loadedDocs);
-                setSettings(loadedSettings);
+                const normalizedSettings = loadedSettings.familyId
+                    ? loadedSettings
+                    : { ...loadedSettings, familyId };
+
+                if (!loadedSettings.familyId) {
+                    storageService.save('kin_settings', normalizedSettings);
+                }
+
+                setSettings(normalizedSettings);
                 setSecurityLogs(loadedLogs);
                 setRecurringExpenses(loadedRecurring);
                 setFamilyInvites(loadedInvites);
@@ -159,6 +192,13 @@ export const useKinStore = (
         setSecurityLogs(prev => [...prev, newLog]);
     }, [currentUser.name]);
 
+    const ensurePermission = useCallback((permission: Parameters<typeof hasPermission>[1], action: string) => {
+        if (hasPermission(currentUser, permission)) return true;
+        logSecurityEvent(`Permission denied: ${action}`, 'WARNING', 'AUTH_FAILURE');
+        alert(`You do not have permission to ${action}.`);
+        return false;
+    }, [currentUser, logSecurityEvent]);
+
     // Entry operations
 
     /**
@@ -166,17 +206,18 @@ export const useKinStore = (
      * @param entry - The ledger entry to add
      */
     const addEntry = (entry: LedgerEntry) => {
+        if (!ensurePermission('entries:create', 'add entries')) return;
         setEntries(prev => [entry, ...prev]);
     };
 
     const addEntries = (newEntries: LedgerEntry[]) => {
+        if (!ensurePermission('entries:create', 'add entries')) return;
         setEntries(prev => [...newEntries, ...prev]);
     };
 
     const deleteEntry = (id: string) => {
-        if (window.confirm("Are you sure you want to delete this entry?")) {
-            setEntries(prev => prev.filter(e => e.id !== id));
-        }
+        if (!ensurePermission('entries:delete', 'delete entries')) return;
+        setEntries(prev => prev.filter(e => e.id !== id));
     };
 
     // Task operations
@@ -186,14 +227,18 @@ export const useKinStore = (
      * @param task - The task to add
      */
     const addTask = (task: Task) => {
+        if (!ensurePermission('tasks:create', 'create tasks')) return;
         setTasks(prev => [...prev, task]);
     };
 
     const updateTask = (updatedTask: Task) => {
+        if (!ensurePermission('tasks:update', 'update tasks')) return;
         setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t));
     };
 
     const convertTaskToEntry = (task: Task, entry: LedgerEntry) => {
+        if (!ensurePermission('entries:create', 'convert tasks to entries')) return;
+        if (!ensurePermission('tasks:update', 'update tasks')) return;
         setEntries(prev => [entry, ...prev]);
         const updatedTask: Task = { ...task, relatedEntryId: entry.id };
         updateTask(updatedTask);
@@ -206,17 +251,18 @@ export const useKinStore = (
      * @param doc - The vault document to add
      */
     const addDocument = (doc: VaultDocument) => {
+        if (!ensurePermission('documents:create', 'add documents')) return;
         setDocuments(prev => [doc, ...prev]);
     };
 
     const deleteDocument = (id: string) => {
-        if (window.confirm("Are you sure you want to delete this document?")) {
-            setDocuments(prev => prev.filter(d => d.id !== id));
-        }
+        if (!ensurePermission('documents:delete', 'delete documents')) return;
+        setDocuments(prev => prev.filter(d => d.id !== id));
     };
 
     // Settings operations
     const updateSettings = (newSettings: FamilySettings) => {
+        if (!ensurePermission('settings:update', 'update settings')) return;
         // Check if security setting changed
         if (newSettings.autoLockEnabled !== settings.autoLockEnabled) {
             logSecurityEvent(
@@ -245,15 +291,23 @@ export const useKinStore = (
      */
     const importData = (data: BackupData) => {
         try {
-            if (!data.entries || !data.settings) throw new Error("Invalid backup format");
+            if (!ensurePermission('data:import', 'import data')) return;
+            const validation = backupDataSchema.safeParse(data);
+            if (!validation.success) {
+                const errors = formatZodErrors(validation.error);
+                alert(`Import Failed:\n${errors.join('\n')}`);
+                return;
+            }
+
+            const validated = validation.data;
 
             // Settings (force overwrite)
-            setSettings(data.settings);
+            setSettings(validated.settings);
 
             // Entries (merge)
             setEntries(prev => {
                 const merged = [...prev];
-                data.entries.forEach((newEntry: LedgerEntry) => {
+                validated.entries.forEach((newEntry: LedgerEntry) => {
                     const idx = merged.findIndex(e => e.id === newEntry.id);
                     if (idx >= 0) merged[idx] = newEntry;
                     else merged.push(newEntry);
@@ -262,10 +316,10 @@ export const useKinStore = (
             });
 
             // Tasks (merge)
-            if (data.tasks) {
+            if (validated.tasks) {
                 setTasks(prev => {
                     const merged = [...prev];
-                    data.tasks.forEach((newTask: Task) => {
+                    validated.tasks?.forEach((newTask: Task) => {
                         const idx = merged.findIndex(t => t.id === newTask.id);
                         if (idx >= 0) merged[idx] = newTask;
                         else merged.push(newTask);
@@ -275,10 +329,10 @@ export const useKinStore = (
             }
 
             // Documents (merge)
-            if (data.documents) {
+            if (validated.documents) {
                 setDocuments(prev => {
                     const merged = [...prev];
-                    data.documents.forEach((newDoc: VaultDocument) => {
+                    validated.documents?.forEach((newDoc: VaultDocument) => {
                         const idx = merged.findIndex(d => d.id === newDoc.id);
                         if (idx >= 0) merged[idx] = newDoc;
                         else merged.push(newDoc);
@@ -288,7 +342,7 @@ export const useKinStore = (
             }
 
             logSecurityEvent("External data imported via Sync", "WARNING", "DATA_RESET");
-            alert(`Sync Complete!\nImported ${data.entries.length} entries and settings.`);
+            alert(`Sync Complete!\nImported ${validated.entries.length} entries and settings.`);
 
         } catch (e) {
             logger.error('Import failed:', e);
@@ -300,31 +354,35 @@ export const useKinStore = (
     // Recurring Expense Operations
     // ============================================
     const addRecurringExpense = (expense: RecurringExpense) => {
+        if (!ensurePermission('recurring_expenses:create', 'add recurring expenses')) return;
         setRecurringExpenses(prev => [expense, ...prev]);
     };
 
     const updateRecurringExpense = (expense: RecurringExpense) => {
+        if (!ensurePermission('recurring_expenses:update', 'update recurring expenses')) return;
         setRecurringExpenses(prev => prev.map(e => e.id === expense.id ? expense : e));
     };
 
     const deleteRecurringExpense = (id: string) => {
-        if (window.confirm("Delete this recurring expense?")) {
-            setRecurringExpenses(prev => prev.filter(e => e.id !== id));
-        }
+        if (!ensurePermission('recurring_expenses:delete', 'delete recurring expenses')) return;
+        setRecurringExpenses(prev => prev.filter(e => e.id !== id));
     };
 
     // ============================================
     // Family Invite Operations
     // ============================================
     const addFamilyInvite = (invite: FamilyInvite) => {
+        if (!ensurePermission('family:invite', 'invite family members')) return;
         setFamilyInvites(prev => [invite, ...prev]);
     };
 
     const updateFamilyInvite = (invite: FamilyInvite) => {
+        if (!ensurePermission('family:manage', 'update invites')) return;
         setFamilyInvites(prev => prev.map(i => i.id === invite.id ? invite : i));
     };
 
     const cancelFamilyInvite = (id: string) => {
+        if (!ensurePermission('family:manage', 'cancel invites')) return;
         setFamilyInvites(prev => prev.filter(i => i.id !== id));
     };
 
@@ -332,14 +390,17 @@ export const useKinStore = (
     // Help Task Operations
     // ============================================
     const addHelpTask = (task: HelpTask) => {
+        if (!ensurePermission('help_tasks:create', 'create help tasks')) return;
         setHelpTasks(prev => [task, ...prev]);
     };
 
     const updateHelpTask = (task: HelpTask) => {
+        if (!ensurePermission('help_tasks:update', 'update help tasks')) return;
         setHelpTasks(prev => prev.map(t => t.id === task.id ? task : t));
     };
 
     const claimHelpTask = (taskId: string, userId: string) => {
+        if (!ensurePermission('help_tasks:claim', 'claim help tasks')) return;
         setHelpTasks(prev => prev.map(t =>
             t.id === taskId
                 ? { ...t, claimedByUserId: userId || undefined, status: userId ? 'claimed' : 'available' }
@@ -348,6 +409,7 @@ export const useKinStore = (
     };
 
     const completeHelpTask = (taskId: string) => {
+        if (!ensurePermission('help_tasks:complete', 'complete help tasks')) return;
         setHelpTasks(prev => prev.map(t =>
             t.id === taskId ? { ...t, status: 'completed' } : t
         ));
@@ -357,20 +419,22 @@ export const useKinStore = (
     // Medication Operations
     // ============================================
     const addMedication = (med: Medication) => {
+        if (!ensurePermission('medications:create', 'add medications')) return;
         setMedications(prev => [med, ...prev]);
     };
 
     const updateMedication = (med: Medication) => {
+        if (!ensurePermission('medications:update', 'update medications')) return;
         setMedications(prev => prev.map(m => m.id === med.id ? med : m));
     };
 
     const deleteMedication = (id: string) => {
-        if (window.confirm("Delete this medication?")) {
-            setMedications(prev => prev.filter(m => m.id !== id));
-        }
+        if (!ensurePermission('medications:delete', 'delete medications')) return;
+        setMedications(prev => prev.filter(m => m.id !== id));
     };
 
     const logMedication = (log: MedicationLog) => {
+        if (!ensurePermission('medications:update', 'log medications')) return;
         setMedicationLogs(prev => [log, ...prev]);
     };
 

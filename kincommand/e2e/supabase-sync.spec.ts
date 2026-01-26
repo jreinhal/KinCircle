@@ -19,6 +19,8 @@ const completeOnboarding = async (page: any) => {
     await page.getByPlaceholder('e.g. Mom, Dad, Aunt Marie').fill('Sync Patient');
     await page.getByRole('button', { name: /continue/i }).click();
     await page.getByRole('button', { name: /looks good/i }).click();
+    await page.getByPlaceholder('PIN').fill('1234');
+    await page.getByPlaceholder('Confirm').fill('1234');
     await page.getByRole('button', { name: /finish setup/i }).click();
   }
 
@@ -29,7 +31,7 @@ test.describe('Supabase multi-session sync', () => {
   test.setTimeout(60000);
   test.skip(!shouldRun, 'Set E2E_SUPABASE=true with Supabase env vars to run.');
 
-  test('entry created in one session can be seen in another after refresh', async ({ browser }) => {
+  test('entry created in one session is isolated from another by default', async ({ browser }) => {
     const contextA = await browser.newContext();
     const pageA = await contextA.newPage();
     await pageA.goto('/');
@@ -49,6 +51,6 @@ test.describe('Supabase multi-session sync', () => {
     await completeOnboarding(pageB);
 
     await pageB.getByRole('button', { name: /all transactions/i }).click();
-    await expect(pageB.getByText(entryDescription)).toBeVisible({ timeout: 15000 });
+    await expect(pageB.getByText(entryDescription)).not.toBeVisible({ timeout: 5000 });
   });
 });

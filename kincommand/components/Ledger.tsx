@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { LedgerEntry, User, EntryType } from '../types';
+import { EntryType } from '../types';
 import { Clock, Search, Filter, Trash2, Download } from 'lucide-react';
+import { useConfirm } from './ConfirmDialog';
+import { useEntriesStore } from '../hooks/useEntriesStore';
+import { useAppContext } from '../context/AppContext';
+import { hasPermission } from '../utils/rbac';
 
-interface LedgerProps {
-  entries: LedgerEntry[];
-  users: User[];
-  onDelete?: (id: string) => void;
-}
-
-const Ledger: React.FC<LedgerProps> = ({ entries, users, onDelete }) => {
+const Ledger: React.FC = () => {
+  const { entries, deleteEntry } = useEntriesStore();
+  const { users, currentUser } = useAppContext();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'ALL' | 'EXPENSE' | 'TIME'>('ALL');
+  const confirm = useConfirm();
+  const canDeleteEntries = hasPermission(currentUser, 'entries:delete');
 
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
 
@@ -110,7 +112,7 @@ const Ledger: React.FC<LedgerProps> = ({ entries, users, onDelete }) => {
                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</th>
                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Value</th>
-                {onDelete && <th className="px-6 py-4 w-10"></th>}
+                {canDeleteEntries && <th className="px-6 py-4 w-10"></th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -150,10 +152,18 @@ const Ledger: React.FC<LedgerProps> = ({ entries, users, onDelete }) => {
                       {entry.amount.toFixed(2)}
                     </span>
                   </td>
-                  {onDelete && (
+                  {canDeleteEntries && (
                     <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => onDelete(entry.id)}
+                        onClick={async () => {
+                          const ok = await confirm({
+                            title: 'Delete entry',
+                            message: 'Are you sure you want to delete this entry? This cannot be undone.',
+                            confirmLabel: 'Delete',
+                            destructive: true
+                          });
+                          if (ok) deleteEntry(entry.id);
+                        }}
                         className="text-slate-300 hover:text-red-500 transition-colors p-1"
                         title="Delete Entry"
                       >

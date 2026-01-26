@@ -14,13 +14,18 @@ import FamilyInvite from './components/FamilyInvite';
 import HelpCalendar from './components/HelpCalendar';
 import MedicationTracker from './components/MedicationTracker';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ConfirmProvider } from './components/ConfirmDialog';
 // Lazy load AgentLab for better performance (only loads when user accesses the feature)
 const AgentLab = lazy(() => import('./components/AgentLab'));
 import LockScreen from './components/LockScreen';
 import OnboardingWizard from './components/OnboardingWizard';
 import { User, LedgerEntry, EntryType, FamilySettings, UserRole, Task, VaultDocument } from './types';
-import { useKinStore } from './hooks/useKinStore';
-import { generateSecureToken } from './utils/crypto';
+import { getSecurityMeta } from './utils/securityMeta';
+import { deriveKeyFromPin } from './utils/storageCrypto';
+import { refreshEncryptionState, setEncryptionEnabled, setEncryptionKey, hasEncryptionKey } from './services/storageService';
+import { AppProvider, useAppContext } from './context/AppContext';
+import { KinStoreProvider, useKinStoreContext } from './context/KinStoreContext';
+import { useSettingsStore } from './hooks/useSettingsStore';
 
 // Mock Data
 const MOCK_USERS: User[] = [
@@ -29,13 +34,14 @@ const MOCK_USERS: User[] = [
 ];
 
 // NOTE: hasCompletedOnboarding default is FALSE to trigger wizard for new instances
-// NOTE: autoLockEnabled default is FALSE for development ease (can be enabled in Settings)
+// Auto-lock defaults to true for safer out-of-the-box behavior
 const DEFAULT_SETTINGS: FamilySettings = {
   hourlyRate: 25,
   patientName: '',
   privacyMode: false,
-  autoLockEnabled: false,
-  hasCompletedOnboarding: false
+  autoLockEnabled: true,
+  hasCompletedOnboarding: false,
+  familyId: ''
 };
 
 const MOCK_ENTRIES: LedgerEntry[] = [
@@ -52,62 +58,15 @@ const MOCK_DOCS: VaultDocument[] = [
   { id: 'd1', name: 'Durable Power of Attorney', date: '2023-11-15', type: 'Legal', size: '2.4 MB' },
 ];
 
-export default function App() {
+const AppShell: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [entryTypeDraft, setEntryTypeDraft] = useState<EntryType | null>(null);
 
-  // State for User Switching
-  const [currentUser, setCurrentUser] = useState<User>(MOCK_USERS[0]);
-
-  // Use centralized store hook
-  const {
-    entries,
-    tasks,
-    documents,
-    settings,
-    securityLogs,
-    isLoading,
-    // Phase 1 & 2: New feature state
-    recurringExpenses,
-    familyInvites,
-    helpTasks,
-    medications,
-    medicationLogs,
-    // Entry Operations
-    addEntry,
-    addEntries,
-    deleteEntry,
-    // Task Operations
-    addTask,
-    updateTask,
-    convertTaskToEntry,
-    // Document Operations
-    addDocument,
-    deleteDocument,
-    // Settings & Import
-    updateSettings,
-    importData,
-    logSecurityEvent,
-    // Recurring Expense Operations
-    addRecurringExpense,
-    updateRecurringExpense,
-    deleteRecurringExpense,
-    // Family Invite Operations
-    addFamilyInvite,
-    cancelFamilyInvite,
-    // Help Task Operations
-    addHelpTask,
-    updateHelpTask,
-    claimHelpTask,
-    completeHelpTask,
-    // Medication Operations
-    addMedication,
-    updateMedication,
-    deleteMedication,
-    logMedication
-  } = useKinStore(MOCK_ENTRIES, MOCK_TASKS, MOCK_DOCS, DEFAULT_SETTINGS, currentUser);
+  const { currentUser, setCurrentUser, users } = useAppContext();
+  const { settings, updateSettings, logSecurityEvent, securityLogs } = useSettingsStore();
+  const { isLoading } = useKinStoreContext();
 
   // Initial App Load Log
   useEffect(() => {
@@ -120,7 +79,7 @@ export default function App() {
   // --- IDLE TIMER LOGIC ---
   const handleActivity = useCallback(() => {
     // If auto-lock is disabled in settings, do nothing
-    if (!settings.autoLockEnabled) {
+    if (!settings.autoLockEnabled || !settings.customPinHash) {
       clearTimeout(window.idleTimer);
       return;
     }
@@ -135,10 +94,10 @@ export default function App() {
       setIsLocked(true);
       logSecurityEvent('Session timeout - Auto lock engaged', 'INFO', 'SESSION_TIMEOUT');
     }, 60000); // 1 minute auto-lock
-  }, [isLocked, settings.autoLockEnabled, settings.hasCompletedOnboarding, currentUser]);
+  }, [isLocked, settings.autoLockEnabled, settings.hasCompletedOnboarding, logSecurityEvent]);
 
   useEffect(() => {
-    if (settings.autoLockEnabled && settings.hasCompletedOnboarding) {
+    if (settings.autoLockEnabled && settings.hasCompletedOnboarding && settings.customPinHash) {
       window.addEventListener('mousemove', handleActivity);
       window.addEventListener('keydown', handleActivity);
       window.addEventListener('click', handleActivity);
@@ -175,15 +134,11 @@ export default function App() {
     logSecurityEvent('User completed onboarding wizard', 'INFO', 'SYSTEM_INIT');
   };
 
-  const handleAddEntry = (entry: LedgerEntry) => {
-    addEntry(entry);
-    setEntryTypeDraft(null);
-    setActiveTab('dashboard');
-  };
-
   const handleSwitchUser = () => {
-    setCurrentUser(prev => {
-      const newUser = prev.id === 'u1' ? MOCK_USERS[1] : MOCK_USERS[0];
+    setCurrentUser((prev: User) => {
+      const currentIndex = users.findIndex(user => user.id === prev.id);
+      const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % users.length : 0;
+      const newUser = users[nextIndex] || prev;
       logSecurityEvent(
         `User switched from ${prev.name} to ${newUser.name}`,
         'INFO',
@@ -200,35 +155,22 @@ export default function App() {
       case 'dashboard':
         return (
           <Dashboard
-            entries={entries}
-            users={MOCK_USERS}
-            settings={settings}
-            currentUser={currentUser}
-            onStartEntry={(type) => {
+            onStartEntry={(type: EntryType) => {
               setEntryTypeDraft(type);
               setActiveTab('add-entry');
             }}
           />
         );
       case 'schedule':
-        return (
-          <Schedule
-            tasks={tasks}
-            users={MOCK_USERS}
-            currentUser={currentUser}
-            settings={settings}
-            onAddTask={addTask}
-            onUpdateTask={updateTask}
-            onConvertTaskToEntry={convertTaskToEntry}
-          />
-        );
+        return <Schedule />;
       case 'add-entry':
         return (
           <EntryForm
-            currentUser={currentUser}
-            settings={settings}
             initialType={entryTypeDraft ?? EntryType.EXPENSE}
-            onAddEntry={handleAddEntry}
+            onEntryAdded={() => {
+              setEntryTypeDraft(null);
+              setActiveTab('dashboard');
+            }}
             onCancel={() => {
               setEntryTypeDraft(null);
               setActiveTab('dashboard');
@@ -236,96 +178,38 @@ export default function App() {
           />
         );
       case 'chat':
-        return <ChatAssistant entries={entries} users={MOCK_USERS} settings={settings} />;
+        return <ChatAssistant />;
       case 'entries':
-        return <Ledger entries={entries} users={MOCK_USERS} onDelete={deleteEntry} />;
+        return <Ledger />;
       case 'medicaid':
-        return <MedicaidReport entries={entries} settings={settings} />;
+        return <MedicaidReport />;
       case 'vault':
-        return (
-          <Vault
-            documents={documents}
-            settings={settings}
-            users={MOCK_USERS}
-            onAddDocument={addDocument}
-            onDeleteDocument={deleteDocument}
-            onLogSecurityEvent={(details, severity) => logSecurityEvent(details, severity, 'EMERGENCY_ACCESS')}
-          />
-        );
+        return <Vault />;
       case 'agent-lab':
         return (
           <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="text-slate-500">Loading Agent Lab...</div></div>}>
-            <AgentLab
-              entries={entries}
-              users={MOCK_USERS}
-              settings={settings}
-              onAddEntries={addEntries}
-            />
+            <AgentLab />
           </Suspense>
         );
       case 'recurring':
-        return (
-          <RecurringExpenses
-            recurringExpenses={recurringExpenses}
-            currentUser={currentUser}
-            onAdd={addRecurringExpense}
-            onUpdate={updateRecurringExpense}
-            onDelete={deleteRecurringExpense}
-            onGenerateEntry={addEntry}
-          />
-        );
+        return <RecurringExpenses />;
       case 'family':
-        return (
-          <FamilyInvite
-            invites={familyInvites}
-            users={MOCK_USERS}
-            currentUser={currentUser}
-            onCreateInvite={addFamilyInvite}
-            onCancelInvite={cancelFamilyInvite}
-          />
-        );
+        return <FamilyInvite />;
       case 'help-calendar':
-        return (
-          <HelpCalendar
-            helpTasks={helpTasks}
-            users={MOCK_USERS}
-            currentUser={currentUser}
-            settings={settings}
-            onAddTask={addHelpTask}
-            onUpdateTask={updateHelpTask}
-            onClaimTask={claimHelpTask}
-            onCompleteTask={completeHelpTask}
-            onConvertToEntry={addEntry}
-          />
-        );
+        return <HelpCalendar />;
       case 'medications':
-        return (
-          <MedicationTracker
-            medications={medications}
-            medicationLogs={medicationLogs}
-            settings={settings}
-            onAddMedication={addMedication}
-            onUpdateMedication={updateMedication}
-            onDeleteMedication={deleteMedication}
-            onLogMedication={logMedication}
-          />
-        );
+        return <MedicationTracker />;
       case 'settings':
+        return <Settings />;
+      default:
         return (
-          <Settings
-            settings={settings}
-            onSave={updateSettings}
-            entries={entries}
-            tasks={tasks}
-            documents={documents}
-            users={MOCK_USERS}
-            currentUser={currentUser}
-            onImport={importData}
-            securityLogs={securityLogs}
+          <Dashboard
+            onStartEntry={(type: EntryType) => {
+              setEntryTypeDraft(type);
+              setActiveTab('add-entry');
+            }}
           />
         );
-      default:
-        return <Dashboard entries={entries} users={MOCK_USERS} settings={settings} currentUser={currentUser} onStartEntry={() => setActiveTab('add-entry')} />;
     }
   };
 
@@ -343,7 +227,7 @@ export default function App() {
 
   // Show Onboarding Wizard if not completed
   if (!settings.hasCompletedOnboarding) {
-    return <OnboardingWizard onComplete={handleOnboardingComplete} />;
+    return <OnboardingWizard onComplete={handleOnboardingComplete} initialSettings={settings} />;
   }
 
   return (
@@ -352,7 +236,7 @@ export default function App() {
       {/* Security Overlay */}
       {isLocked && (
         <LockScreen
-          onUnlock={(method) => handleUnlock(method)}
+          onUnlock={handleUnlock}
           onFailure={handleAuthFailure}
           user={currentUser.name}
           customPinHash={settings.customPinHash}
@@ -395,6 +279,88 @@ export default function App() {
         </main>
       </div>
     </div>
+  );
+};
+
+export default function App() {
+  const [securityMeta, setSecurityMeta] = useState(() => getSecurityMeta());
+  const [encryptionReady, setEncryptionReady] = useState(() => !securityMeta.encryptionEnabled);
+
+  useEffect(() => {
+    const refresh = () => setSecurityMeta(getSecurityMeta());
+    window.addEventListener('security-meta-updated', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('security-meta-updated', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
+
+  useEffect(() => {
+    refreshEncryptionState();
+    const enabled = Boolean(securityMeta.encryptionEnabled);
+    if (enabled && !securityMeta.pinHash) {
+      setEncryptionEnabled(false);
+      setEncryptionReady(true);
+      return;
+    }
+    setEncryptionEnabled(enabled);
+    if (!enabled) {
+      setEncryptionReady(true);
+    }
+  }, [securityMeta]);
+
+  const handleInitialUnlock = async (_method: string, pin?: string) => {
+    if (!securityMeta.encryptionEnabled) {
+      setEncryptionReady(true);
+      return;
+    }
+
+    if (!pin || !securityMeta.saltHex) {
+      return;
+    }
+
+    const key = await deriveKeyFromPin(pin, securityMeta.saltHex);
+    setEncryptionKey(key);
+    setEncryptionReady(true);
+  };
+
+  if (!encryptionReady && securityMeta.encryptionEnabled) {
+    return (
+      <LockScreen
+        onUnlock={handleInitialUnlock}
+        onFailure={() => undefined}
+        user="Family Admin"
+        customPinHash={securityMeta.pinHash}
+        isSecureHash={securityMeta.isSecurePinHash}
+      />
+    );
+  }
+
+  if (securityMeta.encryptionEnabled && !hasEncryptionKey()) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-900 text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Initializing secure storage...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <ConfirmProvider>
+      <AppProvider users={MOCK_USERS}>
+        <KinStoreProvider
+          defaultEntries={MOCK_ENTRIES}
+          defaultTasks={MOCK_TASKS}
+          defaultDocuments={MOCK_DOCS}
+          defaultSettings={DEFAULT_SETTINGS}
+        >
+          <AppShell />
+        </KinStoreProvider>
+      </AppProvider>
+    </ConfirmProvider>
   );
 }
 

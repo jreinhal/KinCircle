@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { Lock, ShieldCheck, Fingerprint, Loader2 } from 'lucide-react';
+import { Lock, ShieldCheck } from 'lucide-react';
 import { verifyPin, hashPinLegacy } from '../utils/crypto';
 
 interface LockScreenProps {
-  onUnlock: (method: string) => void;
+  onUnlock: (method: string, pin?: string) => void;
   onFailure: () => void;
   user: string;
   customPinHash?: string; // Hash of user's custom PIN (secure or legacy)
@@ -14,14 +14,24 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [isBiometricScanning, setIsBiometricScanning] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const [now, setNow] = useState(Date.now());
+
+  const isLockedOut = lockoutUntil !== null && now < lockoutUntil;
+  const lockoutSeconds = lockoutUntil ? Math.max(0, Math.ceil((lockoutUntil - now) / 1000)) : 0;
 
   const verifyPinEntry = useCallback(async (enteredPin: string) => {
+    if (isLockedOut) return;
     setIsVerifying(true);
     try {
-      // Default PIN is "1234" if no custom PIN set
-      const defaultHash = hashPinLegacy('1234');
-      const expectedHash = customPinHash || defaultHash;
+      if (!customPinHash) {
+        setError(true);
+        onFailure();
+        return;
+      }
+
+      const expectedHash = customPinHash;
 
       let isValid = false;
 
@@ -35,20 +45,28 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
       }
 
       if (isValid) {
-        onUnlock('PIN');
+        setFailedAttempts(0);
+        setLockoutUntil(null);
+        onUnlock('PIN', enteredPin);
         setPin('');
       } else {
         setError(true);
         setPin('');
+        const nextAttempts = failedAttempts + 1;
+        setFailedAttempts(nextAttempts);
+        if (nextAttempts >= 3) {
+          const backoffSeconds = Math.min(60, Math.pow(2, nextAttempts - 3));
+          setLockoutUntil(Date.now() + backoffSeconds * 1000);
+        }
         onFailure();
       }
     } finally {
       setIsVerifying(false);
     }
-  }, [customPinHash, isSecureHash, onUnlock, onFailure]);
+  }, [customPinHash, isSecureHash, onUnlock, onFailure, failedAttempts, isLockedOut]);
 
   const handleNumClick = (num: string) => {
-    if (pin.length < 4 && !isVerifying) {
+    if (pin.length < 4 && !isVerifying && !isLockedOut) {
       const newPin = pin + num;
       setPin(newPin);
       setError(false);
@@ -62,14 +80,11 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
     }
   };
 
-  const handleBiometricClick = () => {
-    setIsBiometricScanning(true);
-    // Simulate API delay for webauthn
-    setTimeout(() => {
-      setIsBiometricScanning(false);
-      onUnlock('BIOMETRIC');
-    }, 1000);
-  };
+  React.useEffect(() => {
+    if (!lockoutUntil) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [lockoutUntil]);
 
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center animate-fade-in backdrop-blur-md">
@@ -80,7 +95,7 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
 
         <h2 className="text-2xl font-bold text-white mb-2">KinCircle Protected</h2>
         <p className="text-slate-400 mb-8 text-center">
-          Session timed out for HIPAA security.<br />
+          Session timed out for security.<br />
           Enter PIN for <span className="text-white font-semibold">{user}</span>
         </p>
 
@@ -96,7 +111,14 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
           ))}
         </div>
 
-        {error && <p className="text-red-500 text-sm font-bold mb-4 animate-pulse">Invalid PIN{!customPinHash ? '. Try 1234' : ''}.</p>}
+        {error && !isLockedOut && (
+          <p className="text-red-500 text-sm font-bold mb-4 animate-pulse">Invalid PIN.</p>
+        )}
+        {isLockedOut && (
+          <p className="text-orange-400 text-sm font-bold mb-4">
+            Too many attempts. Try again in {lockoutSeconds}s.
+          </p>
+        )}
 
         {/* Numpad */}
         <div className="grid grid-cols-3 gap-4 w-full">
@@ -109,17 +131,6 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
               {num}
             </button>
           ))}
-
-          {/* Biometric Button (Bottom Left) */}
-          <div className="col-start-1">
-            <button
-              onClick={handleBiometricClick}
-              className="h-16 w-full rounded-xl bg-slate-800 text-blue-400 flex items-center justify-center hover:bg-slate-700 active:bg-blue-600 active:text-white transition-colors"
-              title="Use FaceID / TouchID"
-            >
-              {isBiometricScanning ? <Loader2 size={24} className="animate-spin" /> : <Fingerprint size={24} />}
-            </button>
-          </div>
 
           <div className="col-start-2">
             <button

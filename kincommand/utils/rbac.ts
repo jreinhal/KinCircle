@@ -11,6 +11,10 @@ type Permission =
   | 'entries:read'
   | 'entries:update'
   | 'entries:delete'
+  | 'recurring_expenses:create'
+  | 'recurring_expenses:read'
+  | 'recurring_expenses:update'
+  | 'recurring_expenses:delete'
   | 'tasks:create'
   | 'tasks:read'
   | 'tasks:update'
@@ -28,6 +32,7 @@ type Permission =
   | 'medications:delete'
   | 'help_tasks:create'
   | 'help_tasks:read'
+  | 'help_tasks:update'
   | 'help_tasks:claim'
   | 'help_tasks:complete'
   | 'security_logs:read'
@@ -39,26 +44,29 @@ type Permission =
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   [UserRole.ADMIN]: [
     'entries:create', 'entries:read', 'entries:update', 'entries:delete',
+    'recurring_expenses:create', 'recurring_expenses:read', 'recurring_expenses:update', 'recurring_expenses:delete',
     'tasks:create', 'tasks:read', 'tasks:update', 'tasks:delete',
     'documents:create', 'documents:read', 'documents:delete',
     'settings:read', 'settings:update',
     'family:invite', 'family:manage',
     'medications:create', 'medications:read', 'medications:update', 'medications:delete',
-    'help_tasks:create', 'help_tasks:read', 'help_tasks:claim', 'help_tasks:complete',
+    'help_tasks:create', 'help_tasks:read', 'help_tasks:update', 'help_tasks:claim', 'help_tasks:complete',
     'security_logs:read',
     'data:export', 'data:import', 'data:reset'
   ],
   [UserRole.CONTRIBUTOR]: [
     'entries:create', 'entries:read', 'entries:update',
+    'recurring_expenses:create', 'recurring_expenses:read', 'recurring_expenses:update',
     'tasks:create', 'tasks:read', 'tasks:update',
     'documents:create', 'documents:read',
     'settings:read',
     'medications:read', 'medications:update',
-    'help_tasks:create', 'help_tasks:read', 'help_tasks:claim', 'help_tasks:complete',
+    'help_tasks:create', 'help_tasks:read', 'help_tasks:update', 'help_tasks:claim', 'help_tasks:complete',
     'data:export'
   ],
   [UserRole.VIEWER]: [
     'entries:read',
+    'recurring_expenses:read',
     'tasks:read',
     'documents:read',
     'settings:read',

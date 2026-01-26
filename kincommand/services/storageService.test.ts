@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { storageService, setStorageProviderForTests } from './storageService';
+import { storageService, setStorageProviderForTests, setActiveFamilyId } from './storageService';
 import { supabase } from './supabase';
 
 // Mock Supabase client
@@ -22,6 +22,7 @@ describe('storageService (Supabase Implementation)', () => {
         vi.clearAllMocks();
         vi.spyOn(console, 'error').mockImplementation(() => { }); // Silence console.error
         setStorageProviderForTests('supabase');
+        setActiveFamilyId('family-test');
     });
 
     afterEach(() => {
@@ -68,6 +69,7 @@ describe('storageService (Supabase Implementation)', () => {
 
         expect(mockUpsert).toHaveBeenCalledWith([
             expect.objectContaining({
+                family_id: 'family-test',
                 user_id: 'u1',
                 time_duration_minutes: 30,
                 is_medicaid_flagged: true,

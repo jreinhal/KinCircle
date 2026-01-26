@@ -1,8 +1,39 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { LedgerEntry, FamilySettings, User, EntryType } from "../types";
 import { logger } from "../utils/logger";
+import { anonymizeText } from "../utils/privacyUtils";
+import { agentRateLimiter, RateLimitError } from "../utils/rateLimit";
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY as string });
+const mockFlag = import.meta.env.VITE_GEMINI_MOCK;
+const shouldMock = mockFlag !== 'false';
+const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+
+const buildPrivacySafePayload = (
+  entries: LedgerEntry[],
+  users: User[],
+  settings: FamilySettings
+) => {
+  if (!settings.privacyMode) {
+    return { entries, users, settings };
+  }
+
+  const knownNames = users.map(u => u.name).filter(Boolean);
+  const scrubbedEntries = entries.map(entry => ({
+    ...entry,
+    description: anonymizeText(entry.description, settings, knownNames)
+  }));
+
+  const scrubbedUsers = users.map((user, idx) => ({
+    ...user,
+    name: `Family Member ${idx + 1}`
+  }));
+
+  const scrubbedSettings = {
+    ...settings,
+    patientName: 'The Patient'
+  };
+
+  return { entries: scrubbedEntries, users: scrubbedUsers, settings: scrubbedSettings };
+};
 
 // --- AGENT 0: DATA INTEGRITY (UNIT TESTER) ---
 // Deterministic checks for data validity
@@ -41,53 +72,54 @@ export const runDataIntegrityCheck = async (entries: LedgerEntry[], users: User[
 // --- AGENT 1: SCENARIO SIMULATOR ---
 // Generates synthetic data to test the app's handling of complex family situations.
 export const runScenarioAgent = async (scenario: string, currentUserId: string): Promise<LedgerEntry[]> => {
-  try {
-    const prompt = `
-      Act as a Data Generation Agent for a family caregiving app.
-      Generate 3 realistic ledger entries for the scenario: "${scenario}".
-      
-      Constraints:
-      - Mix of EXPENSE and TIME entries.
-      - Use realistic amounts.
-      - Dates should be within the last 30 days.
-      - Return pure JSON.
-    `;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              type: { type: Type.STRING, enum: ['EXPENSE', 'TIME'] },
-              description: { type: Type.STRING },
-              amount: { type: Type.NUMBER },
-              category: { type: Type.STRING },
-              timeDurationMinutes: { type: Type.NUMBER }
-            },
-            required: ['type', 'description', 'amount', 'category']
-          }
-        }
-      }
-    });
-
-    if (response.text) {
-      const rawData = JSON.parse(response.text);
-      // Hydrate with app-specific IDs and dates
-      return rawData.map((item: any) => ({
-        ...item,
+  if (shouldMock) {
+    return [
+      {
         id: crypto.randomUUID(),
         userId: currentUserId,
-        date: new Date().toISOString().split('T')[0],
-        amount: item.type === 'TIME' ? 0 : item.amount
-      }));
+        type: EntryType.EXPENSE,
+        description: 'Mock scenario expense',
+        amount: 120.5,
+        category: 'Medical',
+        date: new Date().toISOString().split('T')[0]
+      },
+      {
+        id: crypto.randomUUID(),
+        userId: currentUserId,
+        type: EntryType.TIME,
+        description: 'Mock scenario caregiving',
+        amount: 0,
+        timeDurationMinutes: 90,
+        category: 'Caregiving',
+        date: new Date().toISOString().split('T')[0]
+      }
+    ];
+  }
+
+  try {
+    if (!agentRateLimiter.isAllowed()) {
+      const resetTime = agentRateLimiter.getResetTime();
+      logger.warn('Rate limit exceeded for scenario agent', { resetTime });
+      throw new RateLimitError(resetTime);
     }
-    return [];
+
+    const response = await fetch(`${apiBase}/api/agent/scenario`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scenario, currentUserId })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Scenario agent failed (${response.status})`);
+    }
+
+    const data = await response.json();
+    return data.entries || [];
   } catch (error) {
+    if (error instanceof RateLimitError) {
+      logger.warn('Scenario agent rate limited', { resetInMs: error.resetInMs });
+      return [];
+    }
     logger.error("Scenario Agent failed:", error);
     return [];
   }
@@ -96,29 +128,32 @@ export const runScenarioAgent = async (scenario: string, currentUserId: string):
 // --- AGENT 2: UX & FAIRNESS CRITIC ---
 // Analyzes the current state of the ledger to give high-level feedback.
 export const runUXAgent = async (entries: LedgerEntry[], users: User[], settings: FamilySettings): Promise<string> => {
+  if (shouldMock) {
+    return 'Mock UX feedback: consider balancing tasks and expenses.';
+  }
+
   try {
-    const summary = users.map(u => {
-      const userEntries = entries.filter(e => e.userId === u.id);
-      const total = userEntries.reduce((sum, e) => sum + e.amount, 0);
-      return `${u.name}: $${total.toFixed(2)}`;
-    }).join(', ');
+    if (!agentRateLimiter.isAllowed()) {
+      const resetTime = agentRateLimiter.getResetTime();
+      logger.warn('Rate limit exceeded for UX agent', { resetTime });
+      return `Agent Lab is rate-limited. Try again in ${Math.ceil(resetTime / 1000)}s.`;
+    }
 
-    const prompt = `
-      Act as a "Fairness & UX Agent". Analyze this family's ledger summary:
-      [${summary}]
-      
-      The goal of the app is "Sibling Equity". 
-      1. Is the current split fair? 
-      2. Suggest one action the "under-contributor" could take to help.
-      3. Keep it constructive and under 50 words.
-    `;
+    const { entries: safeEntries, users: safeUsers, settings: safeSettings } =
+      buildPrivacySafePayload(entries, users, settings);
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
+    const response = await fetch(`${apiBase}/api/agent/ux`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entries: safeEntries, users: safeUsers, settings: safeSettings })
     });
 
-    return response.text || "Unable to generate critique.";
+    if (!response.ok) {
+      throw new Error(`UX agent failed (${response.status})`);
+    }
+
+    const data = await response.json();
+    return data.text || 'Unable to generate critique.';
   } catch (error) {
     return "UX Agent is offline.";
   }

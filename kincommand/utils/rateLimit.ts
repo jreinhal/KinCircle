@@ -105,6 +105,11 @@ export const receiptScanRateLimiter = new RateLimiter('receipt-scan', {
   windowMs: 60 * 1000
 });
 
+export const agentRateLimiter = new RateLimiter('agent-lab', {
+  maxRequests: 10, // 10 agent runs per minute
+  windowMs: 60 * 1000
+});
+
 /**
  * Debounce utility for preventing rapid-fire calls
  */

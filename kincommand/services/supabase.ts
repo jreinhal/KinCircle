@@ -18,6 +18,7 @@ const createSupabaseStub = () => {
         upsert: () => response,
         delete: () => response,
         single: () => response,
+        maybeSingle: () => response,
         eq: () => chain,
         then: response.then.bind(response),
         catch: response.catch.bind(response),

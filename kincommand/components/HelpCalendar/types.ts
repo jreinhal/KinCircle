@@ -1,16 +1,4 @@
-import { HelpTask, HelpTaskCategory, User, FamilySettings } from '../../types';
-
-export interface HelpCalendarProps {
-  helpTasks: HelpTask[];
-  users: User[];
-  currentUser: User;
-  settings: FamilySettings;
-  onAddTask: (task: HelpTask) => void;
-  onUpdateTask: (task: HelpTask) => void;
-  onClaimTask: (taskId: string, userId: string) => void;
-  onCompleteTask: (taskId: string) => void;
-  onConvertToEntry: (task: HelpTask) => void;
-}
+import { HelpTaskCategory } from '../../types';
 
 export interface TaskFormData {
   title: string;

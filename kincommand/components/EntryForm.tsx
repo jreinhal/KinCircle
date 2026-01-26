@@ -1,19 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { EntryType, User, FamilySettings, LedgerEntry } from '../types';
+import { EntryType, LedgerEntry } from '../types';
 import { suggestCategory, parseReceiptImage, parseVoiceEntry } from '../services/geminiService';
-import { Camera, Clock, DollarSign, Calendar, Loader2, UploadCloud, X, Mic, StopCircle } from 'lucide-react';
+import { Clock, DollarSign, Calendar, Loader2, Mic, StopCircle } from 'lucide-react';
 import { logger } from '../utils/logger';
 import { entryFormSchema, formatZodErrors } from '../utils/validation';
+import ReceiptUploader from './EntryForm/ReceiptUploader';
+import { useEntriesStore } from '../hooks/useEntriesStore';
+import { useSettingsStore } from '../hooks/useSettingsStore';
+import { useAppContext } from '../context/AppContext';
 
 interface EntryFormProps {
-  currentUser: User;
-  settings: FamilySettings;
   initialType?: EntryType;
-  onAddEntry: (entry: LedgerEntry) => void;
   onCancel: () => void;
+  onEntryAdded?: () => void;
 }
 
-const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialType, onAddEntry, onCancel }) => {
+const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdded }) => {
+  const { addEntry } = useEntriesStore();
+  const { settings } = useSettingsStore();
+  const { currentUser } = useAppContext();
   const [type, setType] = useState<EntryType>(initialType ?? EntryType.EXPENSE);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -22,6 +27,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
   const [category, setCategory] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialType) {
@@ -49,6 +55,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
   // --- Voice Logic ---
   const startRecording = async () => {
     try {
+      setVoiceError(null);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -102,9 +109,11 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
         } else if (result.type === 'EXPENSE' && result.amount) {
           setAmount(result.amount.toString());
         }
+        setVoiceError(null);
 
       } catch (e) {
         logger.error("Voice processing failed", e);
+        setVoiceError('We could not process that recording. Please try again or enter details manually.');
       } finally {
         setIsAnalyzing(false);
       }
@@ -188,7 +197,8 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
       isMedicaidFlagged: false // Default false, updated by audit later
     };
 
-    onAddEntry(newEntry);
+    addEntry(newEntry);
+    onEntryAdded?.();
   };
 
   return (
@@ -233,6 +243,11 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
             </span>
           </div>
         )}
+        {voiceError && (
+          <div className="mb-6 p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700">
+            {voiceError}
+          </div>
+        )}
 
         {/* Type Toggle */}
         <div className="flex p-1 bg-slate-100 rounded-lg mb-8">
@@ -264,59 +279,13 @@ const EntryForm: React.FC<EntryFormProps> = ({ currentUser, settings, initialTyp
 
           {/* AI Receipt Uploader (Only for Expense) */}
           {type === EntryType.EXPENSE && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Receipt / Invoice</label>
-
-              {!receiptPreview ? (
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center transition-colors cursor-pointer bg-slate-50
-                    ${isAnalyzing ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-blue-400 hover:text-blue-500 text-slate-400'}
-                  `}
-                >
-                  {isAnalyzing && !isRecording ? (
-                    <>
-                      <Loader2 size={24} className="animate-spin text-blue-500 mb-2" />
-                      <span className="text-sm text-blue-600 font-medium">Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Camera size={24} />
-                        <UploadCloud size={24} />
-                      </div>
-                      <span className="text-sm text-center">Tap to scan receipt</span>
-                      <span className="text-xs text-slate-400 mt-1">AI will auto-fill details</span>
-                    </>
-                  )}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleFileChange}
-                  />
-                </div>
-              ) : (
-                <div className="relative rounded-lg overflow-hidden border border-slate-200 h-48 bg-slate-100 flex items-center justify-center">
-                  <img src={receiptPreview} alt="Receipt" className="h-full object-contain" />
-                  <button
-                    type="button"
-                    onClick={clearReceipt}
-                    className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70"
-                  >
-                    <X size={16} />
-                  </button>
-                  {isAnalyzing && (
-                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center flex-col">
-                      <Loader2 size={32} className="animate-spin text-blue-500 mb-2" />
-                      <span className="text-sm font-medium text-slate-800">Extracting Data...</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <ReceiptUploader
+              receiptPreview={receiptPreview}
+              isAnalyzing={isAnalyzing && !isRecording}
+              onFileChange={handleFileChange}
+              onClear={clearReceipt}
+              fileInputRef={fileInputRef}
+            />
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

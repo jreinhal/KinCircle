@@ -13,7 +13,8 @@ Welcome to KinCircle! This guide will help you use the app to track your caregiv
 2. You'll see a welcome wizard asking for:
    - **Patient Name**: The person you're caring for
    - **Hourly Rate**: How much one hour of caregiving is worth (e.g., $20/hour)
-3. Click **"Get Started"** to enter the app
+   - **Security PIN**: Required to unlock the app and encrypt local data
+3. Click **"Finish Setup"** to enter the app
 
 ---
 
@@ -36,6 +37,11 @@ Welcome to KinCircle! This guide will help you use the app to track your caregiv
 5. Click **"Add Entry"**
 
 💡 **Tip**: You can also take a photo of receipts or use voice recording!
+
+**Receipt scanning (camera):**
+1. In **Add Entry**, tap **"Receipt / Invoice"**
+2. Allow camera access when prompted
+3. Snap a photo — the app will auto-fill details
 
 ---
 
@@ -102,8 +108,9 @@ Just type your question and press Enter!
 ### Emergency Mode
 In an emergency (911 situation):
 1. Click **"Emergency Mode"**
-2. The screen turns high-contrast for first responders
-3. They can quickly find medical history, medications, and contacts
+2. Enter your PIN to unlock Emergency Responder Mode
+3. The screen turns high-contrast for first responders
+4. They can quickly find medical history, medications, and contacts
 
 ---
 
@@ -130,8 +137,8 @@ In an emergency (911 situation):
 ## 🆘 Common Issues
 
 ### "The app looks empty after I opened it"
-- You may need to run **"Cloud Sync"** in Settings to upload your data
-- Or import a backup file
+- You may need to run **"Cloud Sync"** in Settings to upload your data (one-way migration)
+- For ongoing sharing, export a backup and import it on other devices
 
 ### "I forgot my PIN"
 - If you have access to the app on another device, check Settings

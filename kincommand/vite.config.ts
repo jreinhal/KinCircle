@@ -1,9 +1,22 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    ...(process.env.ANALYZE === 'true'
+      ? [
+          visualizer({
+            filename: 'dist/stats.html',
+            gzipSize: true,
+            brotliSize: true,
+            open: false
+          })
+        ]
+      : [])
+  ],
   test: {
     globals: true,
     environment: 'jsdom',
@@ -14,6 +27,9 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    host: true
+    host: true,
+    proxy: {
+      '/api': 'http://localhost:8787'
+    }
   }
 });
