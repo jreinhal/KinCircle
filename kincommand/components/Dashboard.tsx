@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { EntryType } from '../types';
 import { DollarSign, Clock, Users, PlusCircle, ArrowRight, Heart, Sun, ChevronDown } from 'lucide-react';
@@ -89,6 +89,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
   };
 
   const [isJournalOpen, setIsJournalOpen] = useState(false);
+  const journalContentRef = useRef<HTMLDivElement | null>(null);
+
+  const handleJournalToggle = () => {
+    setIsJournalOpen((prev) => {
+      const next = !prev;
+      if (next && typeof window !== 'undefined') {
+        requestAnimationFrame(() => {
+          const target = journalContentRef.current;
+          if (!target) return;
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          window.setTimeout(() => {
+            window.scrollBy({ top: 120, behavior: 'smooth' });
+          }, 120);
+        });
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-6 animate-fade-in pb-16 md:pb-0">
@@ -202,7 +220,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
       <div className="bg-white rounded-3xl border border-stone-100 p-6 shadow-sm">
         <button
           type="button"
-          onClick={() => setIsJournalOpen((prev) => !prev)}
+          onClick={handleJournalToggle}
           aria-expanded={isJournalOpen}
           aria-controls="family-journal"
           className="w-full flex items-center justify-between text-left rounded-xl px-1 py-1 transition-colors hover:bg-stone-50 dark:hover:bg-slate-800/60"
@@ -218,7 +236,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
           </div>
           <ChevronDown
             size={18}
-            className={`text-stone-400 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            className={`text-stone-400 transition-transform duration-400 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
               isJournalOpen ? 'rotate-180' : ''
             }`}
           />
@@ -226,20 +244,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
 
         <div
           id="family-journal"
-          className={`overflow-hidden transition-[max-height,opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            isJournalOpen ? 'max-h-[520px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-1 pointer-events-none'
+          ref={journalContentRef}
+          className={`grid scroll-mt-24 transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
+            isJournalOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
           }`}
         >
-          <div className="mt-4">
-            <div className="flex items-center justify-end mb-4">
-              <button className="text-sm text-teal-600 font-medium hover:underline">Add Photo</button>
-            </div>
-            <div className="bg-stone-50 border-2 border-dashed border-stone-200 rounded-2xl p-8 text-center">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 text-stone-300 shadow-sm">
-                <Sun size={24} />
+          <div className="min-h-0 overflow-hidden">
+            <div className="mt-4">
+              <div className="flex items-center justify-end mb-4">
+                <button className="text-sm text-teal-600 font-medium hover:underline">Add Photo</button>
               </div>
-              <p className="text-stone-500 font-medium">Share a moment today</p>
-              <p className="text-xs text-stone-400 mt-1">Photos and updates help everyone feel connected to {settings.patientName}.</p>
+              <div className="bg-stone-50 border-2 border-dashed border-stone-200 rounded-2xl p-8 text-center">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 text-stone-300 shadow-sm">
+                  <Sun size={24} />
+                </div>
+                <p className="text-stone-500 font-medium">Share a moment today</p>
+                <p className="text-xs text-stone-400 mt-1">Photos and updates help everyone feel connected to {settings.patientName}.</p>
+              </div>
             </div>
           </div>
         </div>
