@@ -22,7 +22,7 @@ const MedicationEmptyState: React.FC<MedicationEmptyStateProps> = ({ settings, c
       <button
         onClick={onAdd}
         disabled={!canAdd}
-        className={`inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg transition-colors ${canAdd ? 'hover:bg-teal-700' : 'opacity-50 cursor-not-allowed'}`}
+        className={`btn-primary ${canAdd ? '' : 'opacity-50 cursor-not-allowed'}`}
       >
         <Plus size={18} />
         Add First Medication

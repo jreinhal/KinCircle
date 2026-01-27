@@ -102,7 +102,7 @@ const AgentLab: React.FC = () => {
     let statusClasses = 'text-slate-400 bg-slate-50 border-slate-200';
     if (current === step) {
       // Active
-      statusClasses = 'text-blue-600 bg-blue-50 border-blue-200 ring-1 ring-blue-300 shadow-sm scale-105';
+      statusClasses = 'text-teal-600 bg-teal-50 border-teal-200 ring-1 ring-teal-300 shadow-sm scale-105';
     } else if (currentIdx > stepIdx) {
       // Passed
       statusClasses = 'text-green-600 bg-green-50 border-green-200';
@@ -146,7 +146,7 @@ const AgentLab: React.FC = () => {
             <button
               onClick={runDiagnostics}
               disabled={testStatus !== 'IDLE' && testStatus !== 'COMPLETE'}
-              className="w-full py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center space-x-2"
+              className="btn-primary w-full py-3 shadow-md shadow-teal-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {testStatus !== 'IDLE' && testStatus !== 'COMPLETE' ? (
                 <>

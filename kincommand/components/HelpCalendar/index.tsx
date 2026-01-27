@@ -179,7 +179,7 @@ const HelpCalendar: React.FC = () => {
         </div>
         <button
           onClick={() => setIsAdding(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-colors font-medium shadow-sm"
+          className="btn-primary px-4 py-2 rounded-xl shadow-sm"
         >
           <Plus size={18} />
           <span className="hidden sm:inline">Request Help</span>
@@ -199,7 +199,7 @@ const HelpCalendar: React.FC = () => {
         <button
           onClick={() => setViewMode('list')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            viewMode === 'list' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+            viewMode === 'list' ? 'bg-teal-600 text-white' : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <List size={16} />
@@ -208,7 +208,7 @@ const HelpCalendar: React.FC = () => {
         <button
           onClick={() => setViewMode('calendar')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            viewMode === 'calendar' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+            viewMode === 'calendar' ? 'bg-teal-600 text-white' : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
           <CalendarDays size={16} />
@@ -244,7 +244,7 @@ const HelpCalendar: React.FC = () => {
               {filterStatus !== 'all' && (
                 <button
                   onClick={() => setFilterStatus('all')}
-                  className="text-teal-600 text-sm font-medium hover:underline"
+                  className="btn-text text-sm"
                 >
                   View all tasks
                 </button>

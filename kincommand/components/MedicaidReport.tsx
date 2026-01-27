@@ -53,7 +53,7 @@ const MedicaidReport: React.FC = () => {
 
       {!hasRun && (
         <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-100 text-center">
-          <ShieldAlert size={48} className="mx-auto text-blue-500 mb-4" />
+          <ShieldAlert size={48} className="mx-auto text-teal-500 mb-4" />
           <h2 className="text-lg font-semibold text-slate-900 mb-2">Ready to Audit?</h2>
           <p className="text-slate-500 mb-6 max-w-md mx-auto">
             We will send your {settings.privacyMode ? 'anonymized' : ''} transaction descriptions to Gemini AI to categorize them according to standard elder law principles.
@@ -61,7 +61,7 @@ const MedicaidReport: React.FC = () => {
           <button
             onClick={runAnalysis}
             disabled={isLoading}
-            className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-70"
+            className="btn-primary px-6 py-3 disabled:opacity-70"
           >
             {isLoading ? (
               <>
@@ -77,12 +77,12 @@ const MedicaidReport: React.FC = () => {
 
       {hasRun && (
         <div className="space-y-6 animate-fade-in">
-            <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-slate-200">
+             <div className="flex justify-between items-center bg-white p-4 rounded-lg border border-slate-200">
                  <div>
                     <h3 className="font-semibold text-slate-800">Audit Complete</h3>
                     <p className="text-sm text-slate-500">{report.filter(r => r.status === 'COMPLIANT').length} compliant, {report.filter(r => r.status === 'WARNING').length} warnings found.</p>
                  </div>
-                 <button onClick={runAnalysis} className="text-sm text-blue-600 hover:text-blue-800 font-medium">Re-run</button>
+                 <button onClick={runAnalysis} className="btn-text text-sm">Re-run</button>
             </div>
 
           <div className="grid gap-4">

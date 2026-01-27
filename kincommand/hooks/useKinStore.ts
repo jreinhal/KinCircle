@@ -105,11 +105,13 @@ export const useKinStore = (
                 setEntries(loadedEntries);
                 setTasks(loadedTasks);
                 setDocuments(loadedDocs);
-                const normalizedSettings = loadedSettings.familyId
-                    ? loadedSettings
-                    : { ...loadedSettings, familyId };
+                const normalizedSettings: FamilySettings = {
+                    ...loadedSettings,
+                    familyId: loadedSettings.familyId ?? familyId,
+                    themeMode: loadedSettings.themeMode ?? 'system'
+                };
 
-                if (!loadedSettings.familyId) {
+                if (!loadedSettings.familyId || !loadedSettings.themeMode) {
                     storageService.save('kin_settings', normalizedSettings);
                 }
 

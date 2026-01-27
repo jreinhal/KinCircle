@@ -23,14 +23,14 @@ Welcome to KinCircle! This guide will help you use the app to track your caregiv
 ### 📝 Adding Expenses or Time
 
 **To track money you spent:**
-1. Click **"+ New Entry"** button
+1. Click **"Add Entry"** in the sidebar
 2. Select **"Expense"**
 3. Enter the amount (e.g., $45.67)
 4. Describe what it was for (e.g., "Groceries for Mom")
 5. Click **"Add Entry"**
 
 **To track time you spent:**
-1. Click **"+ New Entry"**
+1. Click **"Add Entry"**
 2. Select **"Time"**
 3. Enter how many hours (e.g., 2.5 hours)
 4. Describe what you did (e.g., "Doctor appointment with Dad")
@@ -62,28 +62,37 @@ If you're worried about sensitive information:
 
 ---
 
-## 📅 Managing the Schedule
+## 🎨 Appearance
+
+Choose how KinCircle looks on this device:
+1. Go to **Settings**
+2. Under **Appearance**, pick **System**, **Light**, or **Dark**
+3. Your preference is saved automatically
+
+---
+
+## 📅 Managing Care Tasks
 
 ### Adding Tasks
-1. Click **"Schedule"** in the sidebar
-2. Click **"+ Add Task"**
+1. Click **"Care Tasks"** in the sidebar
+2. Click the **+** button to add a task
 3. Fill in:
    - Task name (e.g., "Pick up prescription")
    - Who should do it
    - When it's due
-4. Click **"Add"**
+4. Click the **+** button to save
 
 ### Converting Tasks to Time Entries
 When you complete a task:
-1. Find it in the list
-2. Click **"Convert to Entry"**
-3. The app automatically creates a time entry for you!
+1. Mark it complete (click the circle)
+2. Click **"Log to Ledger"**
+3. Choose **Care Hours** or **Expense**, then **Save Entry**
 
 ---
 
 ## 💬 Asking Kin (AI Assistant)
 
-The **"Ask Kin"** button lets you chat with an AI helper:
+The **"Ask Kin (AI)"** button lets you chat with an AI helper:
 
 **Examples:**
 - "How much has Sarah contributed this month?"
@@ -97,7 +106,7 @@ Just type your question and press Enter!
 ## 📁 Document Vault
 
 ### Storing Important Documents
-1. Click **"Vault"**
+1. Click **"Document Vault"**
 2. Click **"+ Add Document"**
 3. Enter:
    - Document name

@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { EntryType } from '../types';
-import { DollarSign, Clock, Users, PlusCircle, ArrowRight, Heart, Sun } from 'lucide-react';
+import { DollarSign, Clock, Users, PlusCircle, ArrowRight, Heart, Sun, ChevronDown } from 'lucide-react';
 import DebtSummary from './DebtSummary';
 import { useEntriesStore } from '../hooks/useEntriesStore';
 import { useSettingsStore } from '../hooks/useSettingsStore';
@@ -62,7 +62,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
     );
   }
 
-  // Process data for the Sibling Equity Chart
+  // Process data for the Care Equity Chart
   const userTotals = users.map(user => {
     const userEntries = entries.filter(e => e.userId === user.id);
     const cashTotal = userEntries
@@ -88,10 +88,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
     CareHours: '#f97316', // Orange
   };
 
+  const [isJournalOpen, setIsJournalOpen] = useState(false);
+
   return (
     <div className="space-y-6 animate-fade-in pb-16 md:pb-0">
       <header className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">The Sibling Ledger</h1>
+        <h1 className="text-2xl font-bold text-slate-900">The Care Ledger</h1>
         <p className="text-slate-500">Tracking financial and time contributions for {settings.patientName}.</p>
       </header>
 
@@ -164,16 +166,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               layout="vertical"
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--chart-grid-stroke)" />
               <XAxis type="number" tickFormatter={(val) => `$${val}`} stroke="#94a3b8" />
               <YAxis dataKey="name" type="category" stroke="#64748b" width={80} />
               <Tooltip
-                cursor={{ fill: '#f1f5f9' }}
+                cursor={{ fill: 'var(--chart-cursor-fill)' }}
                 formatter={(value) => {
                   const numeric = typeof value === 'number' ? value : Number(value || 0);
                   return [`$${numeric.toLocaleString()}`, ''];
                 }}
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: '1px solid var(--chart-tooltip-border)',
+                  backgroundColor: 'var(--chart-tooltip-bg)',
+                  color: 'var(--chart-tooltip-text)',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                }}
+                labelStyle={{ color: 'var(--chart-tooltip-text)' }}
+                itemStyle={{ color: 'var(--chart-tooltip-text)' }}
               />
               <Bar dataKey="Cash" stackId="a" fill={colors.Cash} radius={[0, 4, 4, 0]} barSize={32} />
               <Bar dataKey="CareHours" stackId="a" fill={colors.CareHours} radius={[0, 4, 4, 0]} barSize={32} />
@@ -190,22 +200,48 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
 
       {/* Family Journal Placeholder */}
       <div className="bg-white rounded-3xl border border-stone-100 p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
+        <button
+          type="button"
+          onClick={() => setIsJournalOpen((prev) => !prev)}
+          aria-expanded={isJournalOpen}
+          aria-controls="family-journal"
+          className="w-full flex items-center justify-between text-left rounded-xl px-1 py-1 transition-colors hover:bg-stone-50 dark:hover:bg-slate-800/60"
+        >
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-pink-100 text-pink-600 rounded-xl">
               <Heart size={20} fill="currentColor" />
             </div>
-            <h3 className="font-bold text-stone-800">Family Journal</h3>
+            <div>
+              <h3 className="font-bold text-stone-800">Family Journal</h3>
+              <p className="text-xs text-stone-500">Share updates and photos</p>
+            </div>
           </div>
-          <button className="text-sm text-teal-600 font-medium hover:underline">Add Photo</button>
-        </div>
+          <ChevronDown
+            size={18}
+            className={`text-stone-400 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              isJournalOpen ? 'rotate-180' : ''
+            }`}
+          />
+        </button>
 
-        <div className="bg-stone-50 border-2 border-dashed border-stone-200 rounded-2xl p-8 text-center">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 text-stone-300 shadow-sm">
-            <Sun size={24} />
+        <div
+          id="family-journal"
+          className={`overflow-hidden transition-[max-height,opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            isJournalOpen ? 'max-h-[520px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-1 pointer-events-none'
+          }`}
+        >
+          <div className="mt-4">
+            <div className="flex items-center justify-end mb-4">
+              <button className="text-sm text-teal-600 font-medium hover:underline">Add Photo</button>
+            </div>
+            <div className="bg-stone-50 border-2 border-dashed border-stone-200 rounded-2xl p-8 text-center">
+              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 text-stone-300 shadow-sm">
+                <Sun size={24} />
+              </div>
+              <p className="text-stone-500 font-medium">Share a moment today</p>
+              <p className="text-xs text-stone-400 mt-1">Photos and updates help everyone feel connected to {settings.patientName}.</p>
+            </div>
           </div>
-          <p className="text-stone-500 font-medium">Share a moment today</p>
-          <p className="text-xs text-stone-400 mt-1">Photos and updates help everyone feel connected to {settings.patientName}.</p>
         </div>
       </div>
     </div>

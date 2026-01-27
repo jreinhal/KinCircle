@@ -26,7 +26,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
     hasCompletedOnboarding: true,
     customPinHash: initialSettings?.customPinHash,
     isSecurePinHash: initialSettings?.isSecurePinHash,
-    familyId: initialSettings?.familyId
+    familyId: initialSettings?.familyId,
+    themeMode: initialSettings?.themeMode ?? 'system'
   });
 
   const nextStep = () => setStep(prev => prev + 1);
@@ -89,25 +90,25 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
     <div className="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4 animate-fade-in">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden relative z-10">
-        {/* Progress Bar */}
-        <div className="h-1 bg-slate-100 w-full">
-          <div
-            className="h-full bg-blue-600 transition-all duration-500 ease-out"
-            style={{ width: `${(step / 4) * 100}%` }}
-          />
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-teal-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-3xl" />
         </div>
+
+        <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden relative z-10">
+          {/* Progress Bar */}
+          <div className="h-1 bg-slate-100 w-full">
+            <div
+              className="h-full bg-teal-600 transition-all duration-500 ease-out"
+              style={{ width: `${(step / 4) * 100}%` }}
+            />
+          </div>
 
         <div className="p-8 md:p-12">
 
           {/* STEP 1: WELCOME */}
           {step === 1 && (
             <div className="animate-fade-in text-center space-y-6">
-              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto text-blue-600 mb-6">
+              <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto text-teal-600 mb-6">
                 <Heart size={40} fill="currentColor" />
               </div>
               <h1 className="text-3xl font-bold text-slate-900">Welcome to KinCircle</h1>
@@ -117,7 +118,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
               <div className="pt-6">
                 <button
                   onClick={nextStep}
-                  className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold text-lg hover:bg-slate-800 transition-transform active:scale-95 flex items-center justify-center"
+                  className="btn-primary w-full py-4 text-lg rounded-xl transition-transform active:scale-95"
                 >
                   Let's Get Started <ArrowRight className="ml-2" />
                 </button>
@@ -147,17 +148,17 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
                       const capitalized = value.charAt(0).toUpperCase() + value.slice(1);
                       setSettings({ ...settings, patientName: capitalized });
                     }}
-                    className="w-full pl-12 pr-4 py-3 bg-white text-slate-900 placeholder:text-slate-400 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-0 outline-none text-lg transition-colors"
+                    className="w-full pl-12 pr-4 py-3 bg-white text-slate-900 placeholder:text-slate-400 border-2 border-slate-200 rounded-xl focus:border-teal-500 focus:ring-0 outline-none text-lg transition-colors"
                   />
                 </div>
               </div>
 
               <div className="pt-8 flex space-x-4">
-                <button onClick={prevStep} className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl">Back</button>
+                <button onClick={prevStep} className="btn-muted flex-1 py-3 rounded-xl">Back</button>
                 <button
                   onClick={nextStep}
                   disabled={!settings.patientName.trim()}
-                  className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="btn-primary flex-1 py-3 rounded-xl disabled:opacity-50"
                 >
                   Continue
                 </button>
@@ -183,7 +184,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={() => setSettings({ ...settings, hourlyRate: Math.max(0, settings.hourlyRate - 5) })}
-                    className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:border-blue-500"
+                    className="btn-muted w-10 h-10 p-0"
                   >
                     -
                   </button>
@@ -193,7 +194,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
                   </div>
                   <button
                     onClick={() => setSettings({ ...settings, hourlyRate: settings.hourlyRate + 5 })}
-                    className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:border-blue-500"
+                    className="btn-muted w-10 h-10 p-0"
                   >
                     +
                   </button>
@@ -201,8 +202,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
               </div>
 
               <div className="pt-8 flex space-x-4">
-                <button onClick={prevStep} className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl">Back</button>
-                <button onClick={nextStep} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors">
+                <button onClick={prevStep} className="btn-muted flex-1 py-3 rounded-xl">Back</button>
+                <button onClick={nextStep} className="btn-primary flex-1 py-3 rounded-xl">
                   Looks Good
                 </button>
               </div>
@@ -225,26 +226,26 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
               <div className="space-y-4">
                 <div
                   onClick={() => setSettings({ ...settings, autoLockEnabled: !settings.autoLockEnabled })}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${settings.autoLockEnabled ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-blue-300'
+                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${settings.autoLockEnabled ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:border-teal-300'
                     }`}
                 >
                   <div>
                     <h3 className="font-bold text-slate-900">Enable Auto-Lock</h3>
                     <p className="text-xs text-slate-500">Locks app after 60s of inactivity</p>
                   </div>
-                  {settings.autoLockEnabled && <CheckCircle2 className="text-blue-600" size={24} />}
+                  {settings.autoLockEnabled && <CheckCircle2 className="text-teal-600" size={24} />}
                 </div>
 
                 <div
                   onClick={() => setSettings({ ...settings, privacyMode: !settings.privacyMode })}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${settings.privacyMode ? 'border-green-500 bg-green-50' : 'border-slate-200 hover:border-green-300'
+                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${settings.privacyMode ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:border-teal-300'
                     }`}
                 >
                   <div>
                     <h3 className="font-bold text-slate-900">AI Privacy Mode</h3>
                     <p className="text-xs text-slate-500">Anonymize names before AI processing</p>
                   </div>
-                  {settings.privacyMode && <CheckCircle2 className="text-green-600" size={24} />}
+                  {settings.privacyMode && <CheckCircle2 className="text-teal-600" size={24} />}
                 </div>
               </div>
 
@@ -261,7 +262,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
                       setPin(e.target.value.replace(/\D/g, ''));
                       setPinError('');
                     }}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-center text-lg tracking-widest focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-center text-lg tracking-widest focus:ring-2 focus:ring-teal-500 outline-none"
                   />
                   <input
                     type="password"
@@ -272,18 +273,18 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
                       setConfirmPin(e.target.value.replace(/\D/g, ''));
                       setPinError('');
                     }}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-center text-lg tracking-widest focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-center text-lg tracking-widest focus:ring-2 focus:ring-teal-500 outline-none"
                   />
                 </div>
                 {pinError && <p className="text-xs text-red-600 mt-2">{pinError}</p>}
               </div>
 
               <div className="pt-8 flex space-x-4">
-                <button onClick={prevStep} className="flex-1 py-3 text-slate-500 font-medium hover:bg-slate-50 rounded-xl">Back</button>
+                <button onClick={prevStep} className="btn-muted flex-1 py-3 rounded-xl">Back</button>
                 <button
                   onClick={finish}
                   disabled={isFinishing}
-                  className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-blue-900/20 disabled:opacity-60"
+                  className="btn-primary flex-1 py-3 rounded-xl shadow-lg shadow-teal-900/20 disabled:opacity-60"
                 >
                   {isFinishing ? 'Saving...' : 'Finish Setup'}
                 </button>

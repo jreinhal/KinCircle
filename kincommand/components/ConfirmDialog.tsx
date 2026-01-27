@@ -46,29 +46,27 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
       {children}
       {dialog && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200">
-            <div className="p-5 border-b border-slate-100">
-              <h3 className="text-lg font-semibold text-slate-900">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
+            <div className="p-5 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {dialog.options.title || 'Please Confirm'}
               </h3>
             </div>
             <div className="p-5">
-              <p className="text-sm text-slate-600 whitespace-pre-line">
+              <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line">
                 {dialog.options.message}
               </p>
             </div>
             <div className="p-5 pt-0 flex flex-col sm:flex-row gap-2 sm:justify-end">
               <button
                 onClick={() => handleClose(false)}
-                className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+                className="btn-muted"
               >
                 {dialog.options.cancelLabel || 'Cancel'}
               </button>
               <button
                 onClick={() => handleClose(true)}
-                className={`px-4 py-2 rounded-lg text-white ${dialog.options.destructive
-                  ? 'bg-red-600 hover:bg-red-700'
-                  : 'bg-slate-900 hover:bg-slate-800'}`}
+                className={dialog.options.destructive ? 'btn-danger' : 'btn-primary'}
               >
                 {dialog.options.confirmLabel || 'Confirm'}
               </button>

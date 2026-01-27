@@ -46,6 +46,6 @@ describe('Settings', () => {
   it('renders settings header and save button', () => {
     render(<Settings />);
     expect(screen.getByText(/Family Configuration/i)).toBeVisible();
-    expect(screen.getByRole('button', { name: /Save Configuration/i })).toBeVisible();
+    expect(screen.getByRole('button', { name: /Save Changes/i })).toBeVisible();
   });
 });

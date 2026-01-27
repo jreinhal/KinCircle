@@ -1,5 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { FamilySettings, LedgerEntry, Task, VaultDocument } from '../types';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
+import { ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { FamilySettings, LedgerEntry, Task, VaultDocument, ThemeMode } from '../types';
 import {
   encryptAllLocalStorage,
   setEncryptionEnabled,
@@ -51,14 +52,38 @@ const Settings: React.FC = () => {
   const { settings, updateSettings, importData, securityLogs } = useSettingsStore();
   const { currentUser } = useAppContext();
   const [formData, setFormData] = useState<FamilySettings>(settings);
+  const previousSettingsRef = useRef<FamilySettings | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [pinError, setPinError] = useState('');
+  const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const confirm = useConfirm();
 
+  const hasUnsavedChanges = useMemo(() => {
+    const keys = Object.keys(formData) as (keyof FamilySettings)[];
+    return keys.some((key) => formData[key] !== settings[key]);
+  }, [formData, settings]);
+  const showSavedState = isSaved && !hasUnsavedChanges;
+
   useEffect(() => {
+    if (!previousSettingsRef.current) {
+      setFormData(settings);
+      previousSettingsRef.current = settings;
+      return;
+    }
+
+    const previous = previousSettingsRef.current;
+    previousSettingsRef.current = settings;
+    const keys = Object.keys(settings) as (keyof FamilySettings)[];
+    const changedKeys = keys.filter((key) => settings[key] !== previous[key]);
+
+    if (changedKeys.length === 1 && changedKeys[0] === 'themeMode') {
+      setFormData((prev) => ({ ...prev, themeMode: settings.themeMode }));
+      return;
+    }
+
     setFormData(settings);
   }, [settings]);
 
@@ -68,15 +93,29 @@ const Settings: React.FC = () => {
   const canResetData = hasPermission(currentUser, 'data:reset');
   const canViewSecurityLogs = hasPermission(currentUser, 'security_logs:read');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = () => {
     if (!canUpdateSettings) {
       alert('You do not have permission to update settings.');
       return;
     }
+    if (!hasUnsavedChanges) return;
     updateSettings(formData);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSave();
+  };
+
+  const handleThemeChange = (mode: ThemeMode) => {
+    if (!canUpdateSettings) {
+      alert('You do not have permission to update settings.');
+      return;
+    }
+    if (settings.themeMode === mode) return;
+    updateSettings({ ...settings, themeMode: mode });
   };
 
   const handleReset = async () => {
@@ -255,7 +294,7 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in pb-12">
+    <div className="max-w-2xl mx-auto space-y-6 animate-fade-in pb-24">
       <SettingsHeader />
 
       <SettingsForm
@@ -271,20 +310,74 @@ const Settings: React.FC = () => {
         onSubmit={handleSubmit}
         isSaved={isSaved}
         canUpdateSettings={canUpdateSettings}
+        onThemeChange={handleThemeChange}
+        showSaveButton={false}
       />
 
-      <DataSyncSection
-        onCloudSync={handleCloudSync}
-        onExport={handleExport}
-        onImportFile={handleImportFile}
-        fileInputRef={fileInputRef}
-        canExport={canExportData}
-        canImport={canImportData}
-      />
+      <details
+        className="group rounded-2xl border border-slate-200/70 bg-slate-50/80 p-4 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900/60 dark:shadow-none"
+        open={isAdvancedOpen}
+        onToggle={(event) => setIsAdvancedOpen((event.currentTarget as HTMLDetailsElement).open)}
+      >
+        <summary className="cursor-pointer list-none flex items-center justify-between rounded-xl px-2 py-2 transition-colors hover:bg-white/70 dark:hover:bg-slate-900/80">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-white/90 border border-slate-200 text-teal-600 flex items-center justify-center shadow-sm dark:bg-slate-900/80 dark:border-slate-700 dark:text-teal-300 dark:shadow-none">
+              <SlidersHorizontal size={18} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100">Advanced Settings</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Sync, audit logs, and resets.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+            <span>{isAdvancedOpen ? 'Collapse' : 'Expand'}</span>
+            <ChevronDown size={16} className={`transition-transform duration-200 ${isAdvancedOpen ? 'rotate-180' : ''}`} />
+          </div>
+        </summary>
+        <div className="mt-4 space-y-6">
+          <DataSyncSection
+            onCloudSync={handleCloudSync}
+            onExport={handleExport}
+            onImportFile={handleImportFile}
+            fileInputRef={fileInputRef}
+            canExport={canExportData}
+            canImport={canImportData}
+            compact
+          />
 
-      <SecurityLogsSection securityLogs={securityLogs} canView={canViewSecurityLogs} />
+          <SecurityLogsSection securityLogs={securityLogs} canView={canViewSecurityLogs} compact />
 
-      <DangerZoneSection onReset={handleReset} canReset={canResetData} />
+          <DangerZoneSection onReset={handleReset} canReset={canResetData} compact />
+        </div>
+      </details>
+
+      <div className={`sticky bottom-4 z-10 rounded-2xl border px-4 py-3 backdrop-blur transition-all duration-200 ease-out shadow-lg shadow-slate-900/5 dark:shadow-none ${
+        hasUnsavedChanges
+          ? 'border-amber-200 bg-amber-50/90 dark:border-amber-500/30 dark:bg-amber-900/20'
+          : 'border-slate-200 bg-white/80 dark:border-slate-800 dark:bg-slate-900/70'
+      }`}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm">
+            {hasUnsavedChanges ? (
+              <span className="text-amber-900 font-medium dark:text-amber-200">Unsaved changes</span>
+            ) : (
+              <span className="text-slate-500 dark:text-slate-400">All changes saved</span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!canUpdateSettings || !hasUnsavedChanges}
+            className={`inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-slate-900 ${
+              canUpdateSettings && hasUnsavedChanges
+                ? 'bg-teal-600 text-white hover:bg-teal-500 dark:bg-teal-500 dark:hover:bg-teal-400'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed dark:bg-slate-800 dark:text-slate-500'
+            }`}
+          >
+            {showSavedState ? 'Saved' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
 
       <SettingsFooter />
     </div>

@@ -27,7 +27,7 @@ const FilterStats: React.FC<FilterStatsProps> = ({
       <button
         onClick={() => onFilterChange('all')}
         className={`p-3 rounded-xl text-center transition-all ${
-          filterStatus === 'all' ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200'
+          filterStatus === 'all' ? 'bg-teal-600 text-white' : 'bg-white border border-slate-200'
         }`}
       >
         <p className="text-lg font-bold">{stats.all}</p>
@@ -36,7 +36,7 @@ const FilterStats: React.FC<FilterStatsProps> = ({
       <button
         onClick={() => onFilterChange('available')}
         className={`p-3 rounded-xl text-center transition-all ${
-          filterStatus === 'available' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200'
+          filterStatus === 'available' ? 'bg-teal-600 text-white' : 'bg-white border border-slate-200'
         }`}
       >
         <p className="text-lg font-bold">{stats.available}</p>
@@ -45,7 +45,7 @@ const FilterStats: React.FC<FilterStatsProps> = ({
       <button
         onClick={() => onFilterChange('mine')}
         className={`p-3 rounded-xl text-center transition-all ${
-          filterStatus === 'mine' ? 'bg-amber-600 text-white' : 'bg-white border border-slate-200'
+          filterStatus === 'mine' ? 'bg-teal-600 text-white' : 'bg-white border border-slate-200'
         }`}
       >
         <p className="text-lg font-bold">{stats.mine}</p>
@@ -54,7 +54,7 @@ const FilterStats: React.FC<FilterStatsProps> = ({
       <button
         onClick={() => onFilterChange('completed')}
         className={`p-3 rounded-xl text-center transition-all ${
-          filterStatus === 'completed' ? 'bg-green-600 text-white' : 'bg-white border border-slate-200'
+          filterStatus === 'completed' ? 'bg-teal-600 text-white' : 'bg-white border border-slate-200'
         }`}
       >
         <p className="text-lg font-bold">{stats.completed}</p>

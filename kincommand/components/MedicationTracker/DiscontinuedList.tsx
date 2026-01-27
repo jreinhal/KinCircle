@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pill } from 'lucide-react';
+import React, { useState } from 'react';
+import { Pill, ChevronDown } from 'lucide-react';
 import { Medication } from '../../types';
 
 interface DiscontinuedListProps {
@@ -9,13 +9,36 @@ interface DiscontinuedListProps {
 
 const DiscontinuedList: React.FC<DiscontinuedListProps> = ({ medications, onReactivate }) => {
   if (medications.length === 0) return null;
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <details className="group">
-      <summary className="cursor-pointer font-medium text-slate-500 hover:text-slate-700">
-        Discontinued ({medications.length})
-      </summary>
-      <div className="mt-3 space-y-2">
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-expanded={isOpen}
+        aria-controls="discontinued-medications"
+        className="w-full flex items-center justify-between rounded-xl border border-slate-200/70 bg-slate-50/80 px-3 py-2 text-left transition-colors hover:bg-white/70 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-900/80"
+      >
+        <div>
+          <p className="text-sm font-semibold text-slate-800">Discontinued</p>
+          <p className="text-xs text-slate-500">{medications.length} inactive meds</p>
+        </div>
+        <ChevronDown
+          size={16}
+          className={`text-slate-400 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+
+      <div
+        id="discontinued-medications"
+        className={`overflow-hidden transition-[max-height,opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isOpen ? 'max-h-[520px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-1 pointer-events-none'
+        }`}
+      >
+        <div className="mt-3 space-y-2">
         {medications.map(med => (
           <div
             key={med.id}
@@ -40,8 +63,9 @@ const DiscontinuedList: React.FC<DiscontinuedListProps> = ({ medications, onReac
             </div>
           </div>
         ))}
+        </div>
       </div>
-    </details>
+    </div>
   );
 };
 

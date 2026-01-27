@@ -353,7 +353,7 @@ app.post('/api/agent/ux', async (req, res) => {
       Act as a "Fairness & UX Agent". Analyze this family's ledger summary:
       [${summary}]
       
-      The goal of the app is "Sibling Equity". 
+      The goal of the app is "Care Equity". 
       1. Is the current split fair? 
       2. Suggest one action the "under-contributor" could take to help.
       3. Keep it constructive and under 50 words.

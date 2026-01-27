@@ -118,7 +118,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             {task.status === 'available' && (
               <button
                 onClick={(e) => { e.stopPropagation(); onClaimTask(task); }}
-                className="px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 transition-colors font-medium"
+                className="btn-primary px-4 py-2 text-sm"
               >
                 I'll do this
               </button>
@@ -127,13 +127,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
               <>
                 <button
                   onClick={(e) => { e.stopPropagation(); onCompleteAndLog(task); }}
-                  className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors font-medium"
+                  className="btn-primary px-4 py-2 text-sm"
                 >
                   Complete & Log
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); onUnclaimTask(task.id); }}
-                  className="px-4 py-2 text-slate-600 text-sm hover:bg-slate-100 rounded-lg transition-colors"
+                  className="btn-muted px-4 py-2 text-sm"
                 >
                   Unclaim
                 </button>
@@ -142,7 +142,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             {task.status !== 'completed' && (
               <button
                 onClick={(e) => { e.stopPropagation(); onEditTask(task); }}
-                className="px-4 py-2 text-slate-600 text-sm hover:bg-slate-100 rounded-lg transition-colors flex items-center gap-1"
+                className="btn-muted px-4 py-2 text-sm"
               >
                 <Pencil size={14} />
                 Edit

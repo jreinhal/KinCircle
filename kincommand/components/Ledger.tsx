@@ -67,26 +67,26 @@ const Ledger: React.FC = () => {
               placeholder="Search ledger..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-white text-slate-900 placeholder:text-slate-400 pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 w-full md:w-64"
+              className="bg-white text-slate-900 placeholder:text-slate-400 pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-teal-500 w-full md:w-64"
             />
           </div>
 
           <div className="flex bg-white border border-slate-200 rounded-lg p-1">
             <button
               onClick={() => setFilterType('ALL')}
-              className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'ALL' ? 'bg-slate-100 text-slate-900' : 'text-slate-500'}`}
+              className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'ALL' ? 'bg-slate-100 text-teal-700' : 'text-slate-500'}`}
             >
               All
             </button>
             <button
               onClick={() => setFilterType('EXPENSE')}
-              className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'EXPENSE' ? 'bg-blue-50 text-blue-700' : 'text-slate-500'}`}
+              className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'EXPENSE' ? 'bg-teal-50 text-teal-700' : 'text-slate-500'}`}
             >
               $$
             </button>
             <button
               onClick={() => setFilterType('TIME')}
-              className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'TIME' ? 'bg-green-50 text-green-700' : 'text-slate-500'}`}
+              className={`px-3 py-1.5 text-xs font-medium rounded ${filterType === 'TIME' ? 'bg-teal-50 text-teal-700' : 'text-slate-500'}`}
             >
               Time
             </button>
@@ -94,7 +94,7 @@ const Ledger: React.FC = () => {
 
           <button
             onClick={handleExportCSV}
-            className="flex items-center space-x-2 px-3 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 text-sm transition-colors"
+            className="btn-secondary px-3 py-2 text-sm"
           >
             <Download size={16} />
             <span className="hidden md:inline">Export CSV</span>

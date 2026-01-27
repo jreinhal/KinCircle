@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Repeat, Pause, Play, Trash2, Calendar, DollarSign } from 'lucide-react';
+import { Plus, Repeat, Pause, Play, Trash2, Calendar, DollarSign, ChevronDown } from 'lucide-react';
 import { RecurringExpense, RecurrenceFrequency, EntryType } from '../types';
 import { useConfirm } from './ConfirmDialog';
 import { useRecurringExpensesStore } from '../hooks/useRecurringExpensesStore';
@@ -24,6 +24,7 @@ const RecurringExpenses: React.FC = () => {
   const { addEntry } = useEntriesStore();
   const { currentUser } = useAppContext();
   const [isAdding, setIsAdding] = useState(false);
+  const [isPausedOpen, setIsPausedOpen] = useState(false);
   const confirm = useConfirm();
   const canAdd = hasPermission(currentUser, 'recurring_expenses:create');
   const canUpdate = hasPermission(currentUser, 'recurring_expenses:update');
@@ -97,7 +98,7 @@ const RecurringExpenses: React.FC = () => {
           <button
             onClick={() => canAdd && setIsAdding(true)}
             disabled={!canAdd}
-            className={`flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg transition-colors ${canAdd ? 'hover:bg-teal-700' : 'opacity-50 cursor-not-allowed'}`}
+            className={`btn-primary ${canAdd ? '' : 'opacity-50 cursor-not-allowed'}`}
           >
             <Plus size={18} />
             Add Recurring
@@ -185,14 +186,14 @@ const RecurringExpenses: React.FC = () => {
             <div className="flex gap-3 pt-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                className="btn-primary"
               >
                 Save Recurring Expense
               </button>
               <button
                 type="button"
                 onClick={() => setIsAdding(false)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="btn-muted"
               >
                 Cancel
               </button>
@@ -293,61 +294,84 @@ const RecurringExpenses: React.FC = () => {
 
       {/* Paused Expenses - Collapsed by default */}
       {pausedExpenses.length > 0 && (
-        <details className="group">
-          <summary className="cursor-pointer font-medium text-slate-500 hover:text-slate-700">
-            Paused ({pausedExpenses.length})
-          </summary>
-          <div className="mt-3 space-y-3">
-            {pausedExpenses.map(expense => (
-              <div
-                key={expense.id}
-                className="bg-slate-50 p-4 rounded-xl border border-slate-200 opacity-60"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center">
-                      <Repeat size={20} className="text-slate-400" />
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setIsPausedOpen((prev) => !prev)}
+            aria-expanded={isPausedOpen}
+            aria-controls="paused-expenses"
+            className="w-full flex items-center justify-between rounded-xl border border-slate-200/70 bg-slate-50/80 px-3 py-2 text-left transition-colors hover:bg-white/70 dark:border-slate-800 dark:bg-slate-900/60 dark:hover:bg-slate-900/80"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-800">Paused expenses</p>
+              <p className="text-xs text-slate-500">{pausedExpenses.length} paused items</p>
+            </div>
+            <ChevronDown
+              size={16}
+              className={`text-slate-400 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                isPausedOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+
+          <div
+            id="paused-expenses"
+            className={`overflow-hidden transition-[max-height,opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              isPausedOpen ? 'max-h-[520px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-1 pointer-events-none'
+            }`}
+          >
+            <div className="mt-3 space-y-3">
+              {pausedExpenses.map(expense => (
+                <div
+                  key={expense.id}
+                  className="bg-slate-50 p-4 rounded-xl border border-slate-200 opacity-60"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-slate-200 rounded-lg flex items-center justify-center">
+                        <Repeat size={20} className="text-slate-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-700">{expense.description}</p>
+                        <p className="text-sm text-slate-400">
+                          {expense.category} • {FREQUENCY_LABELS[expense.frequency]}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-slate-700">{expense.description}</p>
-                      <p className="text-sm text-slate-400">
-                        {expense.category} • {FREQUENCY_LABELS[expense.frequency]}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-600">${expense.amount.toFixed(2)}</span>
-                    <button
-                      onClick={() => toggleActive(expense)}
-                      disabled={!canUpdate}
-                      className={`p-2 rounded-lg transition-colors ${canUpdate ? 'text-teal-600 hover:bg-teal-50' : 'text-slate-300 cursor-not-allowed'}`}
-                      title="Resume recurring"
-                    >
-                      <Play size={18} />
-                    </button>
-                    {canDelete && (
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-600">${expense.amount.toFixed(2)}</span>
                       <button
-                        onClick={async () => {
-                          const ok = await confirm({
-                            title: 'Delete recurring expense',
-                            message: `Delete "${expense.description}"? This cannot be undone.`,
-                            confirmLabel: 'Delete',
-                            destructive: true
-                          });
-                          if (ok) deleteRecurringExpense(expense.id);
-                        }}
-                        className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-                        title="Delete"
+                        onClick={() => toggleActive(expense)}
+                        disabled={!canUpdate}
+                        className={`p-2 rounded-lg transition-colors ${canUpdate ? 'text-teal-600 hover:bg-teal-50' : 'text-slate-300 cursor-not-allowed'}`}
+                        title="Resume recurring"
                       >
-                        <Trash2 size={18} />
+                        <Play size={18} />
                       </button>
-                    )}
+                      {canDelete && (
+                        <button
+                          onClick={async () => {
+                            const ok = await confirm({
+                              title: 'Delete recurring expense',
+                              message: `Delete "${expense.description}"? This cannot be undone.`,
+                              confirmLabel: 'Delete',
+                              destructive: true
+                            });
+                            if (ok) deleteRecurringExpense(expense.id);
+                          }}
+                          className="p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </details>
+        </div>
       )}
 
       {/* Empty State */}
@@ -363,7 +387,7 @@ const RecurringExpenses: React.FC = () => {
           </p>
           <button
             onClick={() => setIsAdding(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+            className="btn-primary"
           >
             <Plus size={18} />
             Add Your First Recurring Expense

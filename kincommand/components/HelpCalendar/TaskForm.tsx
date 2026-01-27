@@ -40,7 +40,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
               <h3 className="font-semibold text-slate-900">Edit Task</h3>
               <button
                 onClick={onCancel}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                className="btn-ghost p-1"
               >
                 <X size={20} />
               </button>
@@ -125,14 +125,14 @@ const TaskForm: React.FC<TaskFormProps> = ({
             <div className="flex gap-3 pt-2">
               <button
                 type="submit"
-                className="flex-1 sm:flex-none px-5 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
+                className="btn-primary flex-1 sm:flex-none px-5 py-2.5"
               >
                 {isEditing ? 'Save Changes' : 'Post Request'}
               </button>
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="btn-muted px-5 py-2.5"
               >
                 Cancel
               </button>

@@ -146,7 +146,7 @@ const MedicationTracker: React.FC = () => {
               setIsAdding(true);
             }}
             disabled={!canCreate}
-            className={`flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg transition-colors ${canCreate ? 'hover:bg-teal-700' : 'opacity-50 cursor-not-allowed'}`}
+            className={`btn-primary ${canCreate ? '' : 'opacity-50 cursor-not-allowed'}`}
           >
             <Plus size={18} />
             Add Medication

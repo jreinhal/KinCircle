@@ -39,7 +39,7 @@ const formatMessage = (text: string): React.ReactNode[] => {
       const codeMatch = remaining.match(/^`(.+?)`/);
       if (codeMatch) {
         elements.push(
-          <code key={`${lineIdx}-${keyIdx++}`} className="bg-slate-100 px-1 rounded text-sm">
+          <code key={`${lineIdx}-${keyIdx++}`} className="bg-slate-100 px-1 rounded text-sm dark:bg-slate-800 dark:text-slate-100">
             {codeMatch[1]}
           </code>
         );
@@ -125,10 +125,10 @@ const ChatAssistant: React.FC = () => {
 
   // Suggested prompts for empty state
   const suggestedPrompts = [
-    { icon: DollarSign, text: "What's our total spending this month?", bgClass: "bg-blue-50", textClass: "text-blue-600", hoverClass: "group-hover:bg-blue-100" },
-    { icon: Clock, text: "How many care hours have I logged?", bgClass: "bg-green-50", textClass: "text-green-600", hoverClass: "group-hover:bg-green-100" },
-    { icon: Search, text: "Find 24-hour pharmacies near me", bgClass: "bg-purple-50", textClass: "text-purple-600", hoverClass: "group-hover:bg-purple-100" },
-    { icon: HelpCircle, text: "What are signs of caregiver burnout?", bgClass: "bg-orange-50", textClass: "text-orange-600", hoverClass: "group-hover:bg-orange-100" },
+    { icon: DollarSign, text: "What's our total spending this month?", bgClass: "bg-blue-50 dark:bg-blue-900/30", textClass: "text-blue-600 dark:text-blue-300", hoverClass: "group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50" },
+    { icon: Clock, text: "How many care hours have I logged?", bgClass: "bg-green-50 dark:bg-emerald-900/30", textClass: "text-green-600 dark:text-emerald-300", hoverClass: "group-hover:bg-green-100 dark:group-hover:bg-emerald-900/50" },
+    { icon: Search, text: "Find 24-hour pharmacies near me", bgClass: "bg-purple-50 dark:bg-purple-900/30", textClass: "text-purple-600 dark:text-purple-300", hoverClass: "group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50" },
+    { icon: HelpCircle, text: "What are signs of caregiver burnout?", bgClass: "bg-orange-50 dark:bg-orange-900/30", textClass: "text-orange-600 dark:text-orange-300", hoverClass: "group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50" },
   ];
 
   const handleSuggestedPrompt = useCallback((prompt: string) => {
@@ -136,28 +136,28 @@ const ChatAssistant: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden animate-fade-in">
+    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden animate-fade-in">
       {/* Header */}
-      <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-teal-50 flex items-center space-x-3">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-blue-50 to-teal-50 dark:from-slate-900 dark:to-slate-800 flex items-center space-x-3">
         <div className="p-2.5 bg-gradient-to-br from-blue-500 to-teal-500 text-white rounded-xl shadow-sm">
           <Bot size={22} />
         </div>
         <div>
-          <h2 className="font-bold text-slate-800">Ask Kin</h2>
-          <p className="text-xs text-slate-500">Your care assistant • Ledger + Web search</p>
+          <h2 className="font-bold text-slate-800 dark:text-slate-100">Ask Kin</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Your care assistant • Ledger + Web search</p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50 dark:bg-slate-950/40">
         {/* Empty state with suggestions */}
         {messages.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-teal-100 rounded-2xl flex items-center justify-center mb-4">
-              <Bot size={32} className="text-teal-600" />
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-teal-100 dark:from-slate-800 dark:to-slate-700 rounded-2xl flex items-center justify-center mb-4">
+              <Bot size={32} className="text-teal-600 dark:text-teal-300" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-800 mb-1">Hi, I'm Kin!</h3>
-            <p className="text-sm text-slate-500 mb-6 max-w-sm">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">Hi, I'm Kin!</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm">
               I can answer questions about your care ledger, look up medical info, or help find local resources.
             </p>
 
@@ -168,12 +168,12 @@ const ChatAssistant: React.FC = () => {
                   <button
                     key={idx}
                     onClick={() => handleSuggestedPrompt(prompt.text)}
-                    className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl text-left hover:border-slate-300 hover:shadow-sm transition-all group"
+                    className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-left hover:border-slate-300 dark:hover:border-slate-600 hover:shadow-sm transition-all group"
                   >
                     <div className={`p-2 rounded-lg ${prompt.bgClass} ${prompt.textClass} ${prompt.hoverClass} transition-colors`}>
                       <Icon size={16} />
                     </div>
-                    <span className="text-sm text-slate-700 flex-1">{prompt.text}</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-200 flex-1">{prompt.text}</span>
                   </button>
                 );
               })}
@@ -188,7 +188,7 @@ const ChatAssistant: React.FC = () => {
             className={`flex items-start max-w-[90%] ${msg.role === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
           >
             <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-1 ${
-              msg.role === 'user' ? 'bg-slate-900 text-white ml-3' : 'bg-gradient-to-br from-blue-500 to-teal-500 text-white mr-3'
+              msg.role === 'user' ? 'bg-slate-900 dark:bg-slate-800 text-white ml-3' : 'bg-gradient-to-br from-blue-500 to-teal-500 text-white mr-3'
             }`}>
               {msg.role === 'user' ? <UserIcon size={14} /> : <Bot size={14} />}
             </div>
@@ -197,7 +197,7 @@ const ChatAssistant: React.FC = () => {
               <div className={`p-4 rounded-2xl text-sm leading-relaxed ${
                 msg.role === 'user'
                   ? 'bg-slate-900 text-white rounded-tr-none'
-                  : 'bg-white text-slate-700 border border-slate-200 shadow-sm rounded-tl-none'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-sm dark:shadow-none rounded-tl-none'
               }`}>
                 {msg.role === 'assistant' ? (
                   <div className="space-y-1">
@@ -211,7 +211,7 @@ const ChatAssistant: React.FC = () => {
               {/* Grounding Sources */}
               {msg.sources && msg.sources.length > 0 && (
                 <div className="mt-2 text-xs w-full">
-                  <p className="flex items-center text-slate-500 mb-1.5 font-medium">
+                  <p className="flex items-center text-slate-500 dark:text-slate-400 mb-1.5 font-medium">
                     <Globe size={10} className="mr-1" />
                     Sources
                   </p>
@@ -222,7 +222,7 @@ const ChatAssistant: React.FC = () => {
                         href={source.uri}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center bg-white border border-slate-200 px-2 py-1 rounded-lg text-blue-600 hover:text-blue-800 hover:border-blue-300 hover:bg-blue-50 transition-colors shadow-sm"
+                        className="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-2 py-1 rounded-lg text-teal-600 dark:text-teal-300 hover:text-teal-800 dark:hover:text-teal-200 hover:border-teal-300 dark:hover:border-slate-600 hover:bg-teal-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
                       >
                         <span className="truncate max-w-[120px]">{source.title}</span>
                         <ExternalLink size={10} className="ml-1 flex-shrink-0" />
@@ -240,7 +240,7 @@ const ChatAssistant: React.FC = () => {
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 text-white mr-3 flex items-center justify-center mt-1">
               <Bot size={14} />
             </div>
-            <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-slate-200 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl rounded-tl-none border border-slate-200 dark:border-slate-700 shadow-sm dark:shadow-none">
               <div className="flex items-center space-x-2">
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -256,19 +256,19 @@ const ChatAssistant: React.FC = () => {
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-white border-t border-slate-100">
+      <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
         <form onSubmit={handleSend} className="relative">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask about expenses or find care resources..."
-            className="w-full pl-4 pr-12 py-3 bg-slate-50 text-slate-900 placeholder:text-slate-400 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
+            className="w-full pl-4 pr-12 py-3 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:border-teal-500 dark:focus:border-teal-400 outline-none transition-all"
           />
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="absolute right-2 top-2 p-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-lg hover:from-blue-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+            className="btn-primary absolute right-2 top-2 p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send size={18} />
           </button>

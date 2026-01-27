@@ -124,13 +124,13 @@ const Schedule: React.FC = () => {
                 <div className="bg-slate-100 p-1 rounded-lg flex">
                     <button
                         onClick={() => setFilter('UPCOMING')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${filter === 'UPCOMING' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${filter === 'UPCOMING' ? 'bg-white shadow-sm text-teal-600' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         Upcoming
                     </button>
                     <button
                         onClick={() => setFilter('COMPLETED')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${filter === 'COMPLETED' ? 'bg-white shadow-sm text-green-600' : 'text-slate-500 hover:text-slate-700'}`}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${filter === 'COMPLETED' ? 'bg-white shadow-sm text-teal-600' : 'text-slate-500 hover:text-slate-700'}`}
                     >
                         Completed
                     </button>
@@ -147,7 +147,7 @@ const Schedule: React.FC = () => {
                             placeholder="e.g. Pick up prescription from Walgreens"
                             value={newTaskTitle}
                             onChange={(e) => setNewTaskTitle(e.target.value)}
-                            className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                         />
                     </div>
                     <div className="w-full md:w-40">
@@ -156,7 +156,7 @@ const Schedule: React.FC = () => {
                             type="date"
                             value={newTaskDate}
                             onChange={(e) => setNewTaskDate(e.target.value)}
-                            className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                         />
                     </div>
                     <div className="w-full md:w-40">
@@ -164,14 +164,14 @@ const Schedule: React.FC = () => {
                         <select
                             value={assignedUser}
                             onChange={(e) => setAssignedUser(e.target.value)}
-                            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-slate-900"
+                            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none bg-white text-slate-900"
                         >
                             {users.map(u => (
                                 <option key={u.id} value={u.id}>{u.name}</option>
                             ))}
                         </select>
                     </div>
-                    <button type="submit" className="w-full md:w-auto px-6 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors flex items-center justify-center">
+                    <button type="submit" className="btn-primary w-full md:w-auto px-6 py-2">
                         <Plus size={18} />
                     </button>
                 </form>
@@ -194,7 +194,7 @@ const Schedule: React.FC = () => {
                     ${isLate ? 'border-red-200 bg-red-50/10' : ''}
                 `}>
                             <div className="flex items-center space-x-4 flex-1">
-                                <button onClick={() => toggleComplete(task)} className="text-slate-400 hover:text-blue-500 transition-colors">
+                                <button onClick={() => toggleComplete(task)} className="text-slate-400 hover:text-teal-500 transition-colors">
                                     {task.isCompleted ? <CheckCircle2 size={24} className="text-green-500" /> : <Circle size={24} />}
                                 </button>
                                 <div>
@@ -230,7 +230,7 @@ const Schedule: React.FC = () => {
                                 {task.isCompleted && !task.relatedEntryId && (
                                     <button
                                         onClick={() => setLoggingTask(task)}
-                                        className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors flex items-center"
+                                        className="btn-secondary px-3 py-1.5 text-xs"
                                     >
                                         Log to Ledger <ArrowRight size={12} className="ml-1" />
                                     </button>
@@ -255,14 +255,14 @@ const Schedule: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setLogType(EntryType.TIME)}
-                                    className={`flex-1 py-2 text-xs font-medium rounded ${logType === EntryType.TIME ? 'bg-white shadow text-green-700' : 'text-slate-500'}`}
+                                    className={`flex-1 py-2 text-xs font-medium rounded ${logType === EntryType.TIME ? 'bg-white shadow text-teal-700' : 'text-slate-500'}`}
                                 >
                                     Care Hours (Time)
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setLogType(EntryType.EXPENSE)}
-                                    className={`flex-1 py-2 text-xs font-medium rounded ${logType === EntryType.EXPENSE ? 'bg-white shadow text-blue-700' : 'text-slate-500'}`}
+                                    className={`flex-1 py-2 text-xs font-medium rounded ${logType === EntryType.EXPENSE ? 'bg-white shadow text-teal-700' : 'text-slate-500'}`}
                                 >
                                     Expense ($)
                                 </button>
@@ -280,7 +280,7 @@ const Schedule: React.FC = () => {
                                     value={logAmount}
                                     onChange={(e) => setLogAmount(e.target.value)}
                                     placeholder={logType === EntryType.TIME ? 'e.g. 1.5' : 'e.g. 24.50'}
-                                    className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                                 />
                                 {logType === EntryType.TIME && logAmount && (
                                     <p className="text-xs text-green-600 mt-1 text-right">
@@ -293,13 +293,13 @@ const Schedule: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setLoggingTask(null)}
-                                    className="flex-1 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg"
+                                    className="btn-muted flex-1 py-2"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-2 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800"
+                                    className="btn-primary flex-1 py-2"
                                 >
                                     Save Entry
                                 </button>
@@ -315,7 +315,7 @@ const Schedule: React.FC = () => {
                     <div className="bg-white rounded-xl shadow-xl max-w-sm w-full overflow-hidden">
                         <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                             <h3 className="font-bold text-slate-800">Edit Task</h3>
-                            <button onClick={cancelEdit} className="text-slate-400 hover:text-slate-600">
+                            <button onClick={cancelEdit} className="btn-ghost p-1">
                                 <X size={20} />
                             </button>
                         </div>
@@ -327,7 +327,7 @@ const Schedule: React.FC = () => {
                                     type="text"
                                     value={editTitle}
                                     onChange={(e) => setEditTitle(e.target.value)}
-                                    className="bg-white text-slate-900 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="bg-white text-slate-900 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                                     required
                                 />
                             </div>
@@ -338,7 +338,7 @@ const Schedule: React.FC = () => {
                                     type="date"
                                     value={editDate}
                                     onChange={(e) => setEditDate(e.target.value)}
-                                    className="bg-white text-slate-900 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="bg-white text-slate-900 w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                                     required
                                 />
                             </div>
@@ -348,7 +348,7 @@ const Schedule: React.FC = () => {
                                 <select
                                     value={editAssignee}
                                     onChange={(e) => setEditAssignee(e.target.value)}
-                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white text-slate-900"
+                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none bg-white text-slate-900"
                                 >
                                     {users.map(u => (
                                         <option key={u.id} value={u.id}>{u.name}</option>
@@ -360,13 +360,13 @@ const Schedule: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={cancelEdit}
-                                    className="flex-1 py-2 text-slate-600 font-medium hover:bg-slate-50 rounded-lg"
+                                    className="btn-muted flex-1 py-2"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 py-2 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800"
+                                    className="btn-primary flex-1 py-2"
                                 >
                                     Save Changes
                                 </button>

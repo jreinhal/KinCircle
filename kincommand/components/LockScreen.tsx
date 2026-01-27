@@ -89,7 +89,7 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
   return (
     <div className="fixed inset-0 z-[100] bg-slate-900 flex items-center justify-center animate-fade-in backdrop-blur-md">
       <div className="w-full max-w-sm p-8 flex flex-col items-center">
-        <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20">
+        <div className="w-16 h-16 bg-teal-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-teal-500/20">
           <Lock size={32} className="text-white" />
         </div>
 
@@ -103,7 +103,7 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
         <div className="flex space-x-4 mb-8">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className={`w-4 h-4 rounded-full transition-all duration-300 ${pin.length > i
-              ? 'bg-blue-500 scale-110'
+              ? 'bg-teal-500 scale-110'
               : error
                 ? 'bg-red-500/50'
                 : 'bg-slate-700'
@@ -126,7 +126,7 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
             <button
               key={num}
               onClick={() => handleNumClick(num.toString())}
-              className="h-16 rounded-xl bg-slate-800 text-white text-xl font-medium hover:bg-slate-700 active:bg-blue-600 transition-colors"
+              className="h-16 rounded-xl bg-slate-800 text-white text-xl font-medium hover:bg-slate-700 active:bg-teal-600 transition-colors"
             >
               {num}
             </button>
@@ -135,7 +135,7 @@ const LockScreen: React.FC<LockScreenProps> = ({ onUnlock, onFailure, user, cust
           <div className="col-start-2">
             <button
               onClick={() => handleNumClick('0')}
-              className="h-16 w-full rounded-xl bg-slate-800 text-white text-xl font-medium hover:bg-slate-700 active:bg-blue-600 transition-colors"
+              className="h-16 w-full rounded-xl bg-slate-800 text-white text-xl font-medium hover:bg-slate-700 active:bg-teal-600 transition-colors"
             >
               0
             </button>

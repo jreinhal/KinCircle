@@ -133,14 +133,14 @@ const MedicationForm: React.FC<MedicationFormProps> = ({
         <div className="flex gap-3 pt-2">
           <button
             type="submit"
-            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+            className="btn-primary"
           >
             {editingId ? 'Save Changes' : 'Add Medication'}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            className="btn-muted"
           >
             Cancel
           </button>

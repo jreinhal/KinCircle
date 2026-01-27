@@ -100,11 +100,11 @@ const Vault: React.FC = () => {
         </button>
       </header>
 
-      <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg flex items-start space-x-3">
-        <Shield className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
+      <div className="bg-teal-50 border border-teal-100 p-4 rounded-lg flex items-start space-x-3">
+        <Shield className="text-teal-600 flex-shrink-0 mt-0.5" size={20} />
         <div>
-            <h3 className="text-sm font-semibold text-blue-900">Security Note</h3>
-            <p className="text-sm text-blue-800 mt-1">
+            <h3 className="text-sm font-semibold text-teal-900">Security Note</h3>
+            <p className="text-sm text-teal-800 mt-1">
                 This prototype stores document metadata locally. Enable a PIN to encrypt local storage. "Emergency Access" creates a read-only view for First Responders.
             </p>
         </div>
@@ -114,11 +114,11 @@ const Vault: React.FC = () => {
         {documents.map((doc) => (
           <div
             key={doc.id}
-            className="bg-white p-5 rounded-xl border border-slate-200 hover:shadow-md hover:border-blue-200 transition-all group relative cursor-pointer"
+            className="bg-white p-5 rounded-xl border border-slate-200 hover:shadow-md hover:border-teal-200 transition-all group relative cursor-pointer"
             onClick={() => setViewingDoc(doc)}
           >
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-slate-100 rounded-lg group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+              <div className="p-3 bg-slate-100 rounded-lg group-hover:bg-teal-50 group-hover:text-teal-600 transition-colors">
                 <FileText size={24} />
               </div>
               {canDeleteDocument && (
@@ -145,16 +145,16 @@ const Vault: React.FC = () => {
               <span>{doc.date}</span>
               <span>{doc.size}</span>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+              <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
                 <span className="text-xs font-medium text-slate-400 uppercase">{doc.type}</span>
                 <button
                   onClick={(e) => { e.stopPropagation(); setViewingDoc(doc); }}
-                  className="text-slate-400 hover:text-blue-600 flex items-center gap-1 text-xs"
+                  className="btn-text text-xs"
                 >
                     <Eye size={14} />
                     <span>View</span>
                 </button>
-            </div>
+              </div>
           </div>
         ))}
         
@@ -162,7 +162,7 @@ const Vault: React.FC = () => {
         {canAddDocument && (
           <div 
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-colors cursor-pointer min-h-[180px]"
+              className="border-2 border-dashed border-slate-200 rounded-xl p-6 flex flex-col items-center justify-center text-slate-400 hover:border-teal-400 hover:text-teal-500 transition-colors cursor-pointer min-h-[180px]"
           >
               <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3">
                   <Upload size={24} />
@@ -191,7 +191,7 @@ const Vault: React.FC = () => {
 
             <div className="p-6">
               <div className="flex items-center gap-4 mb-6">
-                <div className="p-4 bg-blue-50 text-blue-600 rounded-xl">
+                <div className="p-4 bg-teal-50 text-teal-600 rounded-xl">
                   <FileText size={32} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -223,7 +223,7 @@ const Vault: React.FC = () => {
                     logSecurityEvent(`Document accessed: ${viewingDoc.name}`, 'INFO', 'EMERGENCY_ACCESS');
                     alert(`Opening "${viewingDoc.name}"...\n\nIn production, this would open or download the actual document.`);
                   }}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="btn-primary flex-1 py-2.5"
                 >
                   <Eye size={18} />
                   Open Document
@@ -233,7 +233,7 @@ const Vault: React.FC = () => {
                     logSecurityEvent(`Document downloaded: ${viewingDoc.name}`, 'INFO', 'EMERGENCY_ACCESS');
                     alert(`Downloading "${viewingDoc.name}"...\n\nIn production, this would download the actual file.`);
                   }}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                  className="btn-muted px-4 py-2.5"
                 >
                   <Download size={18} />
                 </button>
@@ -364,7 +364,7 @@ const Vault: React.FC = () => {
                                                 <FileText size={20} className="text-slate-400 flex-shrink-0" />
                                                 <span className="font-medium truncate">{doc.name}</span>
                                             </div>
-                                            <span className="text-xs font-bold text-blue-600 px-2 py-1 bg-blue-50 rounded">VIEW</span>
+                                            <span className="text-xs font-bold text-teal-600 px-2 py-1 bg-teal-50 rounded">VIEW</span>
                                        </div>
                                    ))}
                                    {documents.length === 0 && (

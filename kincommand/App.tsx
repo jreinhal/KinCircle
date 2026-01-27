@@ -19,7 +19,7 @@ import { ConfirmProvider } from './components/ConfirmDialog';
 const AgentLab = lazy(() => import('./components/AgentLab'));
 import LockScreen from './components/LockScreen';
 import OnboardingWizard from './components/OnboardingWizard';
-import { User, LedgerEntry, EntryType, FamilySettings, UserRole, Task, VaultDocument } from './types';
+import { User, LedgerEntry, EntryType, FamilySettings, UserRole, Task, VaultDocument, ThemeMode } from './types';
 import { getSecurityMeta } from './utils/securityMeta';
 import { deriveKeyFromPin } from './utils/storageCrypto';
 import { refreshEncryptionState, setEncryptionEnabled, setEncryptionKey, hasEncryptionKey } from './services/storageService';
@@ -41,7 +41,8 @@ const DEFAULT_SETTINGS: FamilySettings = {
   privacyMode: false,
   autoLockEnabled: true,
   hasCompletedOnboarding: false,
-  familyId: ''
+  familyId: '',
+  themeMode: 'system'
 };
 
 const MOCK_ENTRIES: LedgerEntry[] = [
@@ -75,6 +76,43 @@ const AppShell: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const themeMode: ThemeMode = settings.themeMode ?? 'system';
+
+    const applyTheme = () => {
+      const prefersDark = media.matches;
+      const useDark = themeMode === 'dark' || (themeMode === 'system' && prefersDark);
+      root.classList.toggle('dark', useDark);
+      root.style.colorScheme = useDark ? 'dark' : 'light';
+
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', useDark ? '#0f172a' : '#0d9488');
+      }
+    };
+
+    applyTheme();
+
+    if (themeMode === 'system') {
+      const handler = () => applyTheme();
+      if (media.addEventListener) {
+        media.addEventListener('change', handler);
+      } else {
+        media.addListener(handler);
+      }
+      return () => {
+        if (media.removeEventListener) {
+          media.removeEventListener('change', handler);
+        } else {
+          media.removeListener(handler);
+        }
+      };
+    }
+    return undefined;
+  }, [settings.themeMode]);
 
   // --- IDLE TIMER LOGIC ---
   const handleActivity = useCallback(() => {

@@ -218,7 +218,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
             relative flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300
             ${isRecording
               ? 'bg-red-100 text-red-600 ring-4 ring-red-50'
-              : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}
+              : 'bg-teal-50 text-teal-600 hover:bg-teal-100'}
           `}
           title="Voice Entry Mode"
         >
@@ -236,9 +236,9 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
       <div className="p-6">
 
         {isAnalyzing && (
-          <div className="mb-6 p-4 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-center space-x-3 animate-pulse">
-            <Loader2 size={20} className="animate-spin text-indigo-600" />
-            <span className="text-sm font-medium text-indigo-800">
+          <div className="mb-6 p-4 bg-teal-50 border border-teal-100 rounded-lg flex items-center justify-center space-x-3 animate-pulse">
+            <Loader2 size={20} className="animate-spin text-teal-600" />
+            <span className="text-sm font-medium text-teal-800">
               {isRecording ? 'Listening...' : 'AI is processing your voice input...'}
             </span>
           </div>
@@ -298,7 +298,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
                   required
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="bg-white text-slate-900 placeholder:text-slate-400 w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  className="bg-white text-slate-900 placeholder:text-slate-400 w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
                 />
               </div>
             </div>
@@ -314,7 +314,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
                 placeholder={type === EntryType.EXPENSE ? "0.00" : "1.5"}
                 value={type === EntryType.EXPENSE ? amount : duration}
                 onChange={(e) => type === EntryType.EXPENSE ? setAmount(e.target.value) : setDuration(e.target.value)}
-                className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
               />
               {type === EntryType.TIME && duration && (
                 <p className="text-xs text-green-600 font-medium text-right">
@@ -326,21 +326,21 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-700">Description</label>
-            <input
-              type="text"
-              required
-              placeholder={type === EntryType.EXPENSE ? "e.g. Prescriptions at CVS" : "e.g. Driving Mom to Cardiologist"}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              onBlur={handleBlur}
-              className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-            />
-          </div>
+              <input
+                type="text"
+                required
+                placeholder={type === EntryType.EXPENSE ? "e.g. Prescriptions at CVS" : "e.g. Driving Mom to Cardiologist"}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                onBlur={handleBlur}
+                className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
+              />
+            </div>
 
           <div className="space-y-2">
             <div className="flex justify-between">
               <label className="text-sm font-medium text-slate-700">Category</label>
-              {isAnalyzing && !isRecording && <span className="text-xs text-blue-500 flex items-center"><Loader2 size={12} className="animate-spin mr-1" /> AI Suggesting...</span>}
+              {isAnalyzing && !isRecording && <span className="text-xs text-teal-600 flex items-center"><Loader2 size={12} className="animate-spin mr-1" /> AI Suggesting...</span>}
             </div>
             <input
               type="text"
@@ -348,7 +348,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
               placeholder="e.g. Medical, Groceries"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              className="bg-white text-slate-900 placeholder:text-slate-400 w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
             />
           </div>
 
@@ -356,14 +356,14 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 py-3 px-4 border border-slate-200 rounded-lg text-slate-600 font-medium hover:bg-slate-50 transition-colors"
+              className="btn-muted flex-1 py-3"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isAnalyzing || isRecording}
-              className="flex-1 py-3 px-4 bg-slate-900 text-white rounded-lg font-medium hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="btn-primary flex-1 py-3 shadow-lg shadow-teal-900/10 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isAnalyzing ? 'Processing...' : 'Save Entry'}
             </button>

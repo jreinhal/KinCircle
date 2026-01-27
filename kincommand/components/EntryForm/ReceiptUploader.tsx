@@ -24,13 +24,13 @@ const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
         <div
           onClick={() => fileInputRef.current?.click()}
           className={`border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center transition-colors cursor-pointer bg-slate-50
-            ${isAnalyzing ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-blue-400 hover:text-blue-500 text-slate-400'}
+            ${isAnalyzing ? 'border-teal-400 bg-teal-50' : 'border-slate-200 hover:border-teal-400 hover:text-teal-500 text-slate-400'}
           `}
         >
           {isAnalyzing ? (
             <>
-              <Loader2 size={24} className="animate-spin text-blue-500 mb-2" />
-              <span className="text-sm text-blue-600 font-medium">Processing...</span>
+              <Loader2 size={24} className="animate-spin text-teal-500 mb-2" />
+              <span className="text-sm text-teal-700 font-medium">Processing...</span>
             </>
           ) : (
             <>
@@ -63,7 +63,7 @@ const ReceiptUploader: React.FC<ReceiptUploaderProps> = ({
           </button>
           {isAnalyzing && (
             <div className="absolute inset-0 bg-white/80 flex items-center justify-center flex-col">
-              <Loader2 size={32} className="animate-spin text-blue-500 mb-2" />
+              <Loader2 size={32} className="animate-spin text-teal-500 mb-2" />
               <span className="text-sm font-medium text-slate-800">Extracting Data...</span>
             </div>
           )}

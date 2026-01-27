@@ -98,7 +98,7 @@ const FamilyInvite: React.FC = () => {
           <button
             onClick={() => canInvite && setIsInviting(true)}
             disabled={!canInvite}
-            className={`flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg transition-colors ${canInvite ? 'hover:bg-teal-700' : 'opacity-50 cursor-not-allowed'}`}
+            className={`btn-primary ${canInvite ? '' : 'opacity-50 cursor-not-allowed'}`}
           >
             <UserPlus size={18} />
             Invite Family
@@ -160,14 +160,14 @@ const FamilyInvite: React.FC = () => {
             <div className="flex gap-3 pt-2">
               <button
                 type="submit"
-                className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
+                className="btn-primary"
               >
                 Create Invite
               </button>
               <button
                 type="button"
                 onClick={() => setIsInviting(false)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="btn-muted"
               >
                 Cancel
               </button>
@@ -184,11 +184,11 @@ const FamilyInvite: React.FC = () => {
         </h3>
         <div className="space-y-3">
           {users.map(user => (
-            <button
-              key={user.id}
-              onClick={() => setViewingMember(user)}
-              className="w-full flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors text-left"
-            >
+              <button
+                key={user.id}
+                onClick={() => setViewingMember(user)}
+                className="w-full flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors text-left"
+              >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-medium">
                   {user.name.charAt(0)}
@@ -213,14 +213,14 @@ const FamilyInvite: React.FC = () => {
 
       {/* Member Detail Modal */}
       {viewingMember && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
-          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full overflow-hidden">
-            <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="font-bold text-slate-800">Member Details</h3>
-              <button onClick={() => setViewingMember(null)} className="text-slate-400 hover:text-slate-600">
-                <X size={20} />
-              </button>
-            </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
+            <div className="bg-white rounded-xl shadow-xl max-w-sm w-full overflow-hidden">
+              <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <h3 className="font-bold text-slate-800">Member Details</h3>
+                <button onClick={() => setViewingMember(null)} className="btn-ghost p-1">
+                  <X size={20} />
+                </button>
+              </div>
 
             <div className="p-6">
               <div className="flex flex-col items-center mb-6">
@@ -305,7 +305,7 @@ const FamilyInvite: React.FC = () => {
                   {canManage && (
                     <button
                       onClick={() => cancelFamilyInvite(invite.id)}
-                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="btn-ghost p-2 hover:text-red-600"
                       title="Cancel invite"
                     >
                       <XCircle size={18} />
@@ -317,7 +317,7 @@ const FamilyInvite: React.FC = () => {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => copyInviteLink(invite)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm hover:bg-slate-50 transition-colors"
+                    className="btn-secondary px-3 py-1.5 text-sm"
                   >
                     {copiedId === invite.id ? (
                       <>
@@ -333,7 +333,7 @@ const FamilyInvite: React.FC = () => {
                   </button>
                   <button
                     onClick={() => copyInviteCode(invite.inviteCode, invite.id)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-mono hover:bg-slate-50 transition-colors"
+                    className="btn-secondary px-3 py-1.5 text-sm font-mono"
                   >
                     {copiedId === invite.id + '-code' ? (
                       <>
@@ -350,7 +350,7 @@ const FamilyInvite: React.FC = () => {
                   {invite.email && (
                     <a
                       href={`mailto:${invite.email}?subject=Join our KinCircle&body=Hi ${invite.name},%0A%0AI've invited you to help track our family caregiving. Click this link to join:%0A%0A${window.location.origin}?join=${invite.inviteCode}%0A%0AOr use code: ${invite.inviteCode}`}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm hover:bg-slate-50 transition-colors"
+                      className="btn-secondary px-3 py-1.5 text-sm"
                     >
                       <Mail size={14} />
                       <span>Email</span>
@@ -377,7 +377,7 @@ const FamilyInvite: React.FC = () => {
           <button
             onClick={() => canInvite && setIsInviting(true)}
             disabled={!canInvite}
-            className={`inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg transition-colors ${canInvite ? 'hover:bg-teal-700' : 'opacity-50 cursor-not-allowed'}`}
+            className={`btn-primary ${canInvite ? '' : 'opacity-50 cursor-not-allowed'}`}
           >
             <UserPlus size={18} />
             Invite Your First Family Member

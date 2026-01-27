@@ -49,7 +49,8 @@ export const familySettingsSchema = z.object({
   hasCompletedOnboarding: z.boolean(),
   customPinHash: z.string().optional(),
   isSecurePinHash: z.boolean().optional(),
-  familyId: z.string().optional()
+  familyId: z.string().optional(),
+  themeMode: z.enum(['system', 'light', 'dark']).optional()
 });
 
 // Backup data validation

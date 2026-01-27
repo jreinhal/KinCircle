@@ -5,19 +5,20 @@ import { SecurityEvent } from '../../types';
 interface SecurityLogsSectionProps {
   securityLogs: SecurityEvent[];
   canView: boolean;
+  compact?: boolean;
 }
 
-const SecurityLogsSection: React.FC<SecurityLogsSectionProps> = ({ securityLogs, canView }) => {
+const SecurityLogsSection: React.FC<SecurityLogsSectionProps> = ({ securityLogs, canView, compact = false }) => {
   if (!canView) {
     return (
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-500 mt-8">
+      <div className={`bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-500 ${compact ? '' : 'mt-8'}`}>
         You do not have permission to view the security audit trail.
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-900 text-slate-300 rounded-xl overflow-hidden border border-slate-800 shadow-lg mt-8">
+    <div className={`bg-slate-900 text-slate-300 rounded-xl overflow-hidden border border-slate-800 shadow-lg ${compact ? '' : 'mt-8'}`}>
       <div className="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <Activity size={18} className="text-blue-400" />

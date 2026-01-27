@@ -4,16 +4,17 @@
 
 **Your Family's Circle of Care.**
 
-KinCircle is a modern web application designed to bring transparency, fairness, and organization to families managing the care of an aging loved one. It tracks both financial contributions and "care hours" (time spent) to ensure sibling fairness, prepares data for Medicaid look-back periods, and provides instant access to critical documents in emergencies.
+KinCircle is a modern web application designed to bring transparency, fairness, and organization to families managing the care of an aging loved one. It tracks both financial contributions and "care hours" (time spent) to ensure fair recognition across caregivers, prepares data for Medicaid look-back periods, and provides instant access to critical documents in emergencies.
 
 ## 🚀 Key Features
 
-*   **Sibling Ledger**: Tracks expenses and time. Time is converted to monetary value based on a configurable hourly rate ("Sweat Equity").
+*   **Care Ledger**: Tracks expenses and time. Time is converted to monetary value based on a configurable hourly rate ("Sweat Equity").
 *   **Kin AI Assistant**: A chat interface powered by **Google Gemini**. It has access to the ledger data and uses **Google Search Grounding** to answer external questions (e.g., "Find pharmacies near me").
 *   **Medicaid Look-Back Auditor**: AI agents analyze historical ledger entries to flag potential "Gift" transactions that could jeopardize Medicaid eligibility.
-*   **Digital Vault**: Secure storage simulation for legal/medical docs with a high-contrast **Emergency Responder Mode**.
-*   **Care Schedule**: Task management that converts completed tasks directly into ledger entries.
+*   **Document Vault**: Secure storage simulation for legal/medical docs with a high-contrast **Emergency Responder Mode**.
+*   **Care Tasks**: Task management that converts completed tasks directly into ledger entries.
 *   **Agent Lab**: A developer diagnostic tool that runs automated AI agents to test data integrity, privacy compliance (PII scrubbing), and generate synthetic stress-test scenarios.
+*   **Theme Modes**: Light, Dark, or System appearance settings per device.
 
 ## 🛠 Tech Stack
 

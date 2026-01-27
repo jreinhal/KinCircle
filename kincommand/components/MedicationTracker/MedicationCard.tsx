@@ -129,7 +129,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
 
             <button
               onClick={onToggleExpand}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="btn-ghost p-2 rounded-lg"
             >
               {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
@@ -201,7 +201,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             {onEdit && (
               <button
                 onClick={onEdit}
-                className="px-3 py-1.5 text-slate-600 hover:bg-white rounded-lg transition-colors flex items-center gap-1 text-sm"
+                className="btn-secondary px-3 py-1.5 text-sm"
               >
                 <Edit2 size={14} /> Edit
               </button>
@@ -209,7 +209,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             {onDiscontinue && (
               <button
                 onClick={onDiscontinue}
-                className="px-3 py-1.5 text-slate-600 hover:bg-white rounded-lg transition-colors text-sm"
+                className="btn-muted px-3 py-1.5 text-sm"
               >
                 Discontinue
               </button>
@@ -217,7 +217,7 @@ const MedicationCard: React.FC<MedicationCardProps> = ({
             {onDelete && (
               <button
                 onClick={handleDelete}
-                className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1 text-sm"
+                className="btn-danger px-3 py-1.5 text-sm"
               >
                 <Trash2 size={14} /> Delete
               </button>
