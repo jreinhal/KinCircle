@@ -27,7 +27,13 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    host: true,
+    host: (() => {
+      const devHost = process.env.VITE_DEV_HOST;
+      if (!devHost) return false;
+      if (devHost === 'true') return true;
+      if (devHost === 'false') return false;
+      return devHost;
+    })(),
     proxy: {
       '/api': 'http://localhost:8787'
     }

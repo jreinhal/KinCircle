@@ -8,6 +8,12 @@ const mockFlag = import.meta.env.VITE_GEMINI_MOCK;
 const isMock = mockFlag !== 'false';
 const shouldMock = isMock;
 const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+const apiToken = import.meta.env.VITE_KIN_API_TOKEN || '';
+
+const buildHeaders = () => ({
+  'Content-Type': 'application/json',
+  ...(apiToken ? { 'x-kin-api-key': apiToken } : {})
+});
 
 export const analyzeLedgerForMedicaid = async (entries: LedgerEntry[], settings: FamilySettings): Promise<MedicaidReportItem[]> => {
   if (shouldMock) {
@@ -34,7 +40,7 @@ export const analyzeLedgerForMedicaid = async (entries: LedgerEntry[], settings:
 
     const response = await fetch(`${apiBase}/api/medicaid`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(),
       body: JSON.stringify({ entries: promptData, settings })
     });
 
@@ -67,7 +73,7 @@ export const suggestCategory = async (description: string, type: 'EXPENSE' | 'TI
     const cleanDescription = anonymizeText(description, settings);
     const response = await fetch(`${apiBase}/api/suggest-category`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(),
       body: JSON.stringify({ description: cleanDescription, type, settings })
     });
 
@@ -115,7 +121,7 @@ export const parseReceiptImage = async (base64Image: string): Promise<{ amount: 
   try {
     const response = await fetch(`${apiBase}/api/parse-receipt`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(),
       body: JSON.stringify({ base64Image })
     });
 
@@ -154,7 +160,7 @@ export const parseVoiceEntry = async (base64Audio: string): Promise<{ type: 'EXP
   try {
     const response = await fetch(`${apiBase}/api/parse-voice`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(),
       body: JSON.stringify({ base64Audio })
     });
 
@@ -206,7 +212,7 @@ export const queryLedger = async (query: string, entries: LedgerEntry[], users: 
   try {
     const response = await fetch(`${apiBase}/api/query-ledger`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: buildHeaders(),
       body: JSON.stringify({ query, entries: sanitizedEntries, users: sanitizedUsers, settings })
     });
 
@@ -222,7 +228,7 @@ export const queryLedger = async (query: string, entries: LedgerEntry[], users: 
     try {
       const fallbackResponse = await fetch(`${apiBase}/api/query-ledger`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildHeaders(),
         body: JSON.stringify({ query, entries: sanitizedEntries, users: sanitizedUsers, settings })
       });
 

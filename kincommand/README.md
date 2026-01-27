@@ -36,9 +36,20 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
     # Optional: Base URL for the local API proxy
     VITE_API_BASE_URL=http://localhost:8787
 
+    # Optional: Shared token to protect the local API (server + client)
+    KIN_API_TOKEN=your_shared_api_token_here
+    VITE_KIN_API_TOKEN=your_shared_api_token_here
+
     # Optional: LightOnOCR for offline/fallback receipt scanning
     VITE_OCR_ENABLED=false
     VITE_OCR_SERVICE_URL=http://localhost:8090
+
+    # Optional: Server hardening
+    KIN_API_HOST=127.0.0.1
+    KIN_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+    KIN_RATE_LIMIT_MAX=60
+    KIN_AI_RATE_LIMIT_MAX=20
+    KIN_PRIVACY_REQUIRED=false
     ```
     Get a free API key from [Google AI Studio](https://ai.google.dev/)
 
@@ -52,6 +63,9 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
     npm run dev
     npm run dev:api
     ```
+
+    If you point the API/OCR services at a different host, update the `connect-src` allowlist in `kincommand/index.html`.
+    The API server binds to `127.0.0.1` by default; set `KIN_API_HOST=0.0.0.0` if you need LAN access.
 
 4.  **Optional: LightOnOCR Service** (for offline receipt scanning):
     ```bash
@@ -75,7 +89,16 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
 *   **Privacy Mode**: Regex-based PII scrubbing removes patient and user names, emails, phone numbers, and SSNs before sending data to AI.
 *   **Local Encryption**: When a PIN is set, local storage is encrypted at rest.
 *   **Input Validation**: Form validation prevents invalid amounts, empty descriptions, and data corruption.
-*   **API Key Protection**: `.env.local` is gitignored to prevent accidental key exposure.
+*   **API Key Protection**: `.env.local` is gitignored to prevent accidental key exposure. If a secret is ever committed, rotate it immediately and purge git history.
+*   **Optional API Token**: The local API can be locked behind `KIN_API_TOKEN` (use `VITE_KIN_API_TOKEN` on the client).
+
+## ⚠️ Compliance & Data Sharing
+
+**Not HIPAA compliant.** KinCircle is a prototype and is not approved for production storage of PHI without a full compliance review.
+
+**AI data sharing:** When AI features are enabled, sanitized data is sent to Google Gemini (and optionally LightOnOCR). Use Privacy Mode and obtain user consent before sharing sensitive data.
+
+**No medical/legal advice:** AI outputs are informational only and should not replace professional advice.
 
 ## 📂 Project Structure
 

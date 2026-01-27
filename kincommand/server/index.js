@@ -1,17 +1,81 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
+import { z } from 'zod';
 import { GoogleGenAI, Type } from '@google/genai';
 
 dotenv.config();
 dotenv.config({ path: '.env.local' });
 
 const PORT = process.env.KIN_API_PORT || 8787;
+const HOST = process.env.KIN_API_HOST || '127.0.0.1';
 const apiKey = process.env.GEMINI_API_KEY;
+const apiToken = process.env.KIN_API_TOKEN;
+
+const allowedOrigins = (process.env.KIN_ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const defaultOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+const corsOrigins = allowedOrigins.length ? allowedOrigins : defaultOrigins;
+
+const requirePrivacy = process.env.KIN_PRIVACY_REQUIRED === 'true';
+const rateWindowMs = Number(process.env.KIN_RATE_LIMIT_WINDOW_MS || 60_000);
+const apiRateLimitMax = Number(process.env.KIN_RATE_LIMIT_MAX || 60);
+const aiRateLimitMax = Number(process.env.KIN_AI_RATE_LIMIT_MAX || 20);
 
 const app = express();
-app.use(cors());
+app.disable('x-powered-by');
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (corsOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('CORS blocked'));
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: '10mb' }));
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
+
+const enforceApiToken = (req, res, next) => {
+  if (!apiToken) return next();
+  const authHeader = req.get('authorization') || '';
+  const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const headerToken = req.get('x-kin-api-key') || bearer;
+  if (!headerToken || headerToken !== apiToken) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  return next();
+};
+
+const createRateLimiter = (maxRequests) => {
+  const hits = new Map();
+  return (req, res, next) => {
+    const key = req.ip || 'unknown';
+    const now = Date.now();
+    const entry = hits.get(key);
+    if (!entry || now - entry.start >= rateWindowMs) {
+      hits.set(key, { start: now, count: 1 });
+      return next();
+    }
+    if (entry.count >= maxRequests) {
+      const retryAfter = Math.ceil((rateWindowMs - (now - entry.start)) / 1000);
+      res.setHeader('Retry-After', String(retryAfter));
+      return res.status(429).json({ error: 'Rate limit exceeded', retryAfterSeconds: retryAfter });
+    }
+    entry.count += 1;
+    return next();
+  };
+};
+
+const apiLimiter = createRateLimiter(apiRateLimitMax);
+const aiLimiter = createRateLimiter(aiRateLimitMax);
 
 const getAi = () => {
   if (!apiKey) {
@@ -21,6 +85,72 @@ const getAi = () => {
 };
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const settingsSchema = z.object({
+  privacyMode: z.boolean().optional(),
+  patientName: z.string().optional(),
+  hourlyRate: z.number().optional()
+}).passthrough();
+
+const ledgerEntrySchema = z.object({
+  id: z.string().optional(),
+  userId: z.string().optional(),
+  description: z.string().optional(),
+  amount: z.number().optional(),
+  type: z.string().optional(),
+  date: z.string().optional()
+}).passthrough();
+
+const userSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().optional()
+}).passthrough();
+
+const medicaidSchema = z.object({
+  entries: z.array(ledgerEntrySchema).optional(),
+  settings: settingsSchema.optional()
+});
+
+const categorySchema = z.object({
+  description: z.string(),
+  type: z.enum(['EXPENSE', 'TIME']),
+  settings: settingsSchema.optional()
+});
+
+const receiptSchema = z.object({
+  base64Image: z.string()
+});
+
+const voiceSchema = z.object({
+  base64Audio: z.string()
+});
+
+const querySchema = z.object({
+  query: z.string(),
+  entries: z.array(ledgerEntrySchema).optional(),
+  users: z.array(userSchema).optional(),
+  settings: settingsSchema.optional()
+});
+
+const uxSchema = z.object({
+  entries: z.array(ledgerEntrySchema).optional(),
+  users: z.array(userSchema).optional(),
+  settings: settingsSchema.optional()
+});
+
+const scenarioSchema = z.object({
+  scenario: z.string(),
+  currentUserId: z.string().optional()
+});
+
+const validateBody = (schema) => (req, res, next) => {
+  const result = schema.safeParse(req.body || {});
+  if (!result.success) {
+    return res.status(400).json({ error: 'Invalid request body', details: result.error.errors });
+  }
+  req.body = result.data;
+  return next();
+};
 
 const anonymizeText = (text, settings, extraNames = []) => {
   if (!settings?.privacyMode || !text) return text;
@@ -47,14 +177,17 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.post('/api/medicaid', async (req, res) => {
+app.use('/api', enforceApiToken, apiLimiter);
+
+app.post('/api/medicaid', aiLimiter, validateBody(medicaidSchema), async (req, res) => {
   try {
     const { entries = [], settings = {} } = req.body || {};
     const ai = getAi();
+    const effectiveSettings = requirePrivacy ? { ...settings, privacyMode: true } : settings;
 
     const promptData = entries.map((e) => ({
       id: e.id,
-      description: anonymizeText(e.description, settings),
+      description: anonymizeText(e.description, effectiveSettings),
       amount: e.amount,
       type: e.type,
       date: e.date
@@ -102,11 +235,12 @@ app.post('/api/medicaid', async (req, res) => {
   }
 });
 
-app.post('/api/suggest-category', async (req, res) => {
+app.post('/api/suggest-category', aiLimiter, validateBody(categorySchema), async (req, res) => {
   try {
     const { description, type, settings = {} } = req.body || {};
     const ai = getAi();
-    const cleanDescription = anonymizeText(description, settings);
+    const effectiveSettings = requirePrivacy ? { ...settings, privacyMode: true } : settings;
+    const cleanDescription = anonymizeText(description, effectiveSettings);
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -130,7 +264,7 @@ app.post('/api/suggest-category', async (req, res) => {
   }
 });
 
-app.post('/api/parse-receipt', async (req, res) => {
+app.post('/api/parse-receipt', aiLimiter, validateBody(receiptSchema), async (req, res) => {
   try {
     const { base64Image } = req.body || {};
     const ai = getAi();
@@ -172,7 +306,7 @@ app.post('/api/parse-receipt', async (req, res) => {
   }
 });
 
-app.post('/api/parse-voice', async (req, res) => {
+app.post('/api/parse-voice', aiLimiter, validateBody(voiceSchema), async (req, res) => {
   try {
     const { base64Audio } = req.body || {};
     const ai = getAi();
@@ -225,19 +359,20 @@ app.post('/api/parse-voice', async (req, res) => {
   }
 });
 
-app.post('/api/query-ledger', async (req, res) => {
+app.post('/api/query-ledger', aiLimiter, validateBody(querySchema), async (req, res) => {
   try {
     const { query, entries = [], users = [], settings = {} } = req.body || {};
     const ai = getAi();
     const userNames = users.map((u) => u.name).filter(Boolean);
 
+    const effectiveSettings = requirePrivacy ? { ...settings, privacyMode: true } : settings;
     const enrichedEntries = entries.map((e) => ({
       ...e,
-      userName: settings.privacyMode ? 'Family Member' : (users.find(u => u.id === e.userId)?.name || 'Unknown'),
-      description: anonymizeText(e.description, settings, userNames)
+      userName: effectiveSettings.privacyMode ? 'Family Member' : (users.find(u => u.id === e.userId)?.name || 'Unknown'),
+      description: anonymizeText(e.description, effectiveSettings, userNames)
     }));
 
-    const patientLabel = settings.privacyMode ? 'The Patient' : (settings.patientName || 'The Patient');
+    const patientLabel = effectiveSettings.privacyMode ? 'The Patient' : (effectiveSettings.patientName || 'The Patient');
 
     const prompt = `
       You are "Kin", a helpful family care assistant.
@@ -248,7 +383,7 @@ app.post('/api/query-ledger', async (req, res) => {
 
       Family Settings:
       - Patient: ${patientLabel}
-      - Care Time Value: $${settings.hourlyRate}/hr
+      - Care Time Value: $${effectiveSettings.hourlyRate}/hr
 
       Ledger Data:
       ${JSON.stringify(enrichedEntries)}
@@ -284,7 +419,7 @@ app.post('/api/query-ledger', async (req, res) => {
   }
 });
 
-app.post('/api/agent/scenario', async (req, res) => {
+app.post('/api/agent/scenario', aiLimiter, validateBody(scenarioSchema), async (req, res) => {
   try {
     const { scenario, currentUserId } = req.body || {};
     const ai = getAi();
@@ -337,15 +472,16 @@ app.post('/api/agent/scenario', async (req, res) => {
   }
 });
 
-app.post('/api/agent/ux', async (req, res) => {
+app.post('/api/agent/ux', aiLimiter, validateBody(uxSchema), async (req, res) => {
   try {
     const { entries = [], users = [], settings = {} } = req.body || {};
     const ai = getAi();
+    const effectiveSettings = requirePrivacy ? { ...settings, privacyMode: true } : settings;
 
     const summary = users.map(u => {
       const userEntries = entries.filter(e => e.userId === u.id);
       const total = userEntries.reduce((sum, e) => sum + e.amount, 0);
-      const name = settings.privacyMode ? 'Family Member' : u.name;
+      const name = effectiveSettings.privacyMode ? 'Family Member' : u.name;
       return `${name}: $${total.toFixed(2)}`;
     }).join(', ');
 
@@ -370,6 +506,6 @@ app.post('/api/agent/ux', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`KinCircle API listening on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`KinCircle API listening on http://${HOST}:${PORT}`);
 });

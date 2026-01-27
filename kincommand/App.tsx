@@ -38,7 +38,7 @@ const MOCK_USERS: User[] = [
 const DEFAULT_SETTINGS: FamilySettings = {
   hourlyRate: 25,
   patientName: '',
-  privacyMode: false,
+  privacyMode: import.meta.env.PROD ? true : false,
   autoLockEnabled: true,
   hasCompletedOnboarding: false,
   familyId: '',

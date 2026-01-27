@@ -15,6 +15,7 @@ interface ImportMetaEnv {
     readonly VITE_OCR_SERVICE_URL?: string;
     readonly VITE_ENABLE_LOGGING?: string;
     readonly VITE_LOG_LEVEL?: string;
+    readonly VITE_KIN_API_TOKEN?: string;
 }
 
 interface ImportMeta {
