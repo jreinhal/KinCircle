@@ -42,7 +42,8 @@ test.describe('Document Vault', () => {
   test.beforeEach(async ({ page }) => {
     await seedLocalStorage(page);
     await page.goto('/');
-    await page.getByRole('button', { name: /digital vault/i }).click();
+    await page.getByRole('button', { name: /tools & settings/i }).click();
+    await page.getByRole('button', { name: /document vault/i }).click();
   });
 
   test('should add a document to the vault', async ({ page }) => {

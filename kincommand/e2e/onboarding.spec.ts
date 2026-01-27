@@ -22,7 +22,7 @@ test.describe('Onboarding Wizard', () => {
     await page.getByPlaceholder('Confirm').fill('1234');
     await page.getByRole('button', { name: /finish setup/i }).click();
 
-    await expect(page.getByRole('heading', { name: /the sibling ledger/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /the care ledger/i })).toBeVisible();
   });
 
   test('should require patient name before continuing', async ({ page }) => {

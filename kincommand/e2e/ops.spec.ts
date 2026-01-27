@@ -46,7 +46,8 @@ test('can add an expense entry and see it in the ledger', async ({ page }) => {
   await page.getByPlaceholder('e.g. Medical, Groceries').fill('Medical');
   await page.getByRole('button', { name: /save entry/i }).click();
 
-  await page.getByRole('button', { name: /all transactions/i }).click();
+  await page.getByRole('button', { name: /tools & settings/i }).click();
+  await page.getByRole('button', { name: /ledger & reports/i }).click();
   await expect(page.getByText('Test Expense')).toBeVisible();
 });
 

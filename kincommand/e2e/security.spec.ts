@@ -47,7 +47,7 @@ test.describe('PIN Lock Screen', () => {
     }
 
     await expect(page.getByText('KinCircle Protected')).not.toBeVisible();
-    await expect(page.getByRole('button', { name: /sibling ledger/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /care ledger/i })).toBeVisible();
   });
 
   test('should reject incorrect PIN', async ({ page }) => {

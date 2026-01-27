@@ -36,11 +36,12 @@ test.describe('Ledger Entry Creation', () => {
 
     await page.getByRole('button', { name: /save entry/i }).click();
 
-    await page.getByRole('button', { name: /all transactions/i }).click();
+    await page.getByRole('button', { name: /tools & settings/i }).click();
+    await page.getByRole('button', { name: /ledger & reports/i }).click();
     await expect(page.getByText('Groceries for Mom')).toBeVisible();
     await expect(page.getByText('$45.67')).toBeVisible();
 
-    await page.getByRole('button', { name: /sibling ledger/i }).click();
+    await page.getByRole('button', { name: /care ledger/i }).click();
     await expect(page.getByText('Family Journal')).toBeVisible();
   });
 
@@ -53,7 +54,8 @@ test.describe('Ledger Entry Creation', () => {
 
     await page.getByRole('button', { name: /save entry/i }).click();
 
-    await page.getByRole('button', { name: /all transactions/i }).click();
+    await page.getByRole('button', { name: /tools & settings/i }).click();
+    await page.getByRole('button', { name: /ledger & reports/i }).click();
     await expect(page.getByText('Doctor appointment with Dad')).toBeVisible();
   });
 
