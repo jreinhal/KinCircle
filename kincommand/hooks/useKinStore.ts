@@ -108,7 +108,8 @@ export const useKinStore = (
                 const normalizedSettings: FamilySettings = {
                     ...loadedSettings,
                     familyId: loadedSettings.familyId ?? familyId,
-                    themeMode: loadedSettings.themeMode ?? 'system'
+                    themeMode: loadedSettings.themeMode ?? 'system',
+                    securityProfile: loadedSettings.securityProfile ?? 'standard'
                 };
 
                 if (!loadedSettings.familyId || !loadedSettings.themeMode) {

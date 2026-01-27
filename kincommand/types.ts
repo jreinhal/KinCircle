@@ -57,10 +57,12 @@ export interface FamilySettings {
   customPinHash?: string; // Hash of user's custom PIN (PBKDF2 or legacy)
   isSecurePinHash?: boolean; // True if using PBKDF2, false/undefined for legacy hash
   familyId?: string; // Unique ID for multi-tenant data isolation
+  securityProfile?: SecurityProfile; // Quick preset for consumer vs compliance-ready settings
   themeMode?: ThemeMode;
 }
 
 export type ThemeMode = 'system' | 'light' | 'dark';
+export type SecurityProfile = 'standard' | 'compliance';
 
 export interface MedicaidReportItem {
   entryId: string;

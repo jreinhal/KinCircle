@@ -60,6 +60,11 @@ If you're worried about sensitive information:
 2. Check **"Enhanced Privacy Masking"**
 3. This removes names, emails, and phone numbers before using AI features
 
+### Security Profile
+Use **Settings → Privacy & Security → Security profile** to pick:
+- **Standard**: Low-friction defaults for families
+- **Compliance-ready**: Privacy-first defaults for regulated environments
+
 ### Important Data Notes
 - **Not HIPAA compliant:** KinCircle is a prototype and not approved for real-world medical data storage without a full compliance review.
 - **AI data sharing:** When AI features are enabled, sanitized data may be sent to Google Gemini (and optionally LightOnOCR).

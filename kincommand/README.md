@@ -84,7 +84,7 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
 ## 🔐 Security Features
 
 *   **Custom PIN Lock**: Set your own 4-digit PIN in Settings. PINs are hashed before storage.
-*   **Auto-Lock**: Enabled by default with a 60-second idle timeout. Can be disabled in Settings for development.
+*   **Auto-Lock**: Enabled by default with a 5-minute idle timeout. Can be disabled in Settings for development.
 *   **Security Audit Logs**: Append-only event log in-app (local storage can still be reset).
 *   **Privacy Mode**: Regex-based PII scrubbing removes patient and user names, emails, phone numbers, and SSNs before sending data to AI.
 *   **Local Encryption**: When a PIN is set, local storage is encrypted at rest.
@@ -99,6 +99,8 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
 **AI data sharing:** When AI features are enabled, sanitized data is sent to Google Gemini (and optionally LightOnOCR). Use Privacy Mode and obtain user consent before sharing sensitive data.
 
 **No medical/legal advice:** AI outputs are informational only and should not replace professional advice.
+
+For future enterprise work, see `COMPLIANCE_READINESS.md`.
 
 ## 📂 Project Structure
 

@@ -38,10 +38,11 @@ const MOCK_USERS: User[] = [
 const DEFAULT_SETTINGS: FamilySettings = {
   hourlyRate: 25,
   patientName: '',
-  privacyMode: import.meta.env.PROD ? true : false,
+  privacyMode: false,
   autoLockEnabled: true,
   hasCompletedOnboarding: false,
   familyId: '',
+  securityProfile: 'standard',
   themeMode: 'system'
 };
 
@@ -114,6 +115,8 @@ const AppShell: React.FC = () => {
     return undefined;
   }, [settings.themeMode]);
 
+  const AUTO_LOCK_MS = 5 * 60 * 1000;
+
   // --- IDLE TIMER LOGIC ---
   const handleActivity = useCallback(() => {
     // If auto-lock is disabled in settings, do nothing
@@ -131,7 +134,7 @@ const AppShell: React.FC = () => {
     window.idleTimer = setTimeout(() => {
       setIsLocked(true);
       logSecurityEvent('Session timeout - Auto lock engaged', 'INFO', 'SESSION_TIMEOUT');
-    }, 60000); // 1 minute auto-lock
+    }, AUTO_LOCK_MS);
   }, [isLocked, settings.autoLockEnabled, settings.hasCompletedOnboarding, logSecurityEvent]);
 
   useEffect(() => {
@@ -143,7 +146,7 @@ const AppShell: React.FC = () => {
 
       window.idleTimer = setTimeout(() => {
         setIsLocked(true);
-      }, 60000);
+      }, AUTO_LOCK_MS);
     } else {
       clearTimeout(window.idleTimer);
     }

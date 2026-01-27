@@ -27,6 +27,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
     customPinHash: initialSettings?.customPinHash,
     isSecurePinHash: initialSettings?.isSecurePinHash,
     familyId: initialSettings?.familyId,
+    securityProfile: initialSettings?.securityProfile ?? 'standard',
     themeMode: initialSettings?.themeMode ?? 'system'
   });
 
@@ -231,7 +232,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
                 >
                   <div>
                     <h3 className="font-bold text-slate-900">Enable Auto-Lock</h3>
-                    <p className="text-xs text-slate-500">Locks app after 60s of inactivity</p>
+                    <p className="text-xs text-slate-500">Locks app after 5 minutes of inactivity</p>
                   </div>
                   {settings.autoLockEnabled && <CheckCircle2 className="text-teal-600" size={24} />}
                 </div>

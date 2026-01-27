@@ -1,6 +1,6 @@
 import React from 'react';
-import { DollarSign, User as UserIcon, Lock, Save, Monitor, Sun, Moon } from 'lucide-react';
-import { FamilySettings, ThemeMode } from '../../types';
+import { DollarSign, User as UserIcon, Lock, Save, Monitor, Sun, Moon, ShieldCheck } from 'lucide-react';
+import { FamilySettings, ThemeMode, SecurityProfile } from '../../types';
 
 interface SettingsFormProps {
   formData: FamilySettings;
@@ -36,11 +36,26 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
   showSaveButton = true
 }) => {
   const themeMode = formData.themeMode ?? 'system';
+  const securityProfile = formData.securityProfile ?? 'standard';
   const themeOptions = [
     { value: 'system', label: 'System', icon: Monitor, description: 'Match your device' },
     { value: 'light', label: 'Light', icon: Sun, description: 'Bright and clear' },
     { value: 'dark', label: 'Dark', icon: Moon, description: 'Low glare' }
   ] as const;
+  const profileOptions = [
+    { value: 'standard', label: 'Standard', description: 'Low-friction defaults for families' },
+    { value: 'compliance', label: 'Compliance-ready', description: 'Privacy-first for regulated use' }
+  ] as const;
+
+  const applySecurityProfile = (profile: SecurityProfile) => {
+    const nextAutoLock = formData.customPinHash ? true : formData.autoLockEnabled;
+    setFormData((prev) => ({
+      ...prev,
+      securityProfile: profile,
+      privacyMode: profile === 'compliance',
+      autoLockEnabled: nextAutoLock
+    }));
+  };
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -127,18 +142,60 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
         </div>
 
         <div className="space-y-4">
+          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 dark:bg-slate-900/60 dark:border-slate-800">
+            <div className="flex items-center gap-2 mb-3 text-sm font-medium text-slate-900 dark:text-slate-100">
+              <ShieldCheck size={16} className="text-teal-500 dark:text-teal-300" />
+              Security profile
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {profileOptions.map((option) => {
+                const isActive = securityProfile === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => applySecurityProfile(option.value as SecurityProfile)}
+                    className={`flex flex-col gap-1 p-3 rounded-lg border text-sm font-medium transition-all duration-200 ease-out ${
+                      isActive
+                        ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-sm dark:border-teal-400/70 dark:bg-teal-500/15 dark:text-teal-200'
+                        : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100/60 dark:border-slate-800 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-900/70'
+                    }`}
+                    aria-pressed={isActive}
+                  >
+                    <span>{option.label}</span>
+                    <span className={`text-xs ${isActive ? 'text-teal-600 dark:text-teal-200' : 'text-slate-400 dark:text-slate-500'}`}>
+                      {option.description}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {securityProfile === 'compliance' && !formData.customPinHash && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+                Compliance-ready works best with a PIN enabled for auto-lock.
+              </p>
+            )}
+          </div>
+
           <div className="flex items-start space-x-3 p-4 bg-slate-50 rounded-lg border border-slate-200 dark:bg-slate-900/60 dark:border-slate-800">
             <input
               type="checkbox"
               id="privacyMode"
               checked={formData.privacyMode}
-              onChange={(e) => setFormData({ ...formData, privacyMode: e.target.checked })}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setFormData((prev) => ({
+                  ...prev,
+                  privacyMode: checked,
+                  securityProfile: checked && prev.autoLockEnabled ? 'compliance' : 'standard'
+                }));
+              }}
               className="mt-1 w-4 h-4 text-teal-600 rounded focus:ring-teal-500"
             />
             <div>
               <label htmlFor="privacyMode" className="block text-sm font-medium text-slate-900 dark:text-slate-100">Enhanced Privacy Masking</label>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                When enabled, the app uses regex to scrub Patient Names, Emails, Phone Numbers, and SSN patterns before sending data to the AI.
+                When enabled, the app scrubs names, emails, phone numbers, and SSN patterns before sending data to the AI.
               </p>
             </div>
           </div>
@@ -150,14 +207,19 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
               checked={formData.autoLockEnabled}
               disabled={!formData.customPinHash}
               onChange={(e) => {
-                setFormData({ ...formData, autoLockEnabled: e.target.checked });
+                const checked = e.target.checked;
+                setFormData((prev) => ({
+                  ...prev,
+                  autoLockEnabled: checked,
+                  securityProfile: prev.privacyMode && checked ? 'compliance' : 'standard'
+                }));
               }}
               className="mt-1 w-4 h-4 text-teal-600 rounded focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <div>
               <label htmlFor="autoLock" className="block text-sm font-medium text-slate-900 dark:text-slate-100">Auto-Lock Inactivity Timer</label>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Automatically lock the application after 60 seconds of inactivity.
+                Automatically lock the application after 5 minutes of inactivity.
                 <span className="text-orange-600 dark:text-amber-300 font-medium ml-1">
                   Disabling this reduces recommended security posture.
                 </span>

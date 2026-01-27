@@ -50,6 +50,7 @@ export const familySettingsSchema = z.object({
   customPinHash: z.string().optional(),
   isSecurePinHash: z.boolean().optional(),
   familyId: z.string().optional(),
+  securityProfile: z.enum(['standard', 'compliance']).optional(),
   themeMode: z.enum(['system', 'light', 'dark']).optional()
 });
 
