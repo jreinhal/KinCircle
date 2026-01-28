@@ -13,8 +13,10 @@ const startServer = async () => {
 
   const { buildApp } = await import('./index.js');
   const app = buildApp();
-  server = app.listen(0, '127.0.0.1');
-  await new Promise<void>((resolve) => server.once('listening', () => resolve()));
+  await new Promise<void>((resolve, reject) => {
+    server = app.listen(0, '127.0.0.1', () => resolve());
+    server.once('error', (err) => reject(err));
+  });
   const address = server.address();
   if (typeof address === 'string' || !address) {
     throw new Error('Failed to bind test server');
@@ -25,14 +27,23 @@ const startServer = async () => {
 describe('KinCircle API auth + validation', () => {
   beforeAll(async () => {
     await startServer();
-  });
+  }, 20000);
 
   afterAll(async () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
+  }, 20000);
+
+  it('allows health checks without an API token', async () => {
+    const response = await fetch(`${baseUrl}/api/health`);
+    expect(response.status).toBe(200);
   });
 
-  it('rejects requests without an API token', async () => {
-    const response = await fetch(`${baseUrl}/api/health`);
+  it('rejects protected requests without an API token', async () => {
+    const response = await fetch(`${baseUrl}/api/query-ledger`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: 'Hello', entries: [], users: [], settings: {} })
+    });
     expect(response.status).toBe(401);
   });
 
