@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, User as UserIcon, Lock, Save, Monitor, Sun, Moon, ShieldCheck } from 'lucide-react';
+import { DollarSign, User as UserIcon, Lock, Save, Monitor, Sun, Moon, ShieldCheck, Info } from 'lucide-react';
 import { FamilySettings, ThemeMode, SecurityProfile } from '../../types';
 
 interface SettingsFormProps {
@@ -146,6 +146,13 @@ const SettingsForm: React.FC<SettingsFormProps> = ({
             <div className="flex items-center gap-2 mb-3 text-sm font-medium text-slate-900 dark:text-slate-100">
               <ShieldCheck size={16} className="text-teal-500 dark:text-teal-300" />
               Security profile
+              <span
+                className="inline-flex items-center justify-center h-5 w-5 rounded-full border border-slate-200 text-slate-400 dark:border-slate-700 dark:text-slate-500"
+                title="Standard keeps security light for families. Compliance-ready turns on privacy-first defaults for regulated environments."
+                aria-label="Security profile info"
+              >
+                <Info size={12} />
+              </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {profileOptions.map((option) => {
