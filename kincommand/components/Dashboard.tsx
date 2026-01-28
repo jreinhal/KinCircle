@@ -91,6 +91,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
   const [isJournalOpen, setIsJournalOpen] = useState(false);
   const journalContentRef = useRef<HTMLDivElement | null>(null);
   const journalPhotoInputRef = useRef<HTMLInputElement | null>(null);
+  const journalCameraInputRef = useRef<HTMLInputElement | null>(null);
   const [journalPhotoName, setJournalPhotoName] = useState<string | null>(null);
 
   const handleJournalToggle = () => {
@@ -118,6 +119,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
 
   const handleAddPhotoClick = () => {
     journalPhotoInputRef.current?.click();
+  };
+
+  const handleTakePhotoClick = () => {
+    journalCameraInputRef.current?.click();
   };
 
   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -278,13 +283,31 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
                   onChange={handlePhotoChange}
                   className="sr-only"
                 />
-                <button
-                  type="button"
-                  onClick={handleAddPhotoClick}
-                  className="text-sm text-teal-600 font-medium hover:underline"
-                >
-                  Add Photo
-                </button>
+                <input
+                  ref={journalCameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoChange}
+                  className="sr-only"
+                />
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleAddPhotoClick}
+                    className="text-sm text-teal-600 font-medium hover:underline"
+                  >
+                    Choose Photo
+                  </button>
+                  <span className="text-xs text-stone-300">•</span>
+                  <button
+                    type="button"
+                    onClick={handleTakePhotoClick}
+                    className="text-sm text-teal-600 font-medium hover:underline"
+                  >
+                    Take Photo
+                  </button>
+                </div>
               </div>
               <div className="bg-stone-50 border-2 border-dashed border-stone-200 rounded-2xl p-8 text-center">
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 text-stone-300 shadow-sm">
