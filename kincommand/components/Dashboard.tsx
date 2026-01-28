@@ -275,7 +275,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
                   ref={journalPhotoInputRef}
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   onChange={handlePhotoChange}
                   className="sr-only"
                 />
