@@ -90,6 +90,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
 
   const [isJournalOpen, setIsJournalOpen] = useState(false);
   const journalContentRef = useRef<HTMLDivElement | null>(null);
+  const journalPhotoInputRef = useRef<HTMLInputElement | null>(null);
+  const [journalPhotoName, setJournalPhotoName] = useState<string | null>(null);
 
   const handleJournalToggle = () => {
     setIsJournalOpen((prev) => {
@@ -106,6 +108,17 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
       }
       return next;
     });
+  };
+
+  const handleAddPhotoClick = () => {
+    journalPhotoInputRef.current?.click();
+  };
+
+  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setJournalPhotoName(file.name);
+    event.target.value = '';
   };
 
   return (
@@ -252,7 +265,21 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
           <div className="min-h-0 overflow-hidden">
             <div className="mt-4">
               <div className="flex items-center justify-end mb-4">
-                <button className="text-sm text-teal-600 font-medium hover:underline">Add Photo</button>
+                <input
+                  ref={journalPhotoInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoChange}
+                  className="sr-only"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddPhotoClick}
+                  className="text-sm text-teal-600 font-medium hover:underline"
+                >
+                  Add Photo
+                </button>
               </div>
               <div className="bg-stone-50 border-2 border-dashed border-stone-200 rounded-2xl p-8 text-center">
                 <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-3 text-stone-300 shadow-sm">
@@ -260,6 +287,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
                 </div>
                 <p className="text-stone-500 font-medium">Share a moment today</p>
                 <p className="text-xs text-stone-400 mt-1">Photos and updates help everyone feel connected to {settings.patientName}.</p>
+                {journalPhotoName && (
+                  <p className="text-xs text-teal-600 mt-2">Selected: {journalPhotoName}</p>
+                )}
               </div>
             </div>
           </div>
