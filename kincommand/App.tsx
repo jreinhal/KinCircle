@@ -300,11 +300,14 @@ const AppShell: React.FC = () => {
           {/* Status bar spacer */}
           <div className="h-8 bg-slate-900" />
           {/* Actual header content */}
-          <header className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+          <header className="px-4 min-h-[56px] border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-slate-900">KinCircle</span>
+              <span className="font-bold text-slate-900 leading-none">KinCircle</span>
             </div>
-            <button onClick={() => setIsMobileOpen(true)} className="text-slate-600 p-2 -mr-2">
+            <button
+              onClick={() => setIsMobileOpen(true)}
+              className="text-slate-600 -mr-2 h-10 w-10 inline-flex items-center justify-center"
+            >
               <Menu size={24} />
             </button>
           </header>
