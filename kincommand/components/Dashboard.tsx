@@ -281,6 +281,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
                   type="file"
                   accept="image/*"
                   onChange={handlePhotoChange}
+                  data-testid="journal-photo-input"
                   className="sr-only"
                 />
                 <input
@@ -289,6 +290,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
                   accept="image/*"
                   capture="environment"
                   onChange={handlePhotoChange}
+                  data-testid="journal-camera-input"
                   className="sr-only"
                 />
                 <div className="flex items-center gap-3">

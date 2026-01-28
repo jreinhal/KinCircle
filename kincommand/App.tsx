@@ -305,6 +305,7 @@ const AppShell: React.FC = () => {
             <button
               onClick={() => setIsMobileOpen(true)}
               className="text-slate-600 -mr-2 h-10 w-10 inline-flex items-center justify-center"
+              aria-label="Open navigation"
             >
               <Menu size={24} />
             </button>

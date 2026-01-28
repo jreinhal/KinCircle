@@ -90,7 +90,11 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
             <span className="text-xl font-bold tracking-tight">KinCircle</span>
           </div>
-          <button onClick={() => setIsMobileOpen(false)} className="md:hidden">
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="md:hidden"
+            aria-label="Close navigation"
+          >
             <X size={24} />
           </button>
         </div>
