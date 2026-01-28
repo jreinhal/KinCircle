@@ -296,9 +296,9 @@ const AppShell: React.FC = () => {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header - with safe area padding for notched devices */}
-        <div className="md:hidden bg-white pt-[env(safe-area-inset-top)]">
+        <div className="md:hidden bg-white pt-[calc(env(safe-area-inset-top)+0.5rem)]">
           {/* Actual header content */}
-          <header className="px-4 py-3 min-h-[56px] border-b border-slate-200 flex items-center justify-between">
+          <header className="px-4 pb-3 min-h-[52px] border-b border-slate-200 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="font-bold text-slate-900 leading-none">KinCircle</span>
             </div>
