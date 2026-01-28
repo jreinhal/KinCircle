@@ -268,6 +268,7 @@ const ChatAssistant: React.FC = () => {
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
+            aria-label="Send message"
             className="btn-primary absolute right-2 top-2 p-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send size={18} />

@@ -24,7 +24,7 @@ const seedLocalStorage = async (page: any) => {
     const originalSetTimeout = window.setTimeout.bind(window);
     let lockScheduled = false;
     window.setTimeout = ((handler: TimerHandler, timeout?: number, ...args: any[]) => {
-      if (timeout === 60000 && !lockScheduled) {
+      if (timeout === 300000 && !lockScheduled) {
         lockScheduled = true;
         return originalSetTimeout(handler, 10, ...args);
       }

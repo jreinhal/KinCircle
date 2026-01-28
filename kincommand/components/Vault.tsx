@@ -184,7 +184,11 @@ const Vault: React.FC = () => {
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden">
             <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
               <h3 className="font-bold text-slate-800">Document Details</h3>
-              <button onClick={() => setViewingDoc(null)} className="text-slate-400 hover:text-slate-600">
+              <button
+                onClick={() => setViewingDoc(null)}
+                aria-label="Close"
+                className="text-slate-400 hover:text-slate-600"
+              >
                 <X size={20} />
               </button>
             </div>
@@ -254,6 +258,7 @@ const Vault: React.FC = () => {
               </div>
               <button
                 onClick={() => setShowEmergencyPinModal(false)}
+                aria-label="Close"
                 className="text-red-400 hover:text-red-600"
               >
                 <X size={20} />

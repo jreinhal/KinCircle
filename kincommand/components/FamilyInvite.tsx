@@ -213,11 +213,11 @@ const FamilyInvite: React.FC = () => {
 
       {/* Member Detail Modal */}
       {viewingMember && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
             <div className="bg-white rounded-xl shadow-xl max-w-sm w-full overflow-hidden">
               <div className="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                 <h3 className="font-bold text-slate-800">Member Details</h3>
-                <button onClick={() => setViewingMember(null)} className="btn-ghost p-1">
+                <button onClick={() => setViewingMember(null)} aria-label="Close" className="btn-ghost p-1">
                   <X size={20} />
                 </button>
               </div>

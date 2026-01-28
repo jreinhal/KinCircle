@@ -194,7 +194,11 @@ const Schedule: React.FC = () => {
                     ${isLate ? 'border-red-200 bg-red-50/10' : ''}
                 `}>
                             <div className="flex items-center space-x-4 flex-1">
-                                <button onClick={() => toggleComplete(task)} className="text-slate-400 hover:text-teal-500 transition-colors">
+                                <button
+                                    onClick={() => toggleComplete(task)}
+                                    aria-label={task.isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
+                                    className="text-slate-400 hover:text-teal-500 transition-colors"
+                                >
                                     {task.isCompleted ? <CheckCircle2 size={24} className="text-green-500" /> : <Circle size={24} />}
                                 </button>
                                 <div>
