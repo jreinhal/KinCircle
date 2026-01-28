@@ -100,10 +100,16 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
         requestAnimationFrame(() => {
           const target = journalContentRef.current;
           if (!target) return;
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          window.setTimeout(() => {
-            window.scrollBy({ top: 120, behavior: 'smooth' });
-          }, 120);
+          const container = target.closest('main');
+          if (!(container instanceof HTMLElement)) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+          }
+          const targetTop = target.getBoundingClientRect().top;
+          const containerTop = container.getBoundingClientRect().top;
+          const offset = 24;
+          const nextTop = targetTop - containerTop + container.scrollTop - offset;
+          container.scrollTo({ top: Math.max(0, nextTop), behavior: 'smooth' });
         });
       }
       return next;
