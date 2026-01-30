@@ -273,20 +273,13 @@ const AppShell: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50">
-      {/* Mobile Header - fixed so it never scrolls off screen */}
+      {/* Mobile Header - branding only, no nav button (floating button handles navigation) */}
       <div className="md:hidden fixed inset-x-0 top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-200">
         <div className="pt-[env(safe-area-inset-top)]">
-          <header className="px-4 h-12 flex items-center justify-between">
+          <header className="px-4 h-12 flex items-center">
             <div className="flex items-center space-x-2">
               <span className="font-bold text-slate-900 leading-none">KinCircle</span>
             </div>
-            <button
-              onClick={() => setIsMobileOpen(true)}
-              className="text-slate-600 -mr-2 h-10 w-10 inline-flex items-center justify-center"
-              aria-label="Open navigation"
-            >
-              <Menu size={24} />
-            </button>
           </header>
         </div>
       </div>
