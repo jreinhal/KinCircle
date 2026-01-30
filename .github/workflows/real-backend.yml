@@ -38,3 +38,11 @@ jobs:
 
       - name: Run real Gemini tests
         run: npx playwright test e2e/chat-real.spec.ts --reporter=line
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-real-backend
+          path: ./kincommand/playwright-report
+          if-no-files-found: ignore

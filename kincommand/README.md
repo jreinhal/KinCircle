@@ -81,6 +81,33 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
     npm run analyze
     ```
 
+## ✅ Testing
+
+**Local commands:**
+```bash
+# Unit tests
+npm run test
+
+# E2E tests (mocked)
+npm run test:e2e
+
+# Unit + E2E (mocked)
+npm run test:ops
+
+# E2E with Supabase
+npm run test:e2e:supabase
+
+# E2E with real Gemini (requires GEMINI_API_KEY + E2E_GEMINI_REAL=true)
+npm run test:e2e:real
+```
+
+**Test plan (exhaustive):**
+`D:\Projects\Project Documentation\KinCircle\Testing\RAG_DEV_TEST_PLAN.md`
+
+**GitHub Actions:**
+- `ci.yml` runs unit + E2E tests on push/PR.
+- `real-backend.yml` runs scheduled real-backend E2E tests (Supabase + Gemini).
+
 ## 🔐 Security Features
 
 *   **Custom PIN Lock**: Set your own 4-digit PIN in Settings. PINs are hashed before storage.
