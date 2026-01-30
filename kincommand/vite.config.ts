@@ -23,6 +23,16 @@ export default defineConfig({
     setupFiles: './vitest.setup.ts',
     include: ['**/*.test.ts', '**/*.test.tsx'],
     exclude: ['**/node_modules/**', '**/e2e/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      thresholds: {
+        statements: 35,
+        branches: 20,
+        functions: 23,
+        lines: 36
+      }
+    }
   },
   server: {
     port: 3000,
