@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bot, Play, Terminal, Zap, CheckCircle2, Loader2, Database, Shield, HeartHandshake, Activity } from 'lucide-react';
 import { runScenarioAgent, runUXAgent, runPrivacyAgent, runDataIntegrityCheck } from '../services/agentService';
 import { useEntriesStore } from '../hooks/useEntriesStore';
@@ -17,6 +17,7 @@ const AgentLab: React.FC = () => {
   const [uxFeedback, setUxFeedback] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasRun = useRef(false);
+  const addLog = useCallback((msg: string) => setLogs(prev => [...prev, `> ${msg}`]), []);
 
   // Auto-scroll logs
   useEffect(() => {
@@ -25,17 +26,7 @@ const AgentLab: React.FC = () => {
     }
   }, [logs]);
 
-  // Auto-Run on Mount
-  useEffect(() => {
-    if (!hasRun.current) {
-      hasRun.current = true;
-      runDiagnostics();
-    }
-  }, []);
-
-  const addLog = (msg: string) => setLogs(prev => [...prev, `> ${msg}`]);
-
-  const runDiagnostics = async () => {
+  const runDiagnostics = useCallback(async () => {
     if (testStatus !== 'IDLE' && testStatus !== 'COMPLETE') return;
 
     setTestStatus('INTEGRITY');
@@ -92,7 +83,15 @@ const AgentLab: React.FC = () => {
     setTestStatus('COMPLETE');
     addLog('-----------------------------------');
     addLog('> DIAGNOSTIC SEQUENCE COMPLETE.');
-  };
+  }, [addEntries, addLog, entries, settings, testStatus, users]);
+
+  // Auto-Run on Mount
+  useEffect(() => {
+    if (!hasRun.current) {
+      hasRun.current = true;
+      runDiagnostics();
+    }
+  }, [runDiagnostics]);
 
   const StepIndicator = ({ step, current, label, icon: Icon }: { step: TestStep, current: TestStep, label: string, icon: IconType }) => {
     const steps = ['IDLE', 'INTEGRITY', 'STRESS', 'PRIVACY', 'FAIRNESS', 'COMPLETE'];

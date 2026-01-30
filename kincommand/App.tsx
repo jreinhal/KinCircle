@@ -142,7 +142,7 @@ const AppShell: React.FC = () => {
       setIsLocked(true);
       logSecurityEvent('Session timeout - Auto lock engaged', 'INFO', 'SESSION_TIMEOUT');
     }, AUTO_LOCK_MS);
-  }, [isLocked, settings.autoLockEnabled, settings.hasCompletedOnboarding, logSecurityEvent]);
+  }, [AUTO_LOCK_MS, isLocked, logSecurityEvent, settings.autoLockEnabled, settings.customPinHash, settings.hasCompletedOnboarding]);
 
   useEffect(() => {
     if (settings.autoLockEnabled && settings.hasCompletedOnboarding && settings.customPinHash) {
@@ -165,7 +165,7 @@ const AppShell: React.FC = () => {
       window.removeEventListener('scroll', handleActivity);
       clearTimeout(window.idleTimer);
     };
-  }, [handleActivity, settings.autoLockEnabled, settings.hasCompletedOnboarding]);
+  }, [AUTO_LOCK_MS, handleActivity, settings.autoLockEnabled, settings.customPinHash, settings.hasCompletedOnboarding]);
 
   useEffect(() => {
     const container = mainRef.current;

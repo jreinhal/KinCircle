@@ -53,8 +53,7 @@ export const useKinStore = (
     const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
 
     // Async Data Loading
-    useEffect(() => {
-        const loadAllData = async () => {
+    const loadAllData = useCallback(async () => {
             try {
                 let familyId = getActiveFamilyId();
 
@@ -130,10 +129,11 @@ export const useKinStore = (
             } finally {
                 setIsLoading(false);
             }
-        };
+        }, [defaultDocuments, defaultEntries, defaultSettings, defaultTasks]);
 
+    useEffect(() => {
         loadAllData();
-    }, []); // Run once on mount
+    }, [loadAllData]);
 
     // Persist changes to storage (Fire and Forget)
     // In Phase 2, we might want to debounce these or handle 'saving' states

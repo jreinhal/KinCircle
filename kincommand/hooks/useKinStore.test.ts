@@ -143,6 +143,7 @@ describe('useKinStore', () => {
             result.current.deleteEntry('entry-1');
         });
 
+        await waitFor(() => expect(result.current.securityLogs.length).toBeGreaterThan(0));
         expect(result.current.entries).toEqual(mockEntries);
     });
 });
