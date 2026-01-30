@@ -26,8 +26,6 @@ jobs:
             vite_gemini_mock: 'false'
             vite_storage_provider: 'supabase'
 
-    if: ${{ matrix.name != 'supabase-real' || (secrets.VITE_SUPABASE_URL != '' && secrets.VITE_SUPABASE_ANON_KEY != '' && secrets.GEMINI_API_KEY != '') }}
-
     env:
       E2E_SUPABASE: ${{ matrix.e2e_supabase }}
       E2E_GEMINI_REAL: ${{ matrix.e2e_gemini_real }}
@@ -51,7 +49,22 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Gate real-backend run
+        id: gate
+        run: |
+          if [ "${{ matrix.name }}" != "supabase-real" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "${{ secrets.VITE_SUPABASE_URL }}" ] || [ -z "${{ secrets.VITE_SUPABASE_ANON_KEY }}" ] || [ -z "${{ secrets.GEMINI_API_KEY }}" ]; then
+            echo "Missing secrets for supabase-real; skipping run."
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+
       - name: Run E2E Regression (Desktop + Mobile)
+        if: ${{ steps.gate.outputs.should_run == 'true' }}
         run: npx playwright test --config playwright.regression.config.ts --reporter=line --grep-invert @flaky
         env:
           VITE_GEMINI_MOCK: ${{ matrix.vite_gemini_mock }}
