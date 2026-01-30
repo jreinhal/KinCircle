@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { Menu } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -65,6 +65,11 @@ const AppShell: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [entryTypeDraft, setEntryTypeDraft] = useState<EntryType | null>(null);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const mainRef = useRef<HTMLElement | null>(null);
+  const lastScrollTopRef = useRef(0);
+  const scrollTickingRef = useRef(false);
+  const appShellStyle = { ['--mobile-header-height' as any]: '3.5rem' };
 
   const { currentUser, setCurrentUser, users } = useAppContext();
   const { settings, updateSettings, logSecurityEvent, securityLogs } = useSettingsStore();
@@ -159,6 +164,37 @@ const AppShell: React.FC = () => {
       clearTimeout(window.idleTimer);
     };
   }, [handleActivity, settings.autoLockEnabled, settings.hasCompletedOnboarding]);
+
+  useEffect(() => {
+    const container = mainRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const currentTop = container.scrollTop;
+      const lastTop = lastScrollTopRef.current;
+      const delta = currentTop - lastTop;
+
+      if (currentTop <= 0) {
+        setIsHeaderVisible(true);
+      } else if (delta > 6) {
+        setIsHeaderVisible(false);
+      } else if (delta < -6) {
+        setIsHeaderVisible(true);
+      }
+
+      lastScrollTopRef.current = currentTop;
+      scrollTickingRef.current = false;
+    };
+
+    const onScroll = () => {
+      if (scrollTickingRef.current) return;
+      scrollTickingRef.current = true;
+      requestAnimationFrame(handleScroll);
+    };
+
+    container.addEventListener('scroll', onScroll, { passive: true });
+    return () => container.removeEventListener('scroll', onScroll);
+  }, []);
 
 
   const handleUnlock = (method: string) => {
@@ -272,11 +308,15 @@ const AppShell: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-slate-50" style={appShellStyle}>
       {/* Mobile Header - branding only, no nav button (floating button handles navigation) */}
-      <div className="md:hidden fixed inset-x-0 top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-200">
+      <div
+        className={`md:hidden fixed inset-x-0 top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-200 transition-transform duration-300 ease-out will-change-transform ${
+          isHeaderVisible ? 'translate-y-0' : '-translate-y-full pointer-events-none'
+        }`}
+      >
         <div className="pt-[env(safe-area-inset-top)]">
-          <header className="px-4 h-12 flex items-center">
+          <header className="px-4 h-[var(--mobile-header-height)] flex items-center">
             <div className="flex items-center space-x-2">
               <span className="font-bold text-slate-900 leading-none">KinCircle</span>
             </div>
@@ -306,7 +346,10 @@ const AppShell: React.FC = () => {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto px-4 pb-20 pt-[calc(env(safe-area-inset-top)+3.5rem)] md:p-8 md:pb-8">
+        <main
+          ref={mainRef}
+          className="flex-1 overflow-auto px-4 pb-20 pt-[calc(env(safe-area-inset-top)+var(--mobile-header-height))] scroll-pt-[calc(env(safe-area-inset-top)+var(--mobile-header-height))] md:p-8 md:pb-8"
+        >
           <div className="max-w-6xl mx-auto">
             <ErrorBoundary>
               {renderContent()}
