@@ -273,6 +273,23 @@ const AppShell: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50">
+      {/* Mobile Header - fixed so it never scrolls off screen */}
+      <div className="md:hidden fixed inset-x-0 top-0 z-10 bg-white/95 backdrop-blur border-b border-slate-200">
+        <div className="pt-[env(safe-area-inset-top)]">
+          <header className="px-4 h-12 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="font-bold text-slate-900 leading-none">KinCircle</span>
+            </div>
+            <button
+              onClick={() => setIsMobileOpen(true)}
+              className="text-slate-600 -mr-2 h-10 w-10 inline-flex items-center justify-center"
+              aria-label="Open navigation"
+            >
+              <Menu size={24} />
+            </button>
+          </header>
+        </div>
+      </div>
 
       {/* Security Overlay */}
       {isLocked && (
@@ -295,25 +312,8 @@ const AppShell: React.FC = () => {
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header - with safe area padding for notched devices */}
-        <div className="md:hidden bg-white pt-[calc(env(safe-area-inset-top)+0.5rem)]">
-          {/* Actual header content */}
-          <header className="px-4 pb-3 min-h-[52px] border-b border-slate-200 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span className="font-bold text-slate-900 leading-none">KinCircle</span>
-            </div>
-            <button
-              onClick={() => setIsMobileOpen(true)}
-              className="text-slate-600 -mr-2 h-10 w-10 inline-flex items-center justify-center"
-              aria-label="Open navigation"
-            >
-              <Menu size={24} />
-            </button>
-          </header>
-        </div>
-
         {/* Main Content Area */}
-        <main className="flex-1 overflow-auto p-4 pb-20 md:p-8 md:pb-8">
+        <main className="flex-1 overflow-auto px-4 pb-20 pt-[calc(env(safe-area-inset-top)+3.5rem)] md:p-8 md:pb-8">
           <div className="max-w-6xl mx-auto">
             <ErrorBoundary>
               {renderContent()}
