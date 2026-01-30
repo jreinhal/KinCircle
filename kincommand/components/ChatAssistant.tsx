@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, User as UserIcon, Bot, Loader2, ExternalLink, Globe, DollarSign, Clock, Search, HelpCircle } from 'lucide-react';
+import { Send, User as UserIcon, Bot, ExternalLink, Globe, DollarSign, Clock, Search, HelpCircle } from 'lucide-react';
 import { ChatMessage } from '../types';
 import { queryLedger } from '../services/geminiService';
 import { useEntriesStore } from '../hooks/useEntriesStore';
@@ -48,7 +48,7 @@ const formatMessage = (text: string): React.ReactNode[] => {
       }
 
       // Find the next special character or take one character
-      const nextSpecial = remaining.search(/[\*`]/);
+      const nextSpecial = remaining.search(/[*`]/);
       if (nextSpecial === -1) {
         elements.push(<span key={`${lineIdx}-${keyIdx++}`}>{remaining}</span>);
         break;
@@ -156,7 +156,7 @@ const ChatAssistant: React.FC = () => {
             <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-teal-100 dark:from-slate-800 dark:to-slate-700 rounded-2xl flex items-center justify-center mb-4">
               <Bot size={32} className="text-teal-600 dark:text-teal-300" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">Hi, I'm Kin!</h3>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">Hi, I&apos;m Kin!</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm">
               I can answer questions about your care ledger, look up medical info, or help find local resources.
             </p>

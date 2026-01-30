@@ -105,7 +105,7 @@ const Vault: React.FC = () => {
         <div>
             <h3 className="text-sm font-semibold text-teal-900">Security Note</h3>
             <p className="text-sm text-teal-800 mt-1">
-                This prototype stores document metadata locally. Enable a PIN to encrypt local storage. "Emergency Access" creates a read-only view for First Responders.
+                This prototype stores document metadata locally. Enable a PIN to encrypt local storage. &ldquo;Emergency Access&rdquo; creates a read-only view for First Responders.
             </p>
         </div>
       </div>
@@ -217,7 +217,7 @@ const Vault: React.FC = () => {
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
                 <p className="text-sm text-amber-800">
-                  <strong>Demo Mode:</strong> In a production app, clicking "Open Document" would display or download the actual file.
+                  <strong>Demo Mode:</strong> In a production app, clicking &ldquo;Open Document&rdquo; would display or download the actual file.
                 </p>
               </div>
 

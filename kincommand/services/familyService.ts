@@ -1,10 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import { logger } from '../utils/logger';
 
-interface FamilyMembership {
-  family_id: string;
-}
-
 /**
  * Ensures the current authenticated user is associated with a family.
  * Returns the active family_id for scoping all Supabase reads/writes.

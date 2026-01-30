@@ -114,14 +114,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, initial
               </div>
               <h1 className="text-3xl font-bold text-slate-900">Welcome to KinCircle</h1>
               <p className="text-slate-500 text-lg leading-relaxed">
-                Caregiving is hard work—but it doesn't have to be lonely. We help you track expenses, recognize everyone's effort, and keep your family on the same page.
+                Caregiving is hard work—but it doesn&apos;t have to be lonely. We help you track expenses, recognize everyone&apos;s effort, and keep your family on the same page.
               </p>
               <div className="pt-6">
                 <button
                   onClick={nextStep}
                   className="btn-primary w-full py-4 text-lg rounded-xl transition-transform active:scale-95"
                 >
-                  Let's Get Started <ArrowRight className="ml-2" />
+                  Let&apos;s Get Started <ArrowRight className="ml-2" />
                 </button>
               </div>
             </div>

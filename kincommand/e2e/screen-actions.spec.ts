@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { ensureToolsOpen, openMobileNavIfNeeded } from './nav-helpers';
 
-const seedLocalStorage = async (page: any) => {
+const seedLocalStorage = async (page: Page) => {
   await page.addInitScript(() => {
     const familyId = 'family-test';
     const settings = {
@@ -50,14 +51,6 @@ const seedLocalStorage = async (page: any) => {
   });
 };
 
-const ensureToolsOpen = async (page: any) => {
-  const toggle = page.getByRole('button', { name: /tools & settings/i });
-  const expanded = await toggle.getAttribute('aria-expanded');
-  if (expanded !== 'true') {
-    await toggle.click();
-  }
-};
-
 test.describe('Screen action coverage', () => {
   test.beforeEach(async ({ page }) => {
     await seedLocalStorage(page);
@@ -94,6 +87,7 @@ test.describe('Screen action coverage', () => {
   });
 
   test('add entry form toggles, cancel, and save', async ({ page }) => {
+    await openMobileNavIfNeeded(page);
     await page.getByRole('button', { name: /add entry/i }).click();
     await expect(page.getByRole('heading', { name: /add contribution/i })).toBeVisible();
 
@@ -103,6 +97,7 @@ test.describe('Screen action coverage', () => {
     await page.getByRole('button', { name: /cancel/i }).click();
     await expect(page.getByRole('heading', { name: /the care ledger/i })).toBeVisible();
 
+    await openMobileNavIfNeeded(page);
     await page.getByRole('button', { name: /add entry/i }).click();
     await page.getByPlaceholder('0.00').fill('18.75');
     await page.getByPlaceholder('e.g. Prescriptions at CVS').fill('Parking');
@@ -112,6 +107,7 @@ test.describe('Screen action coverage', () => {
   });
 
   test('care tasks add, edit, complete, and log', async ({ page }) => {
+    await openMobileNavIfNeeded(page);
     await page.getByRole('button', { name: /care tasks/i }).click();
     await expect(page.getByRole('heading', { name: /care schedule/i })).toBeVisible();
 
@@ -135,6 +131,7 @@ test.describe('Screen action coverage', () => {
   });
 
   test('help calendar request, edit, claim, and complete', async ({ page }) => {
+    await openMobileNavIfNeeded(page);
     await page.getByRole('button', { name: /help calendar/i }).click();
     await expect(page.getByRole('heading', { name: /help calendar/i })).toBeVisible();
 
@@ -163,6 +160,7 @@ test.describe('Screen action coverage', () => {
   });
 
   test('medications add, log, edit, discontinue, reactivate', async ({ page }) => {
+    await openMobileNavIfNeeded(page);
     await page.getByRole('button', { name: /medications/i }).click();
     await expect(page.getByRole('heading', { name: 'Medications', exact: true })).toBeVisible();
 
@@ -188,6 +186,7 @@ test.describe('Screen action coverage', () => {
   });
 
   test('ask kin suggested prompt and send', async ({ page }) => {
+    await openMobileNavIfNeeded(page);
     await page.getByRole('button', { name: /ask kin/i }).click();
     await expect(page.getByRole('heading', { name: /ask kin/i })).toBeVisible();
 
@@ -251,11 +250,11 @@ test.describe('Screen action coverage', () => {
 
     await page.getByRole('button', { name: /view/i }).click();
     await expect(page.getByRole('heading', { name: /document details/i })).toBeVisible();
-    await page.getByRole('button', { name: /close/i }).click();
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
 
     await page.getByRole('button', { name: /emergency access/i }).click();
     await expect(page.getByRole('heading', { name: /emergency access/i })).toBeVisible();
-    await page.getByRole('button', { name: /close/i }).click();
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
   });
 
   test('family circle invite, member modal, and cancel invite', async ({ page }) => {
@@ -274,7 +273,7 @@ test.describe('Screen action coverage', () => {
 
     await page.getByRole('button', { name: /sarah miller/i }).click();
     await expect(page.getByRole('heading', { name: /member details/i })).toBeVisible();
-    await page.getByRole('button', { name: /close/i }).click();
+    await page.getByRole('button', { name: 'Close', exact: true }).click();
 
     await page.getByTitle('Cancel invite').click();
     await expect(page.getByText('Alex', { exact: true })).not.toBeVisible();
@@ -314,7 +313,7 @@ test.describe('Screen action coverage', () => {
       entries: []
     };
     const backupBuffer = Buffer.from(JSON.stringify(backupPayload));
-    await page.setInputFiles('input[type="file"][accept=\".json\"]', {
+    await page.setInputFiles('input[type="file"][accept=".json"]', {
       name: 'backup.json',
       mimeType: 'application/json',
       buffer: backupBuffer

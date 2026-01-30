@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { openMobileNavIfNeeded } from './nav-helpers';
 
-const seedLocalStorage = async (page: any) => {
+const seedLocalStorage = async (page: Page) => {
   await page.addInitScript(() => {
     const familyId = 'family-test';
     const settings = {
@@ -23,7 +24,7 @@ const seedLocalStorage = async (page: any) => {
 
     const originalSetTimeout = window.setTimeout.bind(window);
     let lockScheduled = false;
-    window.setTimeout = ((handler: TimerHandler, timeout?: number, ...args: any[]) => {
+    window.setTimeout = ((handler: TimerHandler, timeout?: number, ...args: unknown[]) => {
       if (timeout === 300000 && !lockScheduled) {
         lockScheduled = true;
         return originalSetTimeout(handler, 10, ...args);
@@ -47,6 +48,7 @@ test.describe('PIN Lock Screen', () => {
     }
 
     await expect(page.getByText('KinCircle Protected')).not.toBeVisible();
+    await openMobileNavIfNeeded(page);
     await expect(page.getByRole('button', { name: /care ledger/i })).toBeVisible();
   });
 

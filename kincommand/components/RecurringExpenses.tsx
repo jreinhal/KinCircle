@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Repeat, Pause, Play, Trash2, Calendar, DollarSign, ChevronDown } from 'lucide-react';
+import { Plus, Repeat, Pause, Play, Trash2, DollarSign, ChevronDown } from 'lucide-react';
 import { RecurringExpense, RecurrenceFrequency, EntryType } from '../types';
 import { useConfirm } from './ConfirmDialog';
 import { useRecurringExpensesStore } from '../hooks/useRecurringExpensesStore';
@@ -383,7 +383,7 @@ const RecurringExpenses: React.FC = () => {
           <h3 className="font-semibold text-slate-900 mb-2">No recurring expenses yet</h3>
           <p className="text-slate-500 text-sm mb-4 max-w-md mx-auto">
             Set up recurring expenses for things like monthly prescriptions,
-            utilities, or regular grocery runs. We'll remind you when they're due.
+            utilities, or regular grocery runs. We&apos;ll remind you when they&apos;re due.
           </p>
           <button
             onClick={() => setIsAdding(true)}

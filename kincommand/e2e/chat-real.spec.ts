@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { openMobileNavIfNeeded } from './nav-helpers';
 
 const hasRealKey =
   !!process.env.GEMINI_API_KEY &&
@@ -6,7 +7,7 @@ const hasRealKey =
 
 const shouldRun = process.env.E2E_GEMINI_REAL === 'true' && hasRealKey;
 
-const seedLocalStorage = async (page: any) => {
+const seedLocalStorage = async (page: Page) => {
   await page.addInitScript(() => {
     const familyId = 'family-test';
     const settings = {
@@ -34,6 +35,7 @@ test.skip(!shouldRun, 'Set E2E_GEMINI_REAL=true and a real GEMINI_API_KEY to run
     await seedLocalStorage(page);
     await page.goto('/');
 
+    await openMobileNavIfNeeded(page);
     await page.getByRole('button', { name: /ask kin/i }).click();
     await page.getByPlaceholder(/ask about expenses/i).fill('What is 2+2? Reply with just the number.');
     await page.locator('form button[type="submit"]').click();

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MedicaidReportItem } from '../types';
 import { analyzeLedgerForMedicaid } from '../services/geminiService';
-import { ShieldAlert, CheckCircle, AlertTriangle, Loader2, FileCheck } from 'lucide-react';
+import { ShieldAlert, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
 import { useEntriesStore } from '../hooks/useEntriesStore';
 import { useSettingsStore } from '../hooks/useSettingsStore';
 
@@ -41,7 +41,7 @@ const MedicaidReport: React.FC = () => {
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Medicaid Look-Back Auditor</h1>
         <p className="text-slate-500 mt-2">
-          AI analysis of your ledger to identify potential "Gift" classifications vs. legitimate "Care Services" for the 5-year look-back period.
+          AI analysis of your ledger to identify potential &ldquo;Gift&rdquo; classifications vs. legitimate &ldquo;Care Services&rdquo; for the 5-year look-back period.
         </p>
         {settings.privacyMode && (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">
@@ -112,7 +112,7 @@ const MedicaidReport: React.FC = () => {
                     
                     {item.status !== 'COMPLIANT' && (
                         <div className="mt-2 text-xs text-slate-500">
-                             Suggested Action: Clarify if this was for fair market value or obtain a receipt proving it was for the elder's sole benefit.
+                             Suggested Action: Clarify if this was for fair market value or obtain a receipt proving it was for the elder&apos;s sole benefit.
                         </div>
                     )}
                   </div>

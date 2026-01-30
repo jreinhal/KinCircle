@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { EntryType, UserRole, HelpTaskStatus } from '../types';
+import { EntryType, UserRole } from '../types';
 
 // Entry validation
 export const ledgerEntrySchema = z.object({

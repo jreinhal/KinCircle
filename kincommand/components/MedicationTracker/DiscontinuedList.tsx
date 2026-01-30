@@ -8,8 +8,8 @@ interface DiscontinuedListProps {
 }
 
 const DiscontinuedList: React.FC<DiscontinuedListProps> = ({ medications, onReactivate }) => {
-  if (medications.length === 0) return null;
   const [isOpen, setIsOpen] = useState(false);
+  if (medications.length === 0) return null;
 
   return (
     <div className="mt-4">

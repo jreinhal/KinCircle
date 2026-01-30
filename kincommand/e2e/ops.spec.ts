@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { openMobileNavIfNeeded } from './nav-helpers';
 
-const seedLocalStorage = async (page: any) => {
+const seedLocalStorage = async (page: Page) => {
   await page.addInitScript(() => {
     const familyId = 'family-test';
     const settings = {
@@ -46,6 +47,7 @@ test('can add an expense entry and see it in the ledger', async ({ page }) => {
   await page.getByPlaceholder('e.g. Medical, Groceries').fill('Medical');
   await page.getByRole('button', { name: /save entry/i }).click();
 
+  await openMobileNavIfNeeded(page);
   await page.getByRole('button', { name: /tools & settings/i }).click();
   await page.getByRole('button', { name: /ledger & reports/i }).click();
   await expect(page.getByText('Test Expense')).toBeVisible();
@@ -55,6 +57,7 @@ test('ask kin returns a response', async ({ page }) => {
   await seedLocalStorage(page);
   await page.goto('/');
 
+  await openMobileNavIfNeeded(page);
   await page.getByRole('button', { name: /ask kin/i }).click();
   await page.getByPlaceholder(/ask about expenses/i).fill('How much did we spend last month?');
   await page.locator('form button[type="submit"]').click();

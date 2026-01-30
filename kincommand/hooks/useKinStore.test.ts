@@ -1,7 +1,7 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useKinStore } from './useKinStore';
 import { storageService } from '../services/storageService';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach, type Mock } from 'vitest';
 import { EntryType, FamilySettings, UserRole } from '../types';
 
 // Mock storage service
@@ -25,6 +25,8 @@ const defaultSettings: FamilySettings = {
     autoLockEnabled: false,
     hasCompletedOnboarding: true
 };
+const loadMock = storageService.load as Mock;
+const saveMock = storageService.save as Mock;
 
 describe('useKinStore', () => {
     beforeEach(() => {
@@ -38,7 +40,7 @@ describe('useKinStore', () => {
 
     it('should start with isLoading = true', () => {
         // Mock load to hang or take time
-        (storageService.load as any).mockReturnValue(new Promise(() => { }));
+        loadMock.mockReturnValue(new Promise(() => { }));
 
         const { result } = renderHook(() => useKinStore([], [], [], defaultSettings, mockUser));
 
@@ -46,10 +48,18 @@ describe('useKinStore', () => {
     });
 
     it('should populate state from storageService', async () => {
-        const mockEntries = [{ id: '1', userId: 'u1', type: EntryType.EXPENSE, amount: 100 }];
+        const mockEntries = [{
+            id: '1',
+            userId: 'u1',
+            type: EntryType.EXPENSE,
+            date: '2025-01-01',
+            description: 'Supplies',
+            amount: 100,
+            category: 'Medical'
+        }];
 
         // Setup mocks to return data
-        (storageService.load as any).mockImplementation((key: string, def: any) => {
+        loadMock.mockImplementation((key: string, def: unknown) => {
             if (key === 'kin_entries') return Promise.resolve(mockEntries);
             return Promise.resolve(def);
         });
@@ -64,7 +74,7 @@ describe('useKinStore', () => {
 
     it('should add an entry and trigger save', async () => {
         // Setup: Load returns empty
-        (storageService.load as any).mockResolvedValue([]);
+        loadMock.mockResolvedValue([]);
 
         const { result } = renderHook(() => useKinStore([], [], [], defaultSettings, mockUser));
 
@@ -98,9 +108,11 @@ describe('useKinStore', () => {
             expect(storageService.save).toHaveBeenCalled();
 
             // Check that the last call contained our data in the 'kin_entries' key
-            const saveCalls = (storageService.save as any).mock.calls;
-            const entryCall = saveCalls.find((c: any) => c[0] === 'kin_entries');
-            expect(entryCall).toBeTruthy();
+            const saveCalls = saveMock.mock.calls;
+            const entryCall = saveCalls.find((c: unknown[]) => c[0] === 'kin_entries');
+            if (!entryCall) {
+                throw new Error('Expected save call for kin_entries');
+            }
 
             // Loose match for the entry in the array
             expect(entryCall[1]).toEqual(expect.arrayContaining([expect.objectContaining({ id: '2' })]));
@@ -119,12 +131,12 @@ describe('useKinStore', () => {
             category: 'Test'
         }];
 
-        (storageService.load as any).mockImplementation((key: string, def: any) => {
+        loadMock.mockImplementation((key: string, def: unknown) => {
             if (key === 'kin_entries') return Promise.resolve(mockEntries);
             return Promise.resolve(def);
         });
 
-        const { result } = renderHook(() => useKinStore(mockEntries as any, [], [], defaultSettings, viewerUser));
+        const { result } = renderHook(() => useKinStore(mockEntries, [], [], defaultSettings, viewerUser));
         await waitFor(() => expect(result.current.isLoading).toBe(false));
 
         act(() => {

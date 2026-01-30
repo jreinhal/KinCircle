@@ -81,9 +81,6 @@ const DebtSummary: React.FC<DebtSummaryProps> = ({ entries, users, currentUser }
 
   // Find current user's status
   const currentUserBalance = userTotals[currentUser.id] - fairShare;
-  const currentUserOwes = debts.filter(d => d.fromUserId === currentUser.id);
-  const currentUserIsOwed = debts.filter(d => d.toUserId === currentUser.id);
-
   const getUserName = (id: string) => users.find(u => u.id === id)?.name || 'Unknown';
   const hasDebts = debts.length > 0;
   const [isSettlementOpen, setIsSettlementOpen] = useState(false);
@@ -142,7 +139,7 @@ const DebtSummary: React.FC<DebtSummaryProps> = ({ entries, users, currentUser }
           <div className="text-right">
             {currentUserBalance > 0.01 ? (
               <span className="text-green-700 font-semibold">
-                You're owed ${Math.abs(currentUserBalance).toFixed(2)}
+                You&apos;re owed ${Math.abs(currentUserBalance).toFixed(2)}
               </span>
             ) : currentUserBalance < -0.01 ? (
               <span className="text-amber-700 font-semibold">
@@ -156,7 +153,7 @@ const DebtSummary: React.FC<DebtSummaryProps> = ({ entries, users, currentUser }
 
         {/* Quick breakdown for current user */}
         <div className="mt-2 text-sm text-slate-600">
-          You've contributed ${userTotals[currentUser.id].toFixed(2)} of ${totalSpent.toFixed(2)} total
+          You&apos;ve contributed ${userTotals[currentUser.id].toFixed(2)} of ${totalSpent.toFixed(2)} total
           <span className="text-slate-400"> (fair share: ${fairShare.toFixed(2)})</span>
         </div>
       </div>

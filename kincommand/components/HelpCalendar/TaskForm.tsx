@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { HelpTask, HelpTaskCategory } from '../../types';
+import { HelpTaskCategory } from '../../types';
 import { CATEGORY_CONFIG, TIME_SLOTS } from './constants';
 
 export interface TaskFormData {

@@ -69,7 +69,9 @@ const AppShell: React.FC = () => {
   const mainRef = useRef<HTMLElement | null>(null);
   const lastScrollTopRef = useRef(0);
   const scrollTickingRef = useRef(false);
-  const appShellStyle = { ['--mobile-header-height' as any]: '3.5rem' };
+  const appShellStyle: React.CSSProperties & { ['--mobile-header-height']?: string } = {
+    '--mobile-header-height': '3.5rem'
+  };
 
   const { currentUser, setCurrentUser, users } = useAppContext();
   const { settings, updateSettings, logSecurityEvent, securityLogs } = useSettingsStore();

@@ -134,7 +134,7 @@ const MedicationTracker: React.FC = () => {
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Medications</h2>
           <p className="text-slate-500 text-sm mt-1">
-            Track {settings.patientName || 'your loved one'}'s medications and costs
+            Track {settings.patientName || 'your loved one'}&apos;s medications and costs
           </p>
         </div>
         {!isAdding && (

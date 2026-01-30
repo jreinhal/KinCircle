@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { openMobileNavIfNeeded } from './nav-helpers';
 
-const seedLocalStorage = async (page: any) => {
+const seedLocalStorage = async (page: Page) => {
   await page.addInitScript(() => {
     const familyId = 'family-test';
     const settings = {
@@ -36,11 +37,13 @@ test.describe('Ledger Entry Creation', () => {
 
     await page.getByRole('button', { name: /save entry/i }).click();
 
+    await openMobileNavIfNeeded(page);
     await page.getByRole('button', { name: /tools & settings/i }).click();
     await page.getByRole('button', { name: /ledger & reports/i }).click();
     await expect(page.getByText('Groceries for Mom')).toBeVisible();
     await expect(page.getByText('$45.67')).toBeVisible();
 
+    await openMobileNavIfNeeded(page);
     await page.getByRole('button', { name: /care ledger/i }).click();
     await expect(page.getByText('Family Journal')).toBeVisible();
   });
@@ -54,6 +57,7 @@ test.describe('Ledger Entry Creation', () => {
 
     await page.getByRole('button', { name: /save entry/i }).click();
 
+    await openMobileNavIfNeeded(page);
     await page.getByRole('button', { name: /tools & settings/i }).click();
     await page.getByRole('button', { name: /ledger & reports/i }).click();
     await expect(page.getByText('Doctor appointment with Dad')).toBeVisible();

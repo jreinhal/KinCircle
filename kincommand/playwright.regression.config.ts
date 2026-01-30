@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/test';
 
 process.env.NODE_NO_WARNINGS = '1';
 
@@ -7,7 +7,7 @@ const useRealGemini = process.env.E2E_GEMINI_REAL === 'true';
 const useEdge = process.env.E2E_EDGE === 'true';
 const webServerCommand = useRealGemini ? 'npm run dev:full' : 'npm run dev';
 
-const projects = [
+const projects: NonNullable<PlaywrightTestConfig['projects']> = [
   {
     name: 'chromium',
     use: { ...devices['Desktop Chrome'] },

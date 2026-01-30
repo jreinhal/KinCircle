@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { ensureToolsOpen, openMobileNavIfNeeded } from './nav-helpers';
 
-const seedLocalStorage = async (page: any) => {
+const seedLocalStorage = async (page: Page) => {
   await page.addInitScript(() => {
     const familyId = 'family-test';
     const settings = {
@@ -70,16 +71,15 @@ test.describe('Button navigation smoke test (desktop)', () => {
 
   test('primary navigation buttons go to the correct screens', async ({ page }) => {
     for (const item of navExpectations) {
+      await openMobileNavIfNeeded(page);
       await page.getByRole('button', { name: item.label, exact: true }).click();
       await expect(page.getByRole('heading', { name: item.heading, exact: true })).toBeVisible();
     }
   });
 
   test('tools & settings navigation buttons go to the correct screens', async ({ page }) => {
-    const toolsToggle = page.getByRole('button', { name: /tools & settings/i });
-    await toolsToggle.click();
-
     for (const item of toolsExpectations) {
+      await ensureToolsOpen(page);
       await page.getByRole('button', { name: item.label, exact: true }).click();
       await expect(page.getByRole('heading', { name: item.heading, exact: true })).toBeVisible();
     }

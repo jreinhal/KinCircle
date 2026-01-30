@@ -174,11 +174,12 @@ const HelpCalendar: React.FC = () => {
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Help Calendar</h2>
           <p className="text-slate-500 text-sm mt-1">
-            Coordinate who's helping {settings.patientName}
+            Coordinate who&apos;s helping {settings.patientName}
           </p>
         </div>
         <button
           onClick={() => setIsAdding(true)}
+          aria-label="Request Help"
           className="btn-primary px-4 py-2 rounded-xl shadow-sm"
         >
           <Plus size={18} />

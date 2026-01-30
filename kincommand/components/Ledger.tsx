@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { EntryType } from '../types';
-import { Clock, Search, Filter, Trash2, Download } from 'lucide-react';
+import { Clock, Search, Trash2, Download } from 'lucide-react';
 import { useConfirm } from './ConfirmDialog';
 import { useEntriesStore } from '../hooks/useEntriesStore';
 import { useAppContext } from '../context/AppContext';
@@ -95,6 +95,7 @@ const Ledger: React.FC = () => {
           <button
             onClick={handleExportCSV}
             className="btn-secondary px-3 py-2 text-sm"
+            aria-label="Export CSV"
           >
             <Download size={16} />
             <span className="hidden md:inline">Export CSV</span>

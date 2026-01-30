@@ -1,11 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { openMobileNavIfNeeded } from './nav-helpers';
 
 const shouldRun =
   process.env.E2E_SUPABASE === 'true' &&
   process.env.VITE_SUPABASE_URL &&
   process.env.VITE_SUPABASE_ANON_KEY;
 
-const completeOnboarding = async (page: any) => {
+const completeOnboarding = async (page: Page) => {
   const welcome = page.getByRole('heading', { name: /welcome to kincircle/i });
   const dashboardNav = page.getByRole('button', { name: /sibling ledger/i });
 
@@ -24,6 +25,7 @@ const completeOnboarding = async (page: any) => {
     await page.getByRole('button', { name: /finish setup/i }).click();
   }
 
+  await openMobileNavIfNeeded(page);
   await dashboardNav.waitFor({ state: 'visible', timeout: 15000 });
 };
 
@@ -38,6 +40,7 @@ test.describe('Supabase multi-session sync', () => {
     await completeOnboarding(pageA);
 
     const entryDescription = `Sync Entry ${Date.now()}`;
+    await openMobileNavIfNeeded(pageA);
     await pageA.getByRole('button', { name: /add entry/i }).click();
     await expect(pageA.getByRole('heading', { name: /add contribution/i })).toBeVisible();
     await pageA.getByPlaceholder('0.00').fill('12.34');
@@ -50,6 +53,7 @@ test.describe('Supabase multi-session sync', () => {
     await pageB.goto('/');
     await completeOnboarding(pageB);
 
+    await openMobileNavIfNeeded(pageB);
     await pageB.getByRole('button', { name: /all transactions/i }).click();
     await expect(pageB.getByText(entryDescription)).not.toBeVisible({ timeout: 5000 });
   });

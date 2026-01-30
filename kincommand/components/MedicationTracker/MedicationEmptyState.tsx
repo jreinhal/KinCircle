@@ -16,7 +16,7 @@ const MedicationEmptyState: React.FC<MedicationEmptyStateProps> = ({ settings, c
       </div>
       <h3 className="font-semibold text-slate-900 mb-2">Track Medications</h3>
       <p className="text-slate-500 text-sm mb-4 max-w-md mx-auto">
-        Keep a list of {settings.patientName || 'your loved one'}'s medications,
+        Keep a list of {settings.patientName || 'your loved one'}&apos;s medications,
         track costs, and never miss a dose.
       </p>
       <button

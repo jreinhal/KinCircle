@@ -15,6 +15,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
   const { entries } = useEntriesStore();
   const { settings } = useSettingsStore();
   const { users, currentUser } = useAppContext();
+  const [isJournalOpen, setIsJournalOpen] = useState(false);
+  const journalContentRef = useRef<HTMLDivElement | null>(null);
+  const journalPhotoInputRef = useRef<HTMLInputElement | null>(null);
+  const journalCameraInputRef = useRef<HTMLInputElement | null>(null);
+  const [journalPhotoName, setJournalPhotoName] = useState<string | null>(null);
 
   // Empty State Handling
   if (entries.length === 0) {
@@ -27,7 +32,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
           </div>
           <h2 className="text-2xl font-bold text-stone-900 mb-2">Welcome to KinCircle ❤️</h2>
           <p className="text-stone-500 mb-8 leading-relaxed">
-            Caring for a loved one is hard work. We're here to help you stay organized, recognize everyone's contributions, and keep your family connected.
+            Caring for a loved one is hard work. We&apos;re here to help you stay organized, recognize everyone&apos;s contributions, and keep your family connected.
           </p>
           <div className="space-y-4">
             <button
@@ -54,7 +59,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
             </button>
           </div>
           <div className="mt-8 text-sm text-slate-400 flex items-center justify-center">
-            <span>Click "Add Entry" in the sidebar to begin</span>
+            <span>Click &quot;Add Entry&quot; in the sidebar to begin</span>
             <ArrowRight size={14} className="ml-1" />
           </div>
         </div>
@@ -81,18 +86,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onStartEntry }) => {
     };
   });
 
-  const totalFamilyContribution = userTotals.reduce((acc, curr) => acc + curr.Total, 0);
-
   const colors = {
     Cash: '#0d9488', // Teal
     CareHours: '#f97316', // Orange
   };
-
-  const [isJournalOpen, setIsJournalOpen] = useState(false);
-  const journalContentRef = useRef<HTMLDivElement | null>(null);
-  const journalPhotoInputRef = useRef<HTMLInputElement | null>(null);
-  const journalCameraInputRef = useRef<HTMLInputElement | null>(null);
-  const [journalPhotoName, setJournalPhotoName] = useState<string | null>(null);
 
   const handleJournalToggle = () => {
     setIsJournalOpen((prev) => {

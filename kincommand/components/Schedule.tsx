@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Task, EntryType, LedgerEntry } from '../types';
-import { Calendar, CheckCircle2, Circle, Clock, Plus, User as UserIcon, ArrowRight, DollarSign, Pencil, X } from 'lucide-react';
+import { Calendar, CheckCircle2, Circle, Plus, User as UserIcon, ArrowRight, DollarSign, Pencil, X } from 'lucide-react';
 import { useTasksStore } from '../hooks/useTasksStore';
 import { useSettingsStore } from '../hooks/useSettingsStore';
 import { useAppContext } from '../context/AppContext';

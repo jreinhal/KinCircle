@@ -13,8 +13,21 @@ if (!isSupabaseConfigured) {
 const createSupabaseStub = () => {
     const error = new Error('Supabase is not configured');
     const response = Promise.resolve({ data: null, error });
-    const chain: any = {
+    type SupabaseStubChain = {
+        select: () => SupabaseStubChain;
+        insert: () => SupabaseStubChain;
+        upsert: () => typeof response;
+        delete: () => typeof response;
+        single: () => typeof response;
+        maybeSingle: () => typeof response;
+        eq: () => SupabaseStubChain;
+        then: typeof response.then;
+        catch: typeof response.catch;
+        finally: typeof response.finally;
+    };
+    const chain: SupabaseStubChain = {
         select: () => chain,
+        insert: () => chain,
         upsert: () => response,
         delete: () => response,
         single: () => response,

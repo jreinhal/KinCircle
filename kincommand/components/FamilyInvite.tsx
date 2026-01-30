@@ -82,8 +82,6 @@ const FamilyInvite: React.FC = () => {
   };
 
   const pendingInvites = familyInvites.filter(i => i.status === 'pending');
-  const acceptedInvites = familyInvites.filter(i => i.status === 'accepted');
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -154,7 +152,7 @@ const FamilyInvite: React.FC = () => {
             </div>
 
             <div className="bg-slate-50 p-3 rounded-lg text-sm text-slate-600">
-              <p>After creating the invite, you'll get a shareable link to send to them via text, email, or any messaging app.</p>
+              <p>After creating the invite, you&apos;ll get a shareable link to send to them via text, email, or any messaging app.</p>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -269,7 +267,7 @@ const FamilyInvite: React.FC = () => {
 
               <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
                 <p className="text-sm text-blue-800">
-                  <strong>Demo Mode:</strong> In production, you could view this member's contribution history and contact them directly.
+                  <strong>Demo Mode:</strong> In production, you could view this member&apos;s contribution history and contact them directly.
                 </p>
               </div>
             </div>

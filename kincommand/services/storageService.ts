@@ -744,7 +744,7 @@ class SupabaseStorageService implements IStorageService {
 
   async remove(key: string): Promise<void> {
     // In Phase 2, we probably don't want to drop tables via app code
-    logger.warn('Remove operation not fully supported in Supabase mode for safety');
+    logger.warn(`Remove operation not fully supported in Supabase mode for safety (key: ${key})`);
   }
 }
 

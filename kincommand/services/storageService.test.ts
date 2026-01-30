@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
 import { storageService, setStorageProviderForTests, setActiveFamilyId } from './storageService';
 import { supabase } from './supabase';
 
@@ -18,6 +18,8 @@ vi.mock('./supabase', () => ({
 }));
 
 describe('storageService (Supabase Implementation)', () => {
+    const fromMock = supabase.from as Mock;
+
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, 'error').mockImplementation(() => { }); // Silence console.error
@@ -31,7 +33,7 @@ describe('storageService (Supabase Implementation)', () => {
 
     it('should map app keys to correct Supabase tables', async () => {
         const mockUpsert = vi.fn().mockResolvedValue({ error: null });
-        (supabase.from as any).mockReturnValue({ upsert: mockUpsert });
+        fromMock.mockReturnValue({ upsert: mockUpsert });
 
         await storageService.save('kin_entries', [{ id: 1, test: 'data' }]);
 
@@ -41,7 +43,7 @@ describe('storageService (Supabase Implementation)', () => {
 
     it('should handle load errors gracefully by returning default value', async () => {
         const mockSelect = vi.fn().mockResolvedValue({ data: null, error: { message: 'Network Error' } });
-        (supabase.from as any).mockReturnValue({ select: mockSelect });
+        fromMock.mockReturnValue({ select: mockSelect });
 
         const result = await storageService.load('kin_entries', []);
 
@@ -50,7 +52,7 @@ describe('storageService (Supabase Implementation)', () => {
 
     it('should convert data to snake_case on save', async () => {
         const mockUpsert = vi.fn().mockResolvedValue({ error: null });
-        (supabase.from as any).mockReturnValue({ upsert: mockUpsert });
+        fromMock.mockReturnValue({ upsert: mockUpsert });
 
         const testData = [{
             id: 'e1',

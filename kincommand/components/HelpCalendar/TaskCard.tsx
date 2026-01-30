@@ -120,7 +120,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 onClick={(e) => { e.stopPropagation(); onClaimTask(task); }}
                 className="btn-primary px-4 py-2 text-sm"
               >
-                I'll do this
+                I&apos;ll do this
               </button>
             )}
             {task.status === 'claimed' && isClaimedByMe && (

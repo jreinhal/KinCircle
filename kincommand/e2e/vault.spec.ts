@@ -1,6 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { ensureToolsOpen } from './nav-helpers';
 
-const seedLocalStorage = async (page: any) => {
+const seedLocalStorage = async (page: Page) => {
   await page.addInitScript(() => {
     const familyId = 'family-test';
     const settings = {
@@ -24,7 +25,7 @@ const seedLocalStorage = async (page: any) => {
 };
 
 // Helper to enter PIN and activate emergency mode
-const activateEmergencyMode = async (page: any) => {
+const activateEmergencyMode = async (page: Page) => {
   await page.getByRole('button', { name: /emergency access/i }).click();
   // Wait for PIN modal to appear
   await page.waitForSelector('input[type="password"]');
@@ -42,7 +43,7 @@ test.describe('Document Vault', () => {
   test.beforeEach(async ({ page }) => {
     await seedLocalStorage(page);
     await page.goto('/');
-    await page.getByRole('button', { name: /tools & settings/i }).click();
+    await ensureToolsOpen(page);
     await page.getByRole('button', { name: /document vault/i }).click();
   });
 

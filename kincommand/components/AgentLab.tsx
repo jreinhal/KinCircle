@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, Play, Terminal, Zap, CheckCircle2, Loader2, Database, Shield, HeartHandshake, Activity } from 'lucide-react';
-import { LedgerEntry } from '../types';
 import { runScenarioAgent, runUXAgent, runPrivacyAgent, runDataIntegrityCheck } from '../services/agentService';
 import { useEntriesStore } from '../hooks/useEntriesStore';
 import { useSettingsStore } from '../hooks/useSettingsStore';
 import { useAppContext } from '../context/AppContext';
 
 type TestStep = 'IDLE' | 'INTEGRITY' | 'STRESS' | 'PRIVACY' | 'FAIRNESS' | 'COMPLETE';
+type IconType = React.ComponentType<{ size?: number; className?: string }>;
 
 const AgentLab: React.FC = () => {
   const { entries, addEntries } = useEntriesStore();
@@ -94,7 +94,7 @@ const AgentLab: React.FC = () => {
     addLog('> DIAGNOSTIC SEQUENCE COMPLETE.');
   };
 
-  const StepIndicator = ({ step, current, label, icon: Icon }: { step: TestStep, current: TestStep, label: string, icon: any }) => {
+  const StepIndicator = ({ step, current, label, icon: Icon }: { step: TestStep, current: TestStep, label: string, icon: IconType }) => {
     const steps = ['IDLE', 'INTEGRITY', 'STRESS', 'PRIVACY', 'FAIRNESS', 'COMPLETE'];
     const stepIdx = steps.indexOf(step);
     const currentIdx = steps.indexOf(current);
@@ -177,7 +177,7 @@ const AgentLab: React.FC = () => {
                 <CheckCircle2 size={18} />
                 <span className="font-bold">Final Verdict</span>
               </div>
-              <p className="text-sm text-emerald-900 italic">"{uxFeedback}"</p>
+              <p className="text-sm text-emerald-900 italic">&ldquo;{uxFeedback}&rdquo;</p>
             </div>
           )}
         </div>
