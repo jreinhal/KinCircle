@@ -321,6 +321,17 @@ const AppShell: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Mobile fallback hamburger (always visible if sidebar is closed) */}
+      {!isMobileOpen && (
+        <button
+          onClick={() => setIsMobileOpen(true)}
+          className="md:hidden fixed z-20 right-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] h-12 w-12 rounded-full bg-slate-900 text-white shadow-lg shadow-slate-900/20 inline-flex items-center justify-center"
+          aria-label="Open navigation"
+        >
+          <Menu size={22} />
+        </button>
+      )}
     </div>
   );
 };
