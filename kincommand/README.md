@@ -111,7 +111,7 @@ npm run test:e2e:real
 ```
 
 **Test plan (exhaustive):**
-`D:\Projects\Project Documentation\KinCircle\Testing\RAG_DEV_TEST_PLAN.md`
+`D:\Projects\Project Documentation\KinCircle\Testing\KINCIRCLE_TEST.md`
 
 **GitHub Actions:**
 - `ci.yml` runs unit + E2E tests on push/PR.
