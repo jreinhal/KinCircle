@@ -36,7 +36,7 @@ jobs:
         run: npm run typecheck
 
       - name: Unit Tests (Coverage)
-        run: npm run test:coverage
+        run: npm run test:coverage:ci
 
       - name: E2E Tests (CI, mocked)
         run: npm run test:e2e:ci
