@@ -2,7 +2,7 @@ name: Real Backend E2E
 
 on:
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: '0 6 * * *'
 
 jobs:
   e2e-real:
@@ -34,10 +34,10 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run Supabase sync tests
-        run: npx playwright test e2e/supabase-sync.spec.ts --reporter=line
+        run: npx playwright test e2e/supabase-sync.spec.ts --reporter=line --grep-invert @flaky
 
       - name: Run real Gemini tests
-        run: npx playwright test e2e/chat-real.spec.ts --reporter=line
+        run: npx playwright test e2e/chat-real.spec.ts --reporter=line --grep-invert @flaky
 
       - name: Upload Playwright Report
         if: always()

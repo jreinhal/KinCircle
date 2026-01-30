@@ -1,0 +1,68 @@
+name: Nightly Regression Matrix
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  e2e-matrix:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./kincommand
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: local-mock
+            e2e_supabase: 'false'
+            e2e_gemini_real: 'false'
+            vite_gemini_mock: 'true'
+            vite_storage_provider: 'local'
+          - name: supabase-real
+            e2e_supabase: 'true'
+            e2e_gemini_real: 'true'
+            vite_gemini_mock: 'false'
+            vite_storage_provider: 'supabase'
+
+    if: ${{ matrix.name != 'supabase-real' || (secrets.VITE_SUPABASE_URL != '' && secrets.VITE_SUPABASE_ANON_KEY != '' && secrets.GEMINI_API_KEY != '') }}
+
+    env:
+      E2E_SUPABASE: ${{ matrix.e2e_supabase }}
+      E2E_GEMINI_REAL: ${{ matrix.e2e_gemini_real }}
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './kincommand/package-lock.json'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E Regression (Desktop + Mobile)
+        run: npx playwright test --config playwright.regression.config.ts --reporter=line --grep-invert @flaky
+        env:
+          VITE_GEMINI_MOCK: ${{ matrix.vite_gemini_mock }}
+          VITE_STORAGE_PROVIDER: ${{ matrix.vite_storage_provider }}
+          VITE_SUPABASE_AUTH_MODE: ${{ matrix.e2e_supabase == 'true' && 'anonymous' || 'none' }}
+          VITE_API_BASE_URL: ${{ matrix.e2e_gemini_real == 'true' && 'http://localhost:8787' || '' }}
+
+      - name: Upload Playwright Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.name }}
+          path: ./kincommand/playwright-report
+          if-no-files-found: ignore

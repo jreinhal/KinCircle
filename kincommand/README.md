@@ -88,8 +88,17 @@ KinCircle is a modern web application designed to bring transparency, fairness, 
 # Unit tests
 npm run test
 
+# Unit tests with coverage
+npm run test:coverage
+
+# Typecheck
+npm run typecheck
+
 # E2E tests (mocked)
 npm run test:e2e
+
+# E2E tests (CI, excludes @flaky)
+npm run test:e2e:ci
 
 # Unit + E2E (mocked)
 npm run test:ops
@@ -107,6 +116,11 @@ npm run test:e2e:real
 **GitHub Actions:**
 - `ci.yml` runs unit + E2E tests on push/PR.
 - `real-backend.yml` runs scheduled real-backend E2E tests (Supabase + Gemini).
+- `nightly-regression.yml` runs a nightly regression matrix (desktop + mobile).
+
+**Flaky test policy:**
+- Tag unstable Playwright tests with `@flaky` in the test title.
+- CI excludes `@flaky` tests; run locally to validate when working on a fix.
 
 ## 🔐 Security Features
 
