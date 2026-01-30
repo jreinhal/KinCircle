@@ -7,11 +7,13 @@ import { useDocumentsStore } from '../hooks/useDocumentsStore';
 import { useSettingsStore } from '../hooks/useSettingsStore';
 import { useAppContext } from '../context/AppContext';
 import { hasPermission } from '../utils/rbac';
+import { useToast } from './ToastProvider';
 
 const Vault: React.FC = () => {
   const { documents, addDocument, deleteDocument } = useDocumentsStore();
   const { settings, logSecurityEvent } = useSettingsStore();
   const { users, currentUser } = useAppContext();
+  const { notify } = useToast();
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const [showEmergencyPinModal, setShowEmergencyPinModal] = useState(false);
   const [emergencyPin, setEmergencyPin] = useState('');
@@ -71,17 +73,28 @@ const Vault: React.FC = () => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file && canAddDocument) {
+      if (!file) return;
+      if (!canAddDocument) {
+          notify('You do not have permission to upload documents.', 'error');
+          return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
           const newDoc: VaultDocument = {
               id: crypto.randomUUID(),
               name: file.name,
               date: new Date().toISOString().split('T')[0],
-              type: 'Uploaded',
-              size: (file.size / 1024 / 1024).toFixed(1) + ' MB'
+              type: file.type || 'Uploaded',
+              size: (file.size / 1024 / 1024).toFixed(1) + ' MB',
+              sizeBytes: file.size,
+              mimeType: file.type || 'application/octet-stream',
+              fileData: reader.result as string
           };
           addDocument(newDoc);
           if (fileInputRef.current) fileInputRef.current.value = '';
-      }
+          notify('Document uploaded to the vault.', 'success');
+      };
+      reader.readAsDataURL(file);
   };
 
   return (
@@ -215,18 +228,25 @@ const Vault: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
-                <p className="text-sm text-amber-800">
-                  <strong>Demo Mode:</strong> In a production app, clicking &ldquo;Open Document&rdquo; would display or download the actual file.
-                </p>
-              </div>
+              {!viewingDoc.fileData && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
+                  <p className="text-sm text-amber-800">
+                    This document was added without an attached file. Upload it again to enable viewing and download.
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <button
                   onClick={() => {
                     logSecurityEvent(`Document accessed: ${viewingDoc.name}`, 'INFO', 'EMERGENCY_ACCESS');
-                    alert(`Opening "${viewingDoc.name}"...\n\nIn production, this would open or download the actual document.`);
+                    if (!viewingDoc.fileData) {
+                      notify('No file attached to this document.', 'error');
+                      return;
+                    }
+                    window.open(viewingDoc.fileData, '_blank', 'noopener,noreferrer');
                   }}
+                  disabled={!viewingDoc.fileData}
                   className="btn-primary flex-1 py-2.5"
                 >
                   <Eye size={18} />
@@ -235,8 +255,18 @@ const Vault: React.FC = () => {
                 <button
                   onClick={() => {
                     logSecurityEvent(`Document downloaded: ${viewingDoc.name}`, 'INFO', 'EMERGENCY_ACCESS');
-                    alert(`Downloading "${viewingDoc.name}"...\n\nIn production, this would download the actual file.`);
+                    if (!viewingDoc.fileData) {
+                      notify('No file attached to this document.', 'error');
+                      return;
+                    }
+                    const link = document.createElement('a');
+                    link.href = viewingDoc.fileData;
+                    link.download = viewingDoc.name;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                   }}
+                  disabled={!viewingDoc.fileData}
                   className="btn-muted px-4 py-2.5"
                 >
                   <Download size={18} />

@@ -16,6 +16,7 @@ import { ensureFamilyContext } from '../services/familyService';
 import { generateSecureToken } from '../utils/crypto';
 import { backupDataSchema, formatZodErrors } from '../utils/validation';
 import { hasPermission } from '../utils/rbac';
+import { useToast } from '../components/ToastProvider';
 
 /**
  * Custom hook for managing KinCircle's centralized state
@@ -51,6 +52,7 @@ export const useKinStore = (
     const [helpTasks, setHelpTasks] = useState<HelpTask[]>([]);
     const [medications, setMedications] = useState<Medication[]>([]);
     const [medicationLogs, setMedicationLogs] = useState<MedicationLog[]>([]);
+    const { notify } = useToast();
 
     // Async Data Loading
     const loadAllData = useCallback(async () => {
@@ -198,9 +200,9 @@ export const useKinStore = (
     const ensurePermission = useCallback((permission: Parameters<typeof hasPermission>[1], action: string) => {
         if (hasPermission(currentUser, permission)) return true;
         logSecurityEvent(`Permission denied: ${action}`, 'WARNING', 'AUTH_FAILURE');
-        alert(`You do not have permission to ${action}.`);
+        notify(`You do not have permission to ${action}.`, 'error');
         return false;
-    }, [currentUser, logSecurityEvent]);
+    }, [currentUser, logSecurityEvent, notify]);
 
     // Entry operations
 
@@ -298,7 +300,7 @@ export const useKinStore = (
             const validation = backupDataSchema.safeParse(data);
             if (!validation.success) {
                 const errors = formatZodErrors(validation.error);
-                alert(`Import Failed:\n${errors.join('\n')}`);
+                notify(`Import failed: ${errors.join(' • ')}`, 'error');
                 return;
             }
 
@@ -345,11 +347,11 @@ export const useKinStore = (
             }
 
             logSecurityEvent("External data imported via Sync", "WARNING", "DATA_RESET");
-            alert(`Sync Complete!\nImported ${validated.entries.length} entries and settings.`);
+            notify(`Sync complete: imported ${validated.entries.length} entries and settings.`, 'success');
 
         } catch (e) {
             logger.error('Import failed:', e);
-            alert("Import Failed: Invalid JSON file.");
+            notify('Import failed: invalid JSON file.', 'error');
         }
     };
 

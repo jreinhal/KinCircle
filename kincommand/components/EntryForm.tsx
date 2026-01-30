@@ -8,6 +8,7 @@ import ReceiptUploader from './EntryForm/ReceiptUploader';
 import { useEntriesStore } from '../hooks/useEntriesStore';
 import { useSettingsStore } from '../hooks/useSettingsStore';
 import { useAppContext } from '../context/AppContext';
+import { useToast } from './ToastProvider';
 
 interface EntryFormProps {
   initialType?: EntryType;
@@ -19,6 +20,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
   const { addEntry } = useEntriesStore();
   const { settings } = useSettingsStore();
   const { currentUser } = useAppContext();
+  const { notify } = useToast();
   const [type, setType] = useState<EntryType>(initialType ?? EntryType.EXPENSE);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -28,6 +30,7 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialType) {
@@ -79,7 +82,8 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
       setIsRecording(true);
     } catch (err) {
       logger.error("Error accessing microphone:", err);
-      alert("Microphone access is required for voice entry.");
+      setVoiceError('Microphone access is required for voice entry.');
+      notify('Microphone access is required for voice entry.', 'error');
     }
   };
 
@@ -181,10 +185,11 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
 
     if (!validationResult.success) {
       const errors = formatZodErrors(validationResult.error);
-      alert(`Validation errors:\n${errors.join('\n')}`);
+      setFormError(`Validation errors: ${errors.join(' • ')}`);
       return;
     }
 
+    setFormError(null);
     const newEntry: LedgerEntry = {
       id: crypto.randomUUID(),
       userId: currentUser.id,
@@ -232,6 +237,13 @@ const EntryForm: React.FC<EntryFormProps> = ({ initialType, onCancel, onEntryAdd
           )}
         </button>
       </div>
+      {formError && (
+        <div className="px-6 pt-4">
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
+            {formError}
+          </div>
+        </div>
+      )}
 
       <div className="p-6">
 

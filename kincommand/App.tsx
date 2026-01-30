@@ -15,6 +15,7 @@ import HelpCalendar from './components/HelpCalendar';
 import MedicationTracker from './components/MedicationTracker';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ConfirmProvider } from './components/ConfirmDialog';
+import { ToastProvider } from './components/ToastProvider';
 // Lazy load AgentLab for better performance (only loads when user accesses the feature)
 const AgentLab = lazy(() => import('./components/AgentLab'));
 import LockScreen from './components/LockScreen';
@@ -441,18 +442,20 @@ export default function App() {
   }
 
   return (
-    <ConfirmProvider>
-      <AppProvider users={MOCK_USERS}>
-        <KinStoreProvider
-          defaultEntries={MOCK_ENTRIES}
-          defaultTasks={MOCK_TASKS}
-          defaultDocuments={MOCK_DOCS}
-          defaultSettings={DEFAULT_SETTINGS}
-        >
-          <AppShell />
-        </KinStoreProvider>
-      </AppProvider>
-    </ConfirmProvider>
+    <ToastProvider>
+      <ConfirmProvider>
+        <AppProvider users={MOCK_USERS}>
+          <KinStoreProvider
+            defaultEntries={MOCK_ENTRIES}
+            defaultTasks={MOCK_TASKS}
+            defaultDocuments={MOCK_DOCS}
+            defaultSettings={DEFAULT_SETTINGS}
+          >
+            <AppShell />
+          </KinStoreProvider>
+        </AppProvider>
+      </ConfirmProvider>
+    </ToastProvider>
   );
 }
 

@@ -46,6 +46,9 @@ export interface VaultDocument {
   date: string;
   type: string;
   size: string;
+  mimeType?: string;
+  fileData?: string;
+  sizeBytes?: number;
 }
 
 export interface FamilySettings {

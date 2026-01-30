@@ -28,6 +28,7 @@ import { useTasksStore } from '../hooks/useTasksStore';
 import { useDocumentsStore } from '../hooks/useDocumentsStore';
 import { useSettingsStore } from '../hooks/useSettingsStore';
 import { useAppContext } from '../context/AppContext';
+import { useToast } from './ToastProvider';
 
 interface BackupData {
   version?: string;
@@ -51,6 +52,7 @@ const Settings: React.FC = () => {
   const { documents } = useDocumentsStore();
   const { settings, updateSettings, importData, securityLogs } = useSettingsStore();
   const { currentUser } = useAppContext();
+  const { notify } = useToast();
   const [formData, setFormData] = useState<FamilySettings>(settings);
   const previousSettingsRef = useRef<FamilySettings | null>(null);
   const [isSaved, setIsSaved] = useState(false);
@@ -95,7 +97,7 @@ const Settings: React.FC = () => {
 
   const handleSave = () => {
     if (!canUpdateSettings) {
-      alert('You do not have permission to update settings.');
+      notify('You do not have permission to update settings.', 'error');
       return;
     }
     if (!hasUnsavedChanges) return;
@@ -111,7 +113,7 @@ const Settings: React.FC = () => {
 
   const handleThemeChange = (mode: ThemeMode) => {
     if (!canUpdateSettings) {
-      alert('You do not have permission to update settings.');
+      notify('You do not have permission to update settings.', 'error');
       return;
     }
     if (settings.themeMode === mode) return;
@@ -120,7 +122,7 @@ const Settings: React.FC = () => {
 
   const handleReset = async () => {
     if (!canResetData) {
-      alert('You do not have permission to reset application data.');
+      notify('You do not have permission to reset application data.', 'error');
       return;
     }
     const ok = await confirm({
@@ -145,7 +147,7 @@ const Settings: React.FC = () => {
 
   const handleExport = async () => {
     if (!canExportData) {
-      alert('You do not have permission to export data.');
+      notify('You do not have permission to export data.', 'error');
       return;
     }
 
@@ -164,13 +166,13 @@ const Settings: React.FC = () => {
       document.body.removeChild(link);
     } catch (err) {
       logger.error('Export failed:', err);
-      alert('Export failed. Please try again.');
+      notify('Export failed. Please try again.', 'error');
     }
   };
 
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!canImportData) {
-      alert('You do not have permission to import data.');
+      notify('You do not have permission to import data.', 'error');
       return;
     }
     const file = e.target.files?.[0];
@@ -185,7 +187,7 @@ const Settings: React.FC = () => {
         if (checksum) {
           const expected = await sha256Hex(stableStringify(payload));
           if (expected !== checksum) {
-            alert('Import failed: backup checksum does not match. The file may be corrupted or edited.');
+            notify('Import failed: backup checksum does not match. The file may be corrupted or edited.', 'error');
             return;
           }
           if (checksumVersion && checksumVersion !== CHECKSUM_VERSION) {
@@ -196,7 +198,7 @@ const Settings: React.FC = () => {
         const validation = backupDataSchema.safeParse(payload);
         if (!validation.success) {
           const errors = formatZodErrors(validation.error);
-          alert(`Import failed due to validation errors:\n${errors.join('\n')}`);
+          notify(`Import failed due to validation errors: ${errors.join(' • ')}`, 'error');
           return;
         }
 
@@ -205,9 +207,12 @@ const Settings: React.FC = () => {
           message: `Found ${validation.data.entries?.length || 0} entries in this backup. Merge with current data?`,
           confirmLabel: 'Merge backup'
         });
-        if (ok) importData(validation.data);
+        if (ok) {
+          importData(validation.data);
+          notify('Backup imported successfully.', 'success');
+        }
       } catch (err) {
-        alert('Error parsing backup file');
+        notify('Error parsing backup file', 'error');
       }
     };
     reader.readAsText(file);
@@ -216,7 +221,7 @@ const Settings: React.FC = () => {
 
   const handleUpdatePin = async () => {
     if (!canUpdateSettings) {
-      alert('You do not have permission to update settings.');
+      notify('You do not have permission to update settings.', 'error');
       return;
     }
     if (newPin.length !== 4) {
@@ -253,7 +258,7 @@ const Settings: React.FC = () => {
       setNewPin('');
       setConfirmPin('');
       setIsSaved(false);
-      alert('PIN updated and encryption enabled. Remember to save your settings.');
+      notify('PIN updated and encryption enabled. Remember to save your settings.', 'success');
     } catch (err) {
       setPinError('Failed to encrypt PIN. Please try again.');
     }
@@ -261,7 +266,7 @@ const Settings: React.FC = () => {
 
   const handleCloudSync = async () => {
     if (!canExportData || !canImportData) {
-      alert('You do not have permission to sync data.');
+      notify('You do not have permission to sync data.', 'error');
       return;
     }
     const ok = await confirm({
@@ -285,11 +290,11 @@ const Settings: React.FC = () => {
       await cloudStore.save('kin_documents', localDocs);
       await cloudStore.save('kin_settings', localSettings);
 
-      alert('Migration Success! Your data is now in the cloud.');
+      notify('Migration success! Your data is now in the cloud.', 'success');
       window.location.reload();
     } catch (e) {
       logger.error('Cloud migration failed:', e);
-      alert('Migration Failed. Please try again.');
+      notify('Migration failed. Please try again.', 'error');
     }
   };
 

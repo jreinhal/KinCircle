@@ -265,11 +265,6 @@ const FamilyInvite: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                <p className="text-sm text-blue-800">
-                  <strong>Demo Mode:</strong> In production, you could view this member&apos;s contribution history and contact them directly.
-                </p>
-              </div>
             </div>
           </div>
         </div>
