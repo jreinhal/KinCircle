@@ -34,7 +34,7 @@ const seedLocalStorage = async (page: Page) => {
   });
 };
 
-test.describe('PIN Lock Screen', () => {
+test.describe('PIN Lock Screen @local', () => {
   test.beforeEach(async ({ page }) => {
     await seedLocalStorage(page);
     await page.goto('/');

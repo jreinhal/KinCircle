@@ -28,7 +28,7 @@ const seedLocalStorage = async (page: Page) => {
   });
 };
 
-test.describe('Ask Kin real API', () => {
+test.describe('Ask Kin real API @local', () => {
 test.skip(!shouldRun, 'Set E2E_GEMINI_REAL=true and a real GEMINI_API_KEY to run.');
 
   test('returns a response from Gemini without network error', async ({ page }) => {

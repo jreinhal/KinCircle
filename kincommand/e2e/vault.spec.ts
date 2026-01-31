@@ -37,7 +37,7 @@ const activateEmergencyMode = async (page: Page) => {
   await page.waitForSelector('text=Emergency Responder View');
 };
 
-test.describe('Document Vault', () => {
+test.describe('Document Vault @local', () => {
   test.use({ viewport: { width: 1280, height: 720 } });
 
   test.beforeEach(async ({ page }) => {
