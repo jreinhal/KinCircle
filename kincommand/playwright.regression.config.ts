@@ -7,9 +7,6 @@ const useRealGemini = process.env.E2E_GEMINI_REAL === 'true';
 const useEdge = process.env.E2E_EDGE === 'true';
 const webServerCommand = useRealGemini ? 'npm run dev:full' : 'npm run dev';
 
-// Tests tagged @local depend on localStorage seeding and won't work with Supabase storage
-const grepInvert = useSupabase ? '@flaky|@local' : '@flaky';
-
 const projects: NonNullable<PlaywrightTestConfig['projects']> = [
   {
     name: 'chromium',
