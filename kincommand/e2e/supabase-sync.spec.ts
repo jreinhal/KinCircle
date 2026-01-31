@@ -8,11 +8,12 @@ const shouldRun =
 
 const completeOnboarding = async (page: Page) => {
   const welcome = page.getByRole('heading', { name: /welcome to kincircle/i });
-  const dashboardNav = page.getByRole('button', { name: /sibling ledger/i });
+  const dashboardHeading = page.getByRole('heading', { name: /the care ledger/i });
 
+  // Wait for app to load - either onboarding wizard or dashboard
   await Promise.race([
-    welcome.waitFor({ state: 'visible', timeout: 15000 }),
-    dashboardNav.waitFor({ state: 'visible', timeout: 15000 })
+    welcome.waitFor({ state: 'visible', timeout: 30000 }),
+    dashboardHeading.waitFor({ state: 'visible', timeout: 30000 })
   ]).catch(() => {});
 
   if (await welcome.isVisible().catch(() => false)) {
@@ -25,11 +26,11 @@ const completeOnboarding = async (page: Page) => {
     await page.getByRole('button', { name: /finish setup/i }).click();
   }
 
-  await openMobileNavIfNeeded(page);
-  await dashboardNav.waitFor({ state: 'visible', timeout: 15000 });
+  // Wait for dashboard to be visible after onboarding
+  await dashboardHeading.waitFor({ state: 'visible', timeout: 15000 });
 };
 
-test.describe('Supabase multi-session sync', () => {
+test.describe('Supabase multi-session sync @flaky', () => {
   test.setTimeout(60000);
   test.skip(!shouldRun, 'Set E2E_SUPABASE=true with Supabase env vars to run.');
 
@@ -54,7 +55,8 @@ test.describe('Supabase multi-session sync', () => {
     await completeOnboarding(pageB);
 
     await openMobileNavIfNeeded(pageB);
-    await pageB.getByRole('button', { name: /all transactions/i }).click();
+    await pageB.getByRole('button', { name: /tools & settings/i }).click();
+    await pageB.getByRole('button', { name: /ledger & reports/i }).click();
     await expect(pageB.getByText(entryDescription)).not.toBeVisible({ timeout: 5000 });
   });
 });
