@@ -23,10 +23,11 @@ jobs:
           echo "Pinging Supabase to keep project active..."
 
           # Simple health check - query the REST API
+          # Note: With new sb_publishable_ keys, Authorization must match apikey exactly (no Bearer prefix)
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             "${SUPABASE_URL}/rest/v1/" \
             -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+            -H "Authorization: ${SUPABASE_ANON_KEY}")
 
           echo "Response status: $HTTP_STATUS"
 
