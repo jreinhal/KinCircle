@@ -6,7 +6,7 @@ const seedLocalStorage = async (page: Page) => {
   });
 };
 
-test.describe('Onboarding Wizard', () => {
+test.describe('Onboarding Wizard @local', () => {
   test('should complete onboarding and reach dashboard', async ({ page }) => {
     await seedLocalStorage(page);
     await page.goto('/');

@@ -22,7 +22,7 @@ const seedLocalStorage = async (page: Page) => {
   });
 };
 
-test.describe('Ledger Entry Creation', () => {
+test.describe('Ledger Entry Creation @local', () => {
   test.beforeEach(async ({ page }) => {
     await seedLocalStorage(page);
     await page.goto('/');

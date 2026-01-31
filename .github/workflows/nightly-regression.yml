@@ -65,7 +65,14 @@ jobs:
 
       - name: Run E2E Regression (Desktop + Mobile)
         if: ${{ steps.gate.outputs.should_run == 'true' }}
-        run: npx playwright test --config playwright.regression.config.ts --reporter=line --grep-invert @flaky
+        run: |
+          # Tests tagged @local depend on localStorage seeding and won't work with Supabase storage
+          if [ "${{ matrix.e2e_supabase }}" = "true" ]; then
+            GREP_INVERT="@flaky|@local"
+          else
+            GREP_INVERT="@flaky"
+          fi
+          npx playwright test --config playwright.regression.config.ts --reporter=line --grep-invert "$GREP_INVERT"
         env:
           VITE_GEMINI_MOCK: ${{ matrix.vite_gemini_mock }}
           VITE_STORAGE_PROVIDER: ${{ matrix.vite_storage_provider }}

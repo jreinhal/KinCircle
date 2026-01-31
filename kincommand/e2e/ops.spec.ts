@@ -22,7 +22,7 @@ const seedLocalStorage = async (page: Page) => {
   });
 };
 
-test('empty state CTAs open the entry form with the right type', async ({ page }) => {
+test('empty state CTAs open the entry form with the right type @local', async ({ page }) => {
   await seedLocalStorage(page);
   await page.goto('/');
 
@@ -37,7 +37,7 @@ test('empty state CTAs open the entry form with the right type', async ({ page }
   await expect(page.getByText('Duration (Hours)')).toBeVisible();
 });
 
-test('can add an expense entry and see it in the ledger', async ({ page }) => {
+test('can add an expense entry and see it in the ledger @local', async ({ page }) => {
   await seedLocalStorage(page);
   await page.goto('/');
 
@@ -53,7 +53,7 @@ test('can add an expense entry and see it in the ledger', async ({ page }) => {
   await expect(page.getByText('Test Expense')).toBeVisible();
 });
 
-test('ask kin returns a response', async ({ page }) => {
+test('ask kin returns a response @local', async ({ page }) => {
   await seedLocalStorage(page);
   await page.goto('/');
 

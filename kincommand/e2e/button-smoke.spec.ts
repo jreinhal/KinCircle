@@ -63,7 +63,7 @@ const toolsExpectations = [
   { label: 'Settings', heading: 'Family Configuration' }
 ];
 
-test.describe('Button navigation smoke test (desktop)', () => {
+test.describe('Button navigation smoke test (desktop) @local', () => {
   test.beforeEach(async ({ page }) => {
     await seedLocalStorage(page);
     await page.goto('/');
@@ -114,7 +114,7 @@ test.describe('Button navigation smoke test (desktop)', () => {
   });
 });
 
-test.describe('Mobile navigation smoke test', () => {
+test.describe('Mobile navigation smoke test @local', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
   test.beforeEach(async ({ page }) => {

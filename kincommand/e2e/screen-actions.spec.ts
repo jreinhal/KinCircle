@@ -51,7 +51,7 @@ const seedLocalStorage = async (page: Page) => {
   });
 };
 
-test.describe('Screen action coverage', () => {
+test.describe('Screen action coverage @local', () => {
   test.beforeEach(async ({ page }) => {
     await seedLocalStorage(page);
     await page.goto('/');
